@@ -6332,7 +6332,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.4.6';
+const VERSION = '4.4.9';
 const BUILD   = '2026-11-05';
 const SAVE_KEY = 'skinrush_v1';
 let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
@@ -6745,6 +6745,8 @@ async function saveUnpack(code){
 }
 /* применить распакованное: пишем в стор и перезапускаем игру — так гарантированно
    пересоберётся всё, что кэшировалось в памяти (uidSeq, отрисовки, таймеры) */
+/* подтверждение замены прогресса: хранится между нажатиями кнопки */
+let sxPending = null;
 async function saveApply(){
   const area = $('#sxArea'), msg = $('#sxMsg');
   const code = area ? area.value : '';
@@ -6753,8 +6755,23 @@ async function saveApply(){
   try{ d = await saveUnpack(code); }
   catch(e){ sxSay('Не получилось: ' + (e && e.message || e), true); return; }
   const invN = d.inv.length, coins = d.coins | 0;
-  if(!confirm('Заменить текущий прогресс?\n\nВ коде: ' + coins.toLocaleString('ru-RU') +
-      ' кредитов, предметов — ' + invN + '.\nТекущий прогресс будет потерян.')) return;
+  /* 4.4.9: подтверждение — своим окном, а не confirm().
+     В APK у WebView не был назначен WebChromeClient, а без него window.confirm()
+     не показывает диалог и сразу возвращает false. Из-за этого «Вставить код» в
+     приложении молча ничего не делал: человек вставлял код, нажимал кнопку и
+     оставался с пустым инвентарём. Тот же отказ у «Сбросить прогресс», «Выйти из
+     аккаунта», покупки темы и очистки ставки.
+     Теперь замена прогресса просит подтверждения вторым нажатием — работает
+     одинаково в браузере и в приложении. */
+  const stamp = coins + ':' + invN;
+  const now = Date.now();
+  if(!(sxPending && sxPending.stamp === stamp && (now - sxPending.at) < 20000)){
+    sxPending = { stamp: stamp, at: now };
+    sxSay('В коде: ' + coins.toLocaleString('ru-RU') + ' кредитов, предметов — ' + invN +
+          '. Текущий прогресс заменится — он уйдёт в резервную копию. Нажмите «Вставить код» ещё раз, чтобы подтвердить.', false);
+    return;
+  }
+  sxPending = null;
   try{
     saveBak(true);                                   /* текущий — в резервную копию */
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -14236,6 +14253,32 @@ function renderAbout(){
     </div>
     ${albumMetricsBlock()}
     ${renderThemeBlock()}
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,120,120,.14),rgba(180,40,40,.04));border:1px solid rgba(255,120,120,.32)">
+    </div>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(140,170,255,.16),rgba(70,110,220,.04));border:1px solid rgba(140,170,255,.34)">
+      <b style="color:#a9c2ff">Что нового в 4.4.9</b><br>
+      <b>«Вставить код» в приложении теперь работает.</b> Кнопка нажималась и молча
+      ничего не делала: приложение не показывало системные окна страницы, а без них
+      подтверждение «заменить прогресс?» само собой отвечало «Отмена». С тем же
+      корнем были сломаны «Сбросить прогресс», «Выйти из аккаунта», покупка темы и
+      очистка ставки. Окна включены, а замена прогресса спрашивает подтверждение
+      вторым нажатием — так одинаково в приложении и в браузере.
+    </div>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(110,231,160,.14),rgba(60,180,120,.04));border:1px solid rgba(110,231,160,.32)">
+      <b style="color:#8ff0b8">Что нового в 4.4.8</b><br>
+      <b>Вход по нику и паролю починен.</b> Игра сохраняла ник в базу одной пакетной
+      записью, а правила базы такую запись не пропускают. Пароль проверялся верно,
+      но следом игра пыталась записать ник, получала отказ и говорила «такого аккаунта
+      нет» — хотя аккаунт был на месте. Теперь ник и строка игрока пишутся обычными
+      запросами, а если что-то всё-таки не выйдет, игра покажет настоящую причину,
+      а не «нет ника». Вход не падает, даже если запись ника не удалась.
+    </div>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,120,120,.14),rgba(180,40,40,.04));border:1px solid rgba(255,120,120,.32)">
+      <b style="color:#ff8f9f">Что нового в 4.4.7</b><br>
+      <b>Рейтинг больше не затирает прогресс.</b> Пустой аккаунт (ноль кредитов и ни одного
+      предмета) не отправляется в таблицу: раньше вход в рейтинг на чистой установке записывал
+      туда ноль и место сгорало. Теперь игра прямо говорит, что отправлять нечего.
+    </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(110,231,160,.14),rgba(60,180,120,.04));border:1px solid rgba(110,231,160,.32)">
       <b style="color:#8ff0b8">Что нового в 4.4.6</b><br>
       <b>Прогресс можно сохранить и перенести.</b> В этом окне появился код сохранения:
@@ -15412,28 +15455,39 @@ async function rkAttach(nick, pass){
   let back = false;
   if(me.status === 200 && me.data && me.data.fields) back = true;
 
-  /* ник держим за этой учёткой */
-  const writes = [
-    { update: { name: `${FB_NAME}/nicks/${encodeURIComponent(key)}`,
-                fields: { uid: { stringValue: a.uid } } } }
-  ];
+  /* 4.4.8: раньше здесь был один batch-commit на две записи (nicks + players).
+     Правила Firestore его режут: commit приходит как замена документа целиком, без
+     маски полей, и проверка «набор полей не сузился» валит его с PERMISSION_DENIED.
+     А обычный PATCH с updateMask те же поля принимает. Из-за этого вход по нику и
+     паролю не проходил ни у кого: аутентификация уже состоялась, uid получен,
+     своя строка читается, а игра объявляла «такого аккаунта нет».
+     Пишем двумя PATCH; закрепление ника — мягкое, оно не должно валить вход. */
+  let nkErr = '';
+  const nk = await fbFetch(`${FB_ROOT}/nicks/${encodeURIComponent(key)}?updateMask.fieldPaths=uid`,
+    { method:'PATCH', headers:H, body: JSON.stringify({ fields: { uid: { stringValue: a.uid } } }) });
+  if(nk.status === 0) return { ok:false, net:false, err:'Нет связи с Firebase' };
+  if(nk.data && nk.data.error) nkErr = (nk.data.error.status || '') + ' ' + fbErr(nk.data);
+
   if(!back){
-    writes.push({ update: { name: `${FB_NAME}/players/${a.uid}`, fields: {
+    const mask = ['nick','nickKey','worth','bestDrop','opened','upOk','updatedAt']
+      .map(x => 'updateMask.fieldPaths=' + x).join('&');
+    const body = { fields: {
       nick: { stringValue: nick }, nickKey: { stringValue: key },
       worth: fbInt(Math.max(0, rkStats().worth)), bestDrop: fbInt(Math.max(0, rkStats().bestDrop)),
       opened: fbInt(rkStats().opened|0), upOk: fbInt(rkStats().upOk|0),
-      updatedAt: fbInt(Date.now()) } } });
+      updatedAt: fbInt(Date.now()) } };
+    const c = await fbFetch(`${FB_ROOT}/players/${a.uid}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
+    if(c.status === 0) return { ok:false, net:false, err:'Нет связи с Firebase' };
+    if(c.data && c.data.error){
+      const st = c.data.error.status || '';
+      if(st === 'PERMISSION_DENIED')
+        return { ok:false, net:true, err:'Firestore не принял запись строки игрока (правила)' };
+      if(st === 'ALREADY_EXISTS' || st === 'FAILED_PRECONDITION')
+        return { ok:false, net:true, err:'Этот ник уже занят другим игроком' };
+      return { ok:false, net:true, err:'Firebase: ' + fbErr(c.data) };
+    }
   }
-  const c = await fbFetch(`${FB_ROOT}:commit`, { method:'POST', headers:H, body: JSON.stringify({ writes }) });
-  if(c.status === 0) return { ok:false, net:false, err:'Нет связи с Firebase' };
-  if(c.data && c.data.error){
-    const st = c.data.error.status || '';
-    if(st === 'PERMISSION_DENIED')
-      return { ok:false, net:true, err:'Firestore не принял запись: проверьте правила (Rules → Publish)' };
-    if(st === 'ALREADY_EXISTS' || st === 'FAILED_PRECONDITION')
-      return { ok:false, net:true, err:'Этот ник уже занят другим игроком' };
-    return { ok:false, net:true, err:'Firebase: ' + fbErr(c.data) };
-  }
+  if(nkErr) rk.nkErr = nkErr;
   rk.net = true; rk.err = '';
   /* 3.5.0: витрина и хук профиля читают srt_account из localStorage.
      Без этой записи человек регистрировался, но профиль продолжал писать «войдите». */
@@ -15484,26 +15538,32 @@ async function fbCreatePlayer(nick){
   if(nk.status === 200 && nk.data.fields) return { ok:false, err:'Ник занят' };
   if(nk.status !== 404 && nk.status !== 200) return { ok:false, err:'Firebase ответил: ' + fbErr(nk.data) };
 
-  const body = { writes: [
-    { update: { name: `${FB_NAME}/nicks/${encodeURIComponent(key)}`,
-                fields: { uid: { stringValue: auth.uid } } } },
-    { update: { name: `${FB_NAME}/players/${auth.uid}`,
-                fields: {
-                  nick:      { stringValue: nick },
-                  nickKey:   { stringValue: key },
-                  worth:     fbInt(0),
-                  bestDrop:  fbInt(0),
-                  opened:    fbInt(0),
-                  upOk:      fbInt(0),
-                  updatedAt: fbInt(Date.now()) } } }
-  ]};
-  const c = await fbFetch(`${FB_ROOT}:commit`, { method:'POST', headers:H, body: JSON.stringify(body) });
-  if(c.status === 0 || c.net === false) return { net:false };
-  if(c.data.error){
+  /* 4.4.8: то же, что и во входе — batch-commit правила не пропускают, а PATCH с
+     маской проходит. Регистрация писала обе записи коммитом и падала так же. */
+  const nk2 = await fbFetch(`${FB_ROOT}/nicks/${encodeURIComponent(key)}?updateMask.fieldPaths=uid`,
+    { method:'PATCH', headers:H, body: JSON.stringify({ fields: { uid: { stringValue: auth.uid } } }) });
+  if(nk2.status === 0) return { net:false };
+  if(nk2.data && nk2.data.error && (nk2.data.error.status === 'PERMISSION_DENIED'))
+    return { ok:false, err:'Firestore не принял запись ника (правила базы)' };
+
+  const mask2 = ['nick','nickKey','worth','bestDrop','opened','upOk','updatedAt']
+    .map(x => 'updateMask.fieldPaths=' + x).join('&');
+  const body2 = { fields: {
+    nick:      { stringValue: nick },
+    nickKey:   { stringValue: key },
+    worth:     fbInt(0),
+    bestDrop:  fbInt(0),
+    opened:    fbInt(0),
+    upOk:      fbInt(0),
+    updatedAt: fbInt(Date.now()) } };
+  const c = await fbFetch(`${FB_ROOT}/players/${auth.uid}?${mask2}`,
+    { method:'PATCH', headers:H, body: JSON.stringify(body2) });
+  if(c.status === 0) return { net:false };
+  if(c.data && c.data.error){
     const st = c.data.error.status || '';
     if(st === 'ALREADY_EXISTS' || st === 'FAILED_PRECONDITION') return { ok:false, err:'Ник занят' };
     if(st === 'PERMISSION_DENIED')
-      return { ok:false, err:'Firestore не принял запись: не опубликованы правила (Rules → Publish)' };
+      return { ok:false, err:'Firestore не принял запись игрока (правила базы)' };
     return { ok:false, err:'Firebase ответил: ' + fbErr(c.data) };
   }
   return { ok:true, back:false, nick };
@@ -15615,6 +15675,15 @@ async function rkCreate(){
 async function rkSend(quiet){
   if(!rk.player || rk.busy) return;
   const s = rkStats();
+  /* 4.4.7: пустой аккаунт в таблицу не отправляем. Иначе вход в рейтинг на чистой
+     установке затирает строку игрока нулём: ровно это чуть не случилось при переходе
+     с версии 3.7, где прогресс живёт в другом приложении. У живого игрока worth
+     нулевым не бывает — на старте уже есть кредиты. */
+  if(!(s.worth > 0)){
+    rk.msg = 'Пустой аккаунт в таблицу не отправляю — сначала восстановите прогресс';
+    if(!quiet) renderRank(); else renderRankHero();
+    return;
+  }
   let r;
   try{ r = await fbSend(s); }
   catch(e){ r = { net:false }; }
@@ -16443,6 +16512,8 @@ window.__sr = {
   renderSlots, renderInv, switchTab, rollSkin,
   forceRoll(r){ /* для тестов */ return r; },
   get rank(){ return { player: rk.player, top: rk.top, rank: rk.rank, total: rk.total, msg: rk.msg, net: rk.net }; },
+  /* 4.4.7: тестовая ручка — «как будто игрок уже вошёл», без похода в Firebase */
+  rkFakePlayer(v){ rk.player = v; rk.busy = false; },
   rkOnOpen, rkSend, rkLoadTop, rkCreate, rkStats, renderRank, rkAttach, fbMyPlace, nickToMail,
   SFX, sfxMute, sfxIsMuted, FX, RAR, crateGunOf, crateSvg, casePoolOf, caseHasKnife, showWin
 };
@@ -19441,9 +19512,15 @@ window.__sr = {
           srtMsg('Аккаунта нет — пробую войти по нику в рейтинге…','#7fb4ff');
           Promise.resolve(srtSyncRank(n,p)).then(function(r){
             if(r && r.ok){ ok({name:n}); }
+            else if(r && r.err){
+              /* 4.4.8: показываем настоящую причину. Раньше любая беда с записью
+                 в Firebase выглядела как «такого ника нет» — и человек менял ник,
+                 пароль и устройство там, где дело было в правилах базы. */
+              srtMsg(r.err,'#ff8080');
+            }
             else { srtMsg('Такого аккаунта нет. Проверьте ник или нажмите «Регистрация».','#ffd27a'); }
-          }).catch(function(){
-            srtMsg('Такого аккаунта нет. Проверьте ник или нажмите «Регистрация».','#ffd27a');
+          }).catch(function(e){
+            srtMsg('Не удалось войти: '+((e&&e.message)||e),'#ff8080');
           });
           return;
         }
