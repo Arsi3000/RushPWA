@@ -1491,6 +1491,20 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .tir-gun-chip.on{color:#0b0f16;background:linear-gradient(180deg,#ffd166,#e0a52e);
   border-color:#ffd166;box-shadow:0 3px 12px -4px rgba(255,209,102,.8)}
 .tir-gun-chip:active{transform:scale(.97)}
+/* 4.4.6: перенос прогресса — код сохранения в «О игре» */
+.sx-card{margin-top:12px;padding:11px 12px;border-radius:12px;
+  background:linear-gradient(150deg,rgba(110,231,160,.13),rgba(60,180,120,.04));
+  border:1px solid rgba(110,231,160,.32)}
+.sx-h{font-weight:900;font-size:12.5px;color:#8ff0b8;margin-bottom:4px}
+.sx-t{font-size:11.5px;line-height:1.45;color:#93a0b8}
+.sx-row{display:flex;gap:7px;margin:9px 0 7px}
+.sx-b{flex:1 1 0;min-height:40px;font-size:12px;font-weight:800}
+.sx-area{width:100%;height:64px;resize:vertical;border-radius:9px;padding:8px 9px;
+  background:rgba(6,10,14,.72);border:1px solid rgba(255,255,255,.14);color:#cfe0f5;
+  font:600 10.5px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+.sx-area:focus{outline:none;border-color:rgba(110,231,160,.55)}
+.sx-msg{font-size:11px;font-weight:800;min-height:14px;margin-top:5px;color:#8ff0b8}
+.sx-msg.bad{color:#ff8f9f}
 .tirr-gun.awp{right:-22px;width:min(62%,280px)}
 .tirr-gun.usp{width:min(44%,190px)}
 
@@ -6318,7 +6332,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.4.5';
+const VERSION = '4.4.6';
 const BUILD   = '2026-11-05';
 const SAVE_KEY = 'skinrush_v1';
 let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
@@ -6520,10 +6534,13 @@ function normalizeState(s){
   if(!s.tirV3){ s.tirBest = 0; s.tirV3 = 1; }
   /* 4.4.5: косметика оружия в тире. Старым сейвам — Glock, как было до v2. */
   if(['glock','usp','awp'].indexOf(s.tirGun) < 0) s.tirGun = 'glock';
-  /* 4.4.5: шкала тира снова другая — с мультивыстрелом потолок 900, а не 750.
-     Старый рекорд в новой шкале занижен, сравнивать его нельзя: обнуляем один раз,
-     как делали при переходе на 3.0. Остальное (пыль, скины, награды) не трогаем. */
-  if(!s.tirV4){ s.tirBest = 0; s.tirV4 = 1; }
+  /* 4.4.6: рекорд тира НЕ обнуляем повторно. В 4.4.5 здесь стояло обнуление, и оно
+     било по живым игрокам: у них рекорд набран в шкале 750, а новая шкала только ШИРЕ
+     (900 при пяти центрах + мультивыстрел). Старые 750 в ней достижимы, значит честнее
+     сохранить рекорд и лишь подрезать его по новой верхней границе. Обнуление остаётся
+     только для сейвов до 4.4.1 — там была третья шкала (до 635) и сравнение нечестное,
+     это делает миграция tirV3 выше. */
+  if(s.tirV4 == null){ s.tirBest = Math.min(s.tirBest || 0, 900); s.tirV4 = 1; }
   if(!s.albGot || typeof s.albGot !== 'object' || Array.isArray(s.albGot)) s.albGot = {};
   /* 4.3.6: старые сейвы — восстанавливаем «что держал» из инвентаря и истории дропов */
   if(!s.albSeen || typeof s.albSeen !== 'object' || Array.isArray(s.albSeen)) s.albSeen = {};
@@ -6583,10 +6600,45 @@ function normalizeState(s){
   return s;
 }
 
+const BK_KEY = SAVE_KEY + '.bak';
+/* 4.4.6: резервная копия «на шаг назад». Держим в памяти строку последнего удачного
+   сохранения и перед каждой записью кладём её в .bak: восстановление тогда отдаёт
+   состояние предыдущего действия, а не недельной давности. Копия необязательна —
+   если на неё не хватило места, игру это не останавливает. */
+let lastGoodRaw = '';
+function saveBak(force){
+  try{
+    if(lastGoodRaw && lastGoodRaw.length > 40) localStorage.setItem(BK_KEY, lastGoodRaw);
+  }catch(e){}
+}
+/* поднять состояние из резервной копии. Возвращает true, если получилось */
+function loadBak(){
+  try{
+    const raw = localStorage.getItem(BK_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(!d || typeof d !== 'object') return false;
+    const norm = normalizeState(Object.assign({coins:0, inv:[], opened:0, xp:0, lvl:1}, d));
+    if(!norm) return false;
+    state = norm;
+    uidSeq = Math.max(1, state._uidNext || 1);
+    delete state._uidNext;
+    try{
+      const fixed = JSON.stringify(state);
+      localStorage.setItem(SAVE_KEY, fixed);
+      lastGoodRaw = fixed;
+    }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+
 function save(){
   try{
     state.ver = SAVE_VER;
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    const raw = JSON.stringify(state);
+    saveBak(false);              /* предыдущее удачное — в копию, до перезаписи */
+    localStorage.setItem(SAVE_KEY, raw);
+    lastGoodRaw = raw;
   }catch(e){
     /* квота кончилась или сторедж запрещён — говорим вслух, но игру не роняем */
     if(e && e.name === 'QuotaExceededError') toast('Не хватает места для сохранения — продайте часть скинов');
@@ -6622,11 +6674,125 @@ function load(){
       state._lostNotice = state._lostItems;
       delete state._lostItems;
     }
+    /* загруженное — заведомо целое: с него начинаем цепочку копий */
+    try{
+      lastGoodRaw = localStorage.getItem(SAVE_KEY) || '';
+      if(!localStorage.getItem(BK_KEY) && lastGoodRaw) localStorage.setItem(BK_KEY, lastGoodRaw);
+    }catch(_){}
   }catch(e){
-    /* сейв битый: не теряем его, а откладываем в сторону и играем с чистого */
+    /* сейв битый: откладываем его в сторону и пробуем поднять резервную копию.
+       4.4.6: раньше игра в этом случае начиналась с чистого листа — для игрока
+       с прокачкой это потеря всего. Теперь сначала .bak, и только потом ноль. */
     try{ localStorage.setItem(SAVE_KEY + '.broken', localStorage.getItem(SAVE_KEY) || ''); }catch(_){}
     try{ localStorage.removeItem(SAVE_KEY); }catch(_){}
+    if(loadBak()){
+      try{ toast('Сохранение было повреждено — поднял резервную копию'); }catch(_){}
+    }
   }
+}
+
+/* ---------- 4.4.6: код сохранения для переноса между устройствами ----------
+   Формат: одна строка «Z<base64>» (сжато deflate-raw) или «J<base64>» (без сжатия,
+   если браузер не умеет CompressionStream). Префикс нужен, чтобы распаковка
+   понимала, что перед ней, и не падала на старой версии WebView.
+   Внутрь кладём только игровое состояние: ни токена, ни ника — их переносить нельзя,
+   иначе на новом устройстве вы бы вошли в чужую учётку рейтинга. */
+function b64enc(bytes){
+  let out = '';
+  const CH = 0x8000;
+  for(let i = 0; i < bytes.length; i += CH){
+    out += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+  }
+  return btoa(out);
+}
+function b64dec(str){
+  const bin = atob(str);
+  const out = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function savePack(){
+  const json = JSON.stringify(state);
+  if(window.CompressionStream && window.Response && window.Blob){
+    try{
+      const cs = new CompressionStream('deflate-raw');
+      const buf = await new Response(new Blob([json]).stream().pipeThrough(cs)).arrayBuffer();
+      return 'Z' + b64enc(new Uint8Array(buf));
+    }catch(e){}
+  }
+  return 'J' + b64enc(new TextEncoder().encode(json));
+}
+async function saveUnpack(code){
+  const c = String(code || '').replace(/\s+/g, '');
+  if(c.length < 20) throw new Error('код слишком короткий');
+  const tag = c[0], body = c.slice(1);
+  const bytes = b64dec(body);
+  let json;
+  if(tag === 'Z'){
+    if(!window.DecompressionStream) throw new Error('этот браузер не умеет распаковывать');
+    const ds = new DecompressionStream('deflate-raw');
+    const buf = await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+    json = new TextDecoder().decode(buf);
+  } else if(tag === 'J'){
+    json = new TextDecoder().decode(bytes);
+  } else {
+    throw new Error('неизвестный формат кода');
+  }
+  const d = JSON.parse(json);
+  if(!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('в коде не сохранение');
+  if(typeof d.coins !== 'number' || !Array.isArray(d.inv)) throw new Error('в коде не сохранение');
+  return d;
+}
+/* применить распакованное: пишем в стор и перезапускаем игру — так гарантированно
+   пересоберётся всё, что кэшировалось в памяти (uidSeq, отрисовки, таймеры) */
+async function saveApply(){
+  const area = $('#sxArea'), msg = $('#sxMsg');
+  const code = area ? area.value : '';
+  if(!code || !code.trim()){ sxSay('Вставьте код в поле', true); return; }
+  let d;
+  try{ d = await saveUnpack(code); }
+  catch(e){ sxSay('Не получилось: ' + (e && e.message || e), true); return; }
+  const invN = d.inv.length, coins = d.coins | 0;
+  if(!confirm('Заменить текущий прогресс?\n\nВ коде: ' + coins.toLocaleString('ru-RU') +
+      ' кредитов, предметов — ' + invN + '.\nТекущий прогресс будет потерян.')) return;
+  try{
+    saveBak(true);                                   /* текущий — в резервную копию */
+    localStorage.setItem(SAVE_KEY, JSON.stringify(d));
+  }catch(e){ sxSay('Не удалось записать: ' + (e && e.message || e), true); return; }
+  sxSay('Готово, перезапускаю…', false);
+  setTimeout(function(){ try{ location.reload(); }catch(e){} }, 400);
+}
+function sxSay(text, bad){
+  const msg = $('#sxMsg');
+  if(!msg) return;
+  msg.textContent = text || '';
+  msg.classList.toggle('bad', !!bad);
+}
+function sxBind(){
+  const ex = $('#sxExport'), im = $('#sxImport'), area = $('#sxArea');
+  if(ex) ex.addEventListener('click', async function(){
+    sxSay('Собираю код…', false);
+    let code = '';
+    try{ code = await savePack(); }
+    catch(e){ sxSay('Не получилось: ' + (e && e.message || e), true); return; }
+    if(area){
+      area.value = code;
+      try{ area.focus(); area.select(); }catch(e){}
+    }
+    /* копируем сами: на телефоне выделение руками — это пытка */
+    let copied = false;
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(code); copied = true;
+      }
+    }catch(e){}
+    if(!copied){
+      try{ copied = !!(area && document.execCommand('copy')); }catch(e){}
+    }
+    sxSay(copied ? 'Код скопирован · ' + code.length.toLocaleString('ru-RU') + ' символов'
+                 : 'Код в поле — выделите и скопируйте вручную', !copied);
+  });
+  if(im) im.addEventListener('click', saveApply);
 }
 
 /* =========================================================
@@ -14070,6 +14236,15 @@ function renderAbout(){
     </div>
     ${albumMetricsBlock()}
     ${renderThemeBlock()}
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(110,231,160,.14),rgba(60,180,120,.04));border:1px solid rgba(110,231,160,.32)">
+      <b style="color:#8ff0b8">Что нового в 4.4.6</b><br>
+      <b>Прогресс можно сохранить и перенести.</b> В этом окне появился код сохранения:
+      «Скопировать код» — получаете строку, «Вставить код» — восстанавливаете из неё игру
+      на другом телефоне или после переустановки. Рядом с основным сохранением игра теперь
+      держит резервную копию и поднимает её сама, если файл сохранения пострадал.
+      Рекорд тира больше не обнуляется при обновлении: старая шкала 750 в новой (900) честно
+      достижима, поэтому ваш рекорд остаётся вашим.
+    </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,209,102,.16),rgba(255,160,40,.04));border:1px solid rgba(255,209,102,.34)">
       <b style="color:#ffd166">Что нового в 4.4.5</b><br>
       <b>Тир 2.0.</b> Три попадания подряд заряжают пулю: следующая сносит две карточки.
@@ -14504,6 +14679,18 @@ function renderAbout(){
 
       </div>
     </div>
+    <div class="sx-card">
+      <div class="sx-h">Перенос прогресса</div>
+      <div class="sx-t">Код сохранения переносит игру между устройствами и служит копией на чёрный день.
+        Он длинный — это нормально: копируйте целиком.</div>
+      <div class="sx-row">
+        <button class="btn-ghost sx-b" id="sxExport" type="button">Скопировать код</button>
+        <button class="btn-ghost sx-b" id="sxImport" type="button">Вставить код</button>
+      </div>
+      <textarea id="sxArea" class="sx-area" spellcheck="false" autocomplete="off"
+        placeholder="Сюда вставляется код сохранения"></textarea>
+      <div class="sx-msg" id="sxMsg"></div>
+    </div>
     <button class="btn-ghost" id="btnReset" style="width:100%;margin-top:16px;color:#ff8f9f;border-color:rgba(255,110,130,.35)">
       Сбросить прогресс
     </button>`;
@@ -14515,6 +14702,7 @@ function renderAbout(){
     sbnd.addEventListener('click', (e)=>{ e.stopPropagation(); sfxMute(!sfxMuted); paintSnd(); });
   }
   themeBind();
+  sxBind();
   $('#btnReset').addEventListener('click', ()=>{
     if(!confirm('Сбросить баланс, инвентарь и статистику?\n\nОстанутся: достижения, открытые записи и купленная тема — они «вечные».\nОтменить сброс будет нельзя.')) return;
     try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
@@ -16238,6 +16426,8 @@ window.__sr = {
   spinUpgrade, openBoss, bossTick, renderBoss, bossUnlocked, FEED, PRICE_HIST, renderLuck,
   openSniper, tirFire, tirShootAt, tirEnd, openBattle, batGo, batLeft, openTower, renderTower, startTowerGame, towerLeft, TOWER_MULTS, TOWER_CHANCES,
   tirReward, TIR_STREAK, TIR_GUNS, tirRenderGuns, tirRenderGun, tirGunCfg, tirSpawn, get tirState(){ return tirS; },
+  /* 4.4.6 перенос прогресса */
+  savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
   openCraft, craftDo, renderCraft, renderMiniModes,
   /* 3.11.0 забег */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
