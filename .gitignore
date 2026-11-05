@@ -1,0 +1,4 @@
+*.apk
+!skin-rush.apk
+*.idsig
+app/assets/index.html
