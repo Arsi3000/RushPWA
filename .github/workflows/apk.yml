@@ -1,0 +1,119 @@
+name: Сборка APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'app/**'
+      - 'tools/**'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+    inputs:
+      html:
+        description: 'Путь к HTML в репозитории'
+        required: false
+        default: 'index.html'
+      version:
+        description: 'Версия (пусто = взять из const VERSION в HTML)'
+        required: false
+        default: ''
+      vcode:
+        description: 'versionCode (пусто = посчитать из версии)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Собрать APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Забрать код
+        uses: actions/checkout@v4
+
+      - name: Проверить, что HTML на месте
+        id: check
+        run: |
+          HTML="${{ github.event.inputs.html || 'index.html' }}"
+          if [ ! -f "$HTML" ]; then echo "Нет файла $HTML"; exit 1; fi
+          echo "html=$HTML" >> "$GITHUB_OUTPUT"
+          echo "md5=$(md5sum "$HTML" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          grep -oE "const VERSION *= *'[0-9]+\.[0-9]+\.[0-9]+'" "$HTML" | head -1 || true
+
+      - name: Подготовить Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/build-tools" | tail -3
+          ls "$ANDROID_HOME/platforms" | grep android-34
+
+      - name: Восстановить ключ подписи
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.KS_PASS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::error::Нет секрета KEYSTORE_B64 — подписать нечем. Добавь его в Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/skinrush.keystore"
+          printf '%s' "${KS_PASS:-}" > "$RUNNER_TEMP/ks.pass"
+          echo "Ключ восстановлен: $(stat -c%s "$RUNNER_TEMP/skinrush.keystore") байт"
+
+      - name: Собрать
+        id: build
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          KEYSTORE: ${{ runner.temp }}/skinrush.keystore
+          KS_PASS_FILE: ${{ runner.temp }}/ks.pass
+          KS_ALIAS: ${{ secrets.KS_ALIAS || 'skinrush' }}
+        run: |
+          set -euo pipefail
+          VER="${{ github.event.inputs.version || '' }}"
+          VC="${{ github.event.inputs.vcode || '' }}"
+          OUT="$RUNNER_TEMP/out.apk"
+          ./tools/build-apk.sh "${{ steps.check.outputs.html }}" "$VER" "$VC" "$OUT" | tee build.log
+          NAME=$(grep -oE '^версия: [0-9.]+' build.log | awk '{print $2}')
+          echo "version=$NAME" >> "$GITHUB_OUTPUT"
+          cp "$OUT" "skin-rush-$NAME.apk"
+          cp "$OUT" "skin-rush.apk"
+          echo "md5_apk=$(md5sum skin-rush-$NAME.apk | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Отдать как артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ steps.build.outputs.version }}
+          path: |
+            skin-rush-${{ steps.build.outputs.version }}.apk
+          retention-days: 30
+
+      - name: Опубликовать релиз
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.build.outputs.version }}
+          name: SKIN RUSH ${{ steps.build.outputs.version }}
+          body: |
+            APK собран автоматически из `${{ steps.check.outputs.html }}`.
+
+            - версия: **${{ steps.build.outputs.version }}**
+            - md5 HTML внутри APK: `${{ steps.check.outputs.md5 }}`
+            - md5 APK: `${{ steps.build.outputs.md5_apk }}`
+
+            Постоянная ссылка на последний APK:
+            `https://github.com/${{ github.repository }}/releases/latest/download/skin-rush.apk`
+          files: |
+            skin-rush-${{ steps.build.outputs.version }}.apk
+            skin-rush.apk
+          make_latest: true
+          fail_on_unmatched_files: true
+
+      - name: Итог
+        run: |
+          echo "### Готово" >> "$GITHUB_STEP_SUMMARY"
+          echo "- версия: ${{ steps.build.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- APK: skin-rush-${{ steps.build.outputs.version }}.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ссылка: https://github.com/${{ github.repository }}/releases/latest/download/skin-rush.apk" >> "$GITHUB_STEP_SUMMARY"
