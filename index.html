@@ -242,6 +242,15 @@
   .rl-item svg{width:auto;height:auto;max-width:94px;max-height:58px;display:block}
   .rl-item .nm{font-size:10.5px;color:#9aa7c0;text-align:center;padding:0 4px;line-height:1.15;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  /* 4.6.0: характер кейса виден и в оформлении ленты */
+  .roulette[data-spin="rush"]{background:linear-gradient(180deg,#181d29,#0b0e14)}
+  .roulette[data-spin="rush"] .rl-mark{box-shadow:0 0 18px 2px rgba(var(--accent-rgb),.72)}
+  .roulette[data-spin="heavy"]{height:126px}
+  .roulette[data-spin="heavy"] .rl-item{width:112px}
+  .roulette[data-spin="storm"]::before,.roulette[data-spin="storm"]::after{width:96px}
+  .roulette[data-spin="storm"] .rl-item{border-bottom-width:4px}
+  .rl-spin-cap{margin-top:6px;text-align:center;font-size:10.5px;letter-spacing:.06em;
+    text-transform:uppercase;color:#6f7d93;font-weight:800}
   .rl-mark{
     position:absolute;left:50%;top:0;bottom:0;width:2px;z-index:4;transform:translateX(-1px);
     background:linear-gradient(180deg,rgba(var(--accent-rgb),.95),rgba(var(--accent-rgb),.45));
@@ -825,6 +834,64 @@ body.theme-legend header::after{
 }
 body.theme-legend header{position:relative;overflow:hidden}
 @keyframes shimmer{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+
+/* ===== 4.6.0: три платные темы вместо одной.
+   Сделаны «в духе CS»: золото, огонь с углями, дракон со сталью.
+   Наследуют механику золотой — меняются только цвета и узор фона. ===== */
+body.theme-inferno{
+  --accent:#ff7a2f; --accent2:#ffc48a; --accent-deep:#a83a00;
+  --accent-rgb:255,122,47; --accent2-rgb:255,196,138;
+  --bg1:#120705; --bg2:#2a0d05;
+  --pat:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><g fill='none' stroke='%23ff7a2f' stroke-opacity='0.10' stroke-width='1'><path d='M0 54q18-26 36-8t36-14'/><path d='M0 18q18 26 36 8t36 14'/></g><g fill='%23ffc48a' fill-opacity='0.14'><circle cx='12' cy='30' r='1.2'/><circle cx='52' cy='42' r='1.4'/></g></svg>");
+  background-image:
+    radial-gradient(900px 520px at 50% 118%, rgba(255,90,20,.26), transparent 62%),
+    radial-gradient(760px 460px at 10% -6%, rgba(255,150,60,.14), transparent 60%),
+    var(--pat);
+}
+body.theme-inferno .logo s{ text-shadow:0 0 18px rgba(255,122,47,.8) }
+body.theme-inferno .card, body.theme-inferno .case{
+  box-shadow:0 0 0 1px rgba(255,122,47,.18), 0 18px 40px -26px rgba(255,110,30,.9);
+}
+body.theme-inferno header{position:relative;overflow:hidden}
+body.theme-inferno header::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,160,80,.16) 48%,transparent 66%);
+  animation:shimmer 4.2s linear infinite;
+}
+body.theme-dragon{
+  --accent:#4fe6c8; --accent2:#b9fff1; --accent-deep:#0f7f6b;
+  --accent-rgb:79,230,200; --accent2-rgb:185,255,241;
+  --bg1:#050d12; --bg2:#082730;
+  --pat:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='%234fe6c8' stroke-opacity='0.09' stroke-width='1'><path d='M0 40q20-24 40 0t40 0'/><path d='M0 60q20-24 40 0t40 0'/><path d='M0 20q20-24 40 0t40 0'/></g><g fill='%23ffd76a' fill-opacity='0.16'><circle cx='20' cy='40' r='1.3'/><circle cx='60' cy='20' r='1.5'/><circle cx='60' cy='60' r='1.3'/></g></svg>");
+  background-image:
+    radial-gradient(1000px 640px at 50% -10%, rgba(79,230,200,.18), transparent 62%),
+    radial-gradient(900px 600px at 88% 110%, rgba(255,215,106,.12), transparent 60%),
+    var(--pat);
+}
+body.theme-dragon .logo s{ text-shadow:0 0 18px rgba(79,230,200,.8) }
+body.theme-dragon .card, body.theme-dragon .case{
+  box-shadow:0 0 0 1px rgba(79,230,200,.18), 0 18px 40px -26px rgba(30,220,190,.9);
+}
+body.theme-dragon header{position:relative;overflow:hidden}
+body.theme-dragon header::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 30%,rgba(140,255,235,.13) 48%,transparent 66%);
+  animation:shimmer 6.5s linear infinite;
+}
+/* карточки платных тем в витрине оформления */
+.thm-prem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.thm-pt{padding:9px 8px;border-radius:12px;cursor:pointer;text-align:center;transition:.15s;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#dbe7fb;
+  font:inherit;font-size:11px;font-weight:800;line-height:1.25}
+.thm-pt:hover{transform:translateY(-1px)}
+.thm-pt b{display:block;font-size:12px;margin-bottom:2px}
+.thm-pt small{display:block;font-size:10px;font-weight:700;opacity:.8;margin-top:2px}
+.thm-pt.on{box-shadow:0 0 0 2px currentColor inset}
+.thm-pt .thm-dot{display:block;height:26px;border-radius:8px;margin-bottom:6px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+.thm-pt.p0{color:#ffd76a} .thm-pt.p0 .thm-dot{background:linear-gradient(150deg,#ffd76a,#a87800 60%,#120d02)}
+.thm-pt.p1{color:#ff9a5a} .thm-pt.p1 .thm-dot{background:linear-gradient(150deg,#ff9a5a,#c33a00 60%,#160603)}
+.thm-pt.p2{color:#6ff0d6} .thm-pt.p2 .thm-dot{background:linear-gradient(150deg,#6ff0d6,#0f7f6b 55%,#ffd76a)}
 
 /* ---------- блок выбора оформления ---------- */
 .thm{display:grid;gap:10px;margin-top:4px}
@@ -1524,18 +1591,20 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .tir-scene.scope .tirr-world{width:250%;height:172%}
 .tirr-scope{position:absolute;inset:0;z-index:11;pointer-events:none;display:none}
 .tir-scene.scope .tirr-scope{display:block}
-.tirr-scope-hole{position:absolute;left:50%;top:50%;width:min(64%,300px);aspect-ratio:1/1;
+.tirr-scope-hole{position:absolute;left:50%;top:50%;
+  width:min(58%, 300px, 46vh);aspect-ratio:1/1;
   transform:translate(-50%,-50%);border-radius:50%;
   box-shadow:0 0 0 100vmax rgba(2,3,5,.988), inset 0 0 36px 12px rgba(0,0,0,.9);
   border:2px solid rgba(0,0,0,.95);transition:transform .07s ease-out}
 .tirr-scope.kick .tirr-scope-hole{transform:translate(-50%,-50%) scale(1.04)}
-.tirr-reticle{position:absolute;left:50%;top:50%;width:min(64%,300px);aspect-ratio:1/1;
+.tirr-reticle{position:absolute;left:50%;top:50%;
+  width:min(58%, 300px, 46vh);aspect-ratio:1/1;
   transform:translate(-50%,-50%);color:#7dff9b;opacity:.88;
   filter:drop-shadow(0 0 3px rgba(90,255,140,.55))}
 .tirr-reticle svg{width:100%;height:100%;display:block}
-.tirr-scope-cap{position:absolute;left:50%;top:calc(50% - min(32%,150px) - 16px);transform:translate(-50%,-50%);
+.tirr-scope-cap{position:absolute;left:50%;top:calc(50% + min(29%, 150px, 23vh) - 12px);transform:translate(-50%,-50%);
   font:800 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;color:rgba(125,255,155,.6);text-transform:uppercase}
-.tirr-mini{position:absolute;right:7px;top:42px;width:70px;height:54px;z-index:13;display:none;
+.tirr-mini{position:absolute;right:7px;top:38px;width:70px;height:54px;z-index:13;display:none;
   border:1px solid rgba(125,255,155,.34);background:rgba(3,7,5,.62);border-radius:6px;overflow:hidden;
   box-shadow:0 3px 12px -4px rgba(0,0,0,.9)}
 .tir-scene.scope .tirr-mini{display:block}
@@ -1543,8 +1612,8 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   background:#8ff0b8;box-shadow:0 0 4px rgba(143,240,184,.85)}
 .tirr-mini i.decoy{background:#7a8494;box-shadow:none}
 .tirr-mini .vp{position:absolute;border:1px solid rgba(255,255,255,.5);border-radius:2px}
-.tirr-fire{position:absolute;right:10px;bottom:calc(12% + 6px);z-index:14;display:none;
-  width:76px;height:76px;border-radius:50%;border:2px solid rgba(125,255,155,.6);
+.tirr-fire{position:absolute;right:10px;bottom:8px;z-index:14;display:none;
+  width:64px;height:64px;border-radius:50%;border:2px solid rgba(125,255,155,.6);
   background:radial-gradient(circle at 50% 38%,rgba(40,80,50,.95),rgba(8,16,10,.95));
   color:#c9ffd8;font:900 12px/1 system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;
   box-shadow:0 6px 18px -6px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.18);
@@ -1552,6 +1621,16 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .tir-scene.scope .tirr-fire{display:flex;align-items:center;justify-content:center}
 .tirr-fire:active{transform:scale(.95)}
 .tirr-fire.cool{opacity:.42}
+/* узкие экраны: мини-карта жмётся в угол, подпись «AWP · 6×» убираем —
+   на 320 px круг шире и они наезжали на сетку */
+@media (max-width: 360px){
+  /* 4.5.2: сцена на узком экране стала ниже (в подвале появилась кнопка тренировки),
+     и «ОГОНЬ» в правом нижнем углу задевал круг — жмём круг ещё на 4 % */
+  .tirr-scope-hole, .tirr-reticle{width:min(54%, 300px, 44vh)}
+  .tirr-mini{width:56px;height:44px;right:4px;top:6px}
+  .tirr-scope-cap{display:none}
+  .tirr-fire{width:58px;height:58px;font-size:11px}
+}
 .tirr-reload{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);z-index:14;display:none;
   width:110px;height:3px;border-radius:2px;background:rgba(255,255,255,.16);overflow:hidden}
 .tirr-reload.on{display:block}
@@ -1569,6 +1648,11 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 
 .tir-foot{flex:0 0 auto;padding:8px 12px calc(10px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.07)}
+.tir-train{display:block;width:100%;margin:6px 0 2px;padding:8px 10px;border-radius:10px;cursor:pointer;
+  background:rgba(255,209,102,.08);border:1px dashed rgba(255,209,102,.45);color:#ffd894;
+  font:inherit;font-size:11px;font-weight:700;letter-spacing:.02em;transition:.15s}
+.tir-train:active{background:rgba(255,209,102,.18)}
+.tir-train.hide{display:none}
 .tir-name{text-align:center;font-size:11.5px;color:var(--accent);min-height:15px;font-weight:700}
 .tir-res{text-align:center;font-weight:800;font-size:12.5px;min-height:16px}
 
@@ -1776,16 +1860,16 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
    ========================================================= */
 [data-rarity]{--rar-line:rgba(139,147,167,.45);--rar-w:1px;--rar-glow:0 0 0 0 transparent;--rar-pat:none;--rar-pulse:none}
 [data-rarity="common"]{--rar-line:rgba(139,147,167,.42)}
-[data-rarity="uncommon"]{--rar-line:rgba(74,163,255,.55);--rar-glow:0 0 10px -4px rgba(74,163,255,.65);
+[data-rarity="uncommon"]{--rar-line:rgba(74,163,255,.55);--rar-glow:0 0 12px -3px rgba(74,163,255,.72);
   --rar-pat:repeating-linear-gradient(45deg,transparent 0 6px,rgba(74,163,255,.05) 6px 7px)}
-[data-rarity="rare"]{--rar-line:rgba(169,112,255,.65);--rar-glow:0 0 16px -5px rgba(169,112,255,.75);
+[data-rarity="rare"]{--rar-line:rgba(169,112,255,.65);--rar-glow:0 0 18px -4px rgba(169,112,255,.82);
   --rar-pat:radial-gradient(circle,rgba(169,112,255,.10) 1px,transparent 1.5px);}
-[data-rarity="epic"]{--rar-line:rgba(255,95,162,.75);--rar-w:1.5px;--rar-glow:0 0 22px -7px rgba(255,95,162,.8);
+[data-rarity="epic"]{--rar-line:rgba(255,95,162,.75);--rar-w:1.5px;--rar-glow:0 0 24px -6px rgba(255,95,162,.86);
   --rar-pat:repeating-linear-gradient(115deg,transparent 0 12px,rgba(255,95,162,.06) 12px 13px)}
-[data-rarity="legend"]{--rar-line:rgba(255,176,46,.85);--rar-w:2px;--rar-glow:0 0 30px -9px rgba(255,176,46,.9);
+[data-rarity="legend"]{--rar-line:rgba(255,176,46,.85);--rar-w:2px;--rar-glow:0 0 32px -8px rgba(255,176,46,.95);
   --rar-pat:repeating-linear-gradient(60deg,transparent 0 10px,rgba(255,176,46,.07) 10px 11px)}
 [data-rarity="myth"]{--rar-line:rgba(255,77,77,.95);--rar-w:2px;
-  --rar-glow:0 0 40px -10px rgba(255,77,77,.95);
+  --rar-glow:0 0 44px -9px rgba(255,77,77,1);
   --rar-pat:repeating-linear-gradient(115deg,transparent 0 8px,rgba(255,77,77,.08) 8px 10px);
   --rar-pulse:rarityBreathe 2.6s ease-in-out infinite}
 @keyframes rarityBreathe{0%,100%{opacity:1}50%{opacity:.82}}
@@ -3495,12 +3579,20 @@ header.hud .ver { display: none !important; }
   #srtEntry > div{padding-top:14px !important; padding-bottom:14px !important}
 }
 
-/* ===== 4.5.0: подсветка PNG-арта цветом редкости =====
-   Вектор рисовался в палитре скина и «цвел» сам, а фотография — просто фотография,
-   и в карточке цвет читался только по рамке. Здесь цвет редкости возвращается
-   свечением вокруг ствола и мягким пятном под ним. Правило стоит в конце таблицы
-   намеренно: выше по файлу есть старое .weapon-img{filter:...}, и оно перебивало. */
-.card .gwrap, .slot, #winCard .art, .craft-it .art, .run-piece, .rl-item{position:relative}
+/* ===== 4.5.1: подсветка PNG-арта цветом редкости — БЕЗ прямых линий =====
+   Первая версия (4.5.0) красила так: цветной drop-shadow прямо на <img> плюс пятно
+   radial-gradient в ::before у контейнера. На телефоне это дало ровно то, чего нельзя:
+   прямоугольный ореол вокруг ствола и прямые полосы в стороны от карточки.
+   Причины две, обе известные:
+     1) drop-shadow с большим радиусом на большой картинке WebView рисует в текстуре
+        по границам элемента — на краях получается резкая линия;
+     2) ::before стоял внутри .gwrap / .art, а у них overflow:hidden (арт не должен
+        вылезать за карточку) — пятно обрезалось ровно по прямоугольнику.
+   Теперь свет даёт только рамка карточки: box-shadow с --rar-glow (он уже был по
+   data-rarity и обрезается аккуратно, повторяя border-radius), а под стволом лежит
+   тонкая цветная «полка» — linear-gradient с прозрачными краями, ей обрезка не мешает.
+   Яркость ниже: тень мягкая, без второго цветного слоя. */
+.card .gwrap, .craft-it .art, #winCard .art{position:relative}
 .card .gwrap .weapon-img,
 .slot .weapon-img,
 #winCard .art .weapon-img,
@@ -3508,15 +3600,11 @@ header.hud .ver { display: none !important; }
 .run-piece .weapon-img,
 .rl-item .weapon-img,
 .bat-cell .weapon-img{
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.6))
-          drop-shadow(0 0 8px var(--c, var(--rar-line, #8b93a7)));
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,.55));
+  position:relative; z-index:1;
 }
-.card .gwrap::before, .craft-it .art::before, #winCard .art::before{
-  content:'';position:absolute;inset:-5px;border-radius:10px;pointer-events:none;z-index:0;
-  background:radial-gradient(circle at 50% 55%, var(--c, var(--rar-line, #8b93a7)), transparent 68%);
-  opacity:.22;
-}
-.card .gwrap > *, .craft-it .art > *, #winCard .art > *{position:relative;z-index:1}
+/* Полку и цветную тень убрал совсем: на телефоне любая горизонтальная градиентная
+   полоса под стволом читалась как «прямая линия». Цвет даёт только рамка карточки. */
 </style>
 <style id="albumCSS">
 /* ===== 4.3.6 · альбом «Коллекции» (вёрстка по прототипу человека) ===== */
@@ -3801,6 +3889,9 @@ header.hud .ver { display: none !important; }
         </button>
       </div>
 
+      <!-- 4.6.0: музыка вкл/выкл. Отдельно от звука: щелчки могут быть нужны без трека -->
+      <button class="hud-cell" id="btnMus" title="Музыка вкл/выкл" style="flex:0 0 auto">🎵</button>
+
       <!-- НОВАЯ КНОПКА ДНЕВНИКА -->
       <button class="hud-cell" id="btnDiary" title="Дневник игрока" style="flex:0 0 auto; color: #ffb02e;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
@@ -3949,13 +4040,12 @@ header.hud .ver { display: none !important; }
         <div class="wg-n" id="wgNote">Открой 15 платных кейсов за неделю — гарантированный легендарный скин.</div>
       </div>
       <div class="best-drop" id="bestDrop"></div>
-      <div class="hint" id="luckTickHint" hidden style="margin-top:6px;color:#a9d8b0"></div>
       <div class="luck" id="luckBar">
         <div class="row"><span>До гарантированного эпика</span><b id="luckNum">0 / 30</b></div>
         <div class="track"><div class="fill" id="luckFill"></div></div>
       </div>
       <div class="rl-wrap">
-        <div class="roulette">
+        <div class="roulette" id="rlFrame">
           <div class="rl-track" id="rlTrack"></div>
           <div class="rl-mark"></div>
       <!-- Кнопка пропуска прокрутки -->
@@ -3968,6 +4058,7 @@ header.hud .ver { display: none !important; }
       </button>
 
         </div>
+        <div class="rl-spin-cap" id="rlSpinCap"></div>
       </div>
 
       <div class="drop-stats" id="dropStats"></div>
@@ -4114,9 +4205,7 @@ header.hud .ver { display: none !important; }
             <button data-f="legend">Легендарные</button>
             <button data-f="myth">Мифические</button>
           </div>
-          <div class="inv-bulk-row">
-            <button class="inv-bulk-toggle" id="invBulkBtn">✏️ Выбрать</button>
-          </div>
+
         </div>
       </div>
       <div class="grid" id="invGrid"></div>
@@ -4298,7 +4387,7 @@ header.hud .ver { display: none !important; }
     <button class="mini-card" id="openSniperTrial">
       <span class="mini-ic">🎯</span>
       <span class="mini-t">Тир · стрельба по карточкам</span>
-      <span class="mini-d" id="snipLeft">2 сессии в день · 5 выстрелов · 20 секунд · центр скина — 150</span>
+      <span class="mini-d" id="snipLeft">2 сессии в день · 5 выстрелов · 18 секунд · очки 150–300 по редкости</span>
     </button>
     <button class="mini-card" id="openBatTrial">
       <span class="mini-ic">🎰</span>
@@ -4678,7 +4767,7 @@ header.hud .ver { display: none !important; }
       <div class="tirr-cross" id="tirrCross"><s></s><i></i><b></b><b></b><b></b><b></b></div>
       <div class="tirr-hud">
         <div class="tirr-pill"><b id="tirBullets">5</b><span>пули</span></div>
-        <div class="tirr-pill" id="tirTimerPill"><b id="tirTimer">20.0</b><span>сек</span></div>
+        <div class="tirr-pill" id="tirTimerPill"><b id="tirTimer">18.0</b><span>сек</span></div>
         <div class="tirr-pill"><b id="tirScoreS">0</b><span>попад.</span></div>
         <div class="tirr-pill" id="tirStreakPill"><b id="tirStreak">0</b><span>серия</span></div>
       </div>
@@ -4687,7 +4776,8 @@ header.hud .ver { display: none !important; }
 
     <div class="tir-foot">
       <div class="tir-guns" id="tirGuns"></div>
-      <div class="tir-name" id="tirName">Пять выстрелов, двадцать секунд</div>
+      <button class="tir-train" id="tirTrainBtn" type="button">🎓 Тренировка · без наград и без траты сессии</button>
+      <div class="tir-name" id="tirName">Пять выстрелов, восемнадцать секунд</div>
       <div class="tir-res" id="snipRes"></div>
     </div>
   </div>
@@ -6202,6 +6292,15 @@ const VFIX = {
   'Бабочка | Янтарь':   15500
 };
 SKINS.forEach(s => { if(VFIX[s.n]) s.val = VFIX[s.n]; });
+
+/* ===== 4.6.0: УНИКАЛЬНЫЙ СКИН ГЛАВНОГО КВЕСТА =====
+   Награда за собранный набор АК-47. Три важных флага:
+   excl — не попадает ни в один кейс и не падает боссом (там свой пул),
+   uniq — не учитывается в альбоме (наборы остаются ровно 140, «без пересечений»),
+   ключ цены фиксирован, иначе пересчёт редкости сдвинул бы среднюю цену мифа. */
+SKINS.push({ id:'s140', n:'Призрак', w:'ak47', r:'myth', p:'void', pat:'marble',
+             excl:true, uniq:true, val:18000 });
+function uniqueSkin(){ return SKINS.filter(s => s.uniq)[0] || null; }
 RAR_ORDER.forEach(r => {
   const pool = SKINS.filter(s => s.r === r && !s.excl);
   if(!pool.length) return;
@@ -6433,7 +6532,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.5.0';
+const VERSION = '4.6.0';
 const BUILD   = '2026-11-05';
 const SAVE_KEY = 'skinrush_v1';
 let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
@@ -6461,7 +6560,10 @@ let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
              /* 4.4.0 карьера-нарратив */
              rank:'', chapters:0,
              /* 4.4.5 тир v2: рекорд по шкале 900 и косметика оружия */
-             tirBest:0, tirV3:1, tirGun:'glock', tirView:'scope'};
+             tirBest:0, tirV3:1, tirGun:'glock', tirView:'scope',
+             /* 4.5.1: дата последней тренировки. Первый заход в день открывается
+                тренировкой автоматически — без попытки, без наград. */
+             tirTrainDay:''};
 let uidSeq = 1;
 
 /* =========================================================
@@ -6505,13 +6607,18 @@ function rarTickUp(r){
   return (i >= 0 && i < cap) ? RAR_ORDER[i + 1] : r;
 }
 /* билеты удачи: за перерождение их больше, но не бесконечно */
-function luckTickPerDay(){ return Math.min(LUCK_TICK_MAX, LUCK_TICK_BASE + rebCount()); }
+function luckTickPerDay(){ return 0; }   /* 4.6.0: билеты удачи сняты с игры */
 function luckTickUsed(){
   const o = state.luckTick;
   return (o && o.date === todayKey()) ? (o.n | 0) : 0;
 }
 function luckTickLeft(){ return Math.max(0, luckTickPerDay() - luckTickUsed()); }
 function luckTickTake(){
+  /* 4.6.0: билеты удачи убраны — вызов ничего не делает */
+  toast('Билеты удачи убраны из игры');
+  return;
+}
+function luckOldTickTake(){
   if(luckTickLeft() <= 0){ toast('Билеты удачи на сегодня кончились'); return; }
   const d = todayKey();
   if(!state.luckTick || state.luckTick.date !== d) state.luckTick = {date: d, n: 0};
@@ -6523,6 +6630,10 @@ function luckTickTake(){
 }
 /* AFK: билет каждые 3 часа, копится до 8. Часы назад — не начисляем. */
 function afkAccrue(){
+  /* 4.6.0: начисление выключено — механика снята с игры */
+  return;
+}
+function afkOldAccrue(){
   const now = Date.now();
   const o = state.afk || (state.afk = {last: 0, n: 0});
   if(!o.last){ o.last = now; save(); return; }
@@ -6644,6 +6755,16 @@ function normalizeState(s){
      только для сейвов до 4.4.1 — там была третья шкала (до 635) и сравнение нечестное,
      это делает миграция tirV3 выше. */
   if(s.tirV4 == null){ s.tirBest = Math.min(s.tirBest || 0, 900); s.tirV4 = 1; }
+  /* ===== 4.6.0: снятые валюты =====
+     АФК-билеты и билеты удачи убраны. Накопленное не должно пропасть молча:
+     АФК-билет менял кейс до 400 кредитов, при отдаче 90 % это ≈ 360 — их и начисляем.
+     Билеты удачи (luckOn) сгорают: это был разовый буст, деньгами его не оценить. */
+  if(s.afk && (s.afk.n | 0) > 0){
+    s.coins = (s.coins | 0) + Math.round((s.afk.n | 0) * 360);
+    s.afk = { last: 0, n: 0 };
+    s.migV460 = 1;
+  }
+  if(s.luckOn){ s.luckOn = 0; }
   if(!s.albGot || typeof s.albGot !== 'object' || Array.isArray(s.albGot)) s.albGot = {};
   /* 4.3.6: старые сейвы — восстанавливаем «что держал» из инвентаря и истории дропов */
   if(!s.albSeen || typeof s.albSeen !== 'object' || Array.isArray(s.albSeen)) s.albSeen = {};
@@ -6951,9 +7072,127 @@ function sfxMute(on){
   }
   const b = document.getElementById('btnSnd');
   if(b){ b.textContent = sfxMuted ? '🔇' : '🔊'; b.classList.toggle('off', sfxMuted); }
+  /* 4.6.0: общий тумблер «звук» глушит и музыку — иначе «выключил звук» врёт */
+  if(musMaster && actx){
+    musMaster.gain.cancelScheduledValues(actx.currentTime);
+    musMaster.gain.setTargetAtTime((musOn && !sfxMuted) ? .9 : 0, actx.currentTime, .05);
+  }
+  if(sfxMuted) musStop(); else if(musOn && !musTimer) musSet(musWant || 'menu');
   return sfxMuted;
 }
 function sfxIsMuted(){ return sfxMuted; }
+
+/* =========================================================
+   4.6.0. МУЗЫКА — генеративный синтез, как и звуки: ни одного файла
+   Три сцены: меню (lo-fi пэд с арпеджио), рулетка (пульс с басом),
+   триумф (короткий стингер, возвращается в прежнюю сцену).
+   Почему синтез, а не mp3: APK должен работать офлайн, а три трека
+   в mp3 — это 6–9 МБ и отдельная возня с лицензиями.
+   ========================================================= */
+let musOn = true;
+try{ musOn = localStorage.getItem('skinrush.music') !== '0'; }catch(e){}
+let musMaster = null, musScene = '', musWant = '', musTimer = 0, musBeat = 0, musNext = 0;
+
+const MUS_SCENES = {
+  /* bpm, корень (полутона от A3), аккорды (сдвиги полутонов), форма волны, громкость пэда */
+  menu: { bpm: 74,  root: 0,  chords: [[0,3,7,10],[-4,0,3,7],[3,7,10,14],[-2,2,5,9]],
+          wave:'triangle', pad:.052, arp:.028, bass:.040, arpType:'sine' },
+  spin: { bpm: 128, root: 0,  chords: [[0,3,7],[-2,2,7],[3,7,10],[-4,0,7]],
+          wave:'sawtooth', pad:.030, arp:.030, bass:.055, arpType:'square' },
+  tower:{ bpm: 96,  root: -5, chords: [[0,3,7,10],[-3,1,5,8],[2,5,9,12],[-5,-1,2,7]],
+          wave:'triangle', pad:.048, arp:.026, bass:.038, arpType:'sine' }
+};
+
+function musCtx(){
+  const a = audio();
+  if(!a) return null;
+  if(!musMaster){
+    musMaster = a.createGain();
+    musMaster.gain.value = (musOn && !sfxMuted) ? .9 : 0;
+    musMaster.connect(a.destination);
+  }
+  return a;
+}
+function musNote(freq, t0, dur, type, vol){
+  const a = musCtx(); if(!a || !musMaster) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(.0001, t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(.0002, vol), t0 + .05);
+  g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+  o.connect(g); g.connect(musMaster);
+  o.start(t0); o.stop(t0 + dur + .04);
+}
+function musFreq(semis){ return 220 * Math.pow(2, semis / 12); }
+
+/* один такт сцены: пэд аккордом, бас, арпеджио */
+function musPlayBar(sc, bar){
+  const a = musCtx(); if(!a) return;
+  const beat = 60 / sc.bpm;              /* длительность доли, сек */
+  const chord = sc.chords[bar % sc.chords.length];
+  const t = a.currentTime + .05;
+  /* пэд — весь такт */
+  chord.forEach((sem, i) => musNote(musFreq(sc.root + sem), t, beat * 3.6, sc.wave, sc.pad * (i ? .8 : 1)));
+  /* бас — на первую и третью долю */
+  musNote(musFreq(sc.root + chord[0] - 12), t, beat * 1.4, 'triangle', sc.bass);
+  musNote(musFreq(sc.root + chord[0] - 12), t + beat * 2, beat * 1.4, 'triangle', sc.bass * .8);
+  /* арпеджио — по одной ноте на восьмую, с мягким смещением по такту */
+  for(let i = 0; i < 8; i++){
+    const sem = chord[(i + bar) % chord.length] + (i >= 4 ? 12 : 0);
+    musNote(musFreq(sc.root + sem), t + i * beat * .5, beat * .62, sc.arpType, sc.arp * (i % 2 ? .7 : 1));
+  }
+}
+function musTick(){
+  if(!musOn || sfxMuted || !musScene) return;
+  const sc = MUS_SCENES[musScene];
+  if(!sc) return;
+  const a = musCtx(); if(!a){ return; }
+  musPlayBar(sc, musBeat++);
+  const barMs = (60 / sc.bpm) * 4 * 1000;
+  musTimer = setTimeout(musTick, Math.max(600, barMs - 60));
+}
+function musStop(){
+  if(musTimer){ clearTimeout(musTimer); musTimer = 0; }
+  musScene = ''; musBeat = 0;
+}
+/* set('menu'|'spin'|'tower'|'') — переключить сцену; 'win' играется стингером */
+function musSet(name){
+  musWant = name || '';
+  if(!musOn){ musStop(); return; }
+  if(name === 'win'){ musStinger(); return; }
+  if(musScene === name){ return; }
+  musStop();
+  if(!name) return;
+  musScene = name; musBeat = 0;
+  /* небольшая задержка: смена сцены не должна рубить хвост предыдущей */
+  setTimeout(() => { if(musScene === name && !musTimer) musTick(); }, 180);
+}
+/* триумф: короткий подъём по аккорду, сцена не меняется */
+function musStinger(){
+  const a = musCtx(); if(!a || !musOn || sfxMuted) return;
+  const t = a.currentTime + .02;
+  [0, 4, 7, 12, 16].forEach((sem, i) => {
+    musNote(musFreq(sem), t + i * .09, 1.5 - i * .12, 'triangle', .07);
+    musNote(musFreq(sem + 12), t + i * .09, .9, 'sine', .05);
+  });
+}
+function musToggle(on){
+  musOn = (on === undefined) ? !musOn : !!on;
+  try{ localStorage.setItem('skinrush.music', musOn ? '1' : '0'); }catch(e){}
+  if(musMaster && actx){
+    musMaster.gain.cancelScheduledValues(actx.currentTime);
+    musMaster.gain.setTargetAtTime((musOn && !sfxMuted) ? .9 : 0, actx.currentTime, .05);
+  }
+  if(musOn){ const w = musWant || 'menu'; musWant = ''; musSet(w); }
+  else musStop();
+  const b = document.getElementById('btnMus');
+  if(b){ b.textContent = musOn ? '🎵' : '🔇'; b.classList.toggle('off', !musOn); }
+  const ba = document.getElementById('btnMusAbout');
+  if(ba) ba.textContent = musOn ? '🎵' : '🔇';
+  return musOn;
+}
+function musIsOn(){ return musOn; }
 
 /* тон: частота, длительность, форма, громкость, скольжение */
 function tone(freq, dur, o){
@@ -7286,9 +7525,25 @@ const BGS = {
   coal:  {name:'Уголь', c1:'#0b0b0d', c2:'#17171b'},
   fog:   {name:'Туман', c1:'#0b1014', c2:'#161f26'}
 };
-const LEGEND_PRICE = 100000000;
+/* ===== 4.6.0: ТРИ ПЛАТНЫЕ ТЕМЫ =====
+   Было одной за 100 000 000 — цифра-мем, до неё не дойти. Теперь ступени:
+   5 млн «попроще», 10 млн «средняя», 20 млн «самая крутая».
+   ВАЖНО про экономику: доход игрока из таймеров ≈ 6 600 кр в сутки, значит
+   5 млн — это ~2 года без единой траты, 20 млн — около 8 лет. Это по-прежнему
+   цель-витрина, а не покупка на месяц. Цены держу в одном месте (PREMIUM_THEMES),
+   чтобы поменять их можно было одной строкой. */
+const PREMIUM_THEMES = [
+  { k:'gold',    cls:'theme-legend',  name:'Золотая',  sub:'5 млн',  price:5000000,
+    note:'классическое золото с блеском' },
+  { k:'inferno', cls:'theme-inferno', name:'Инферно',  sub:'10 млн', price:10000000,
+    note:'огонь и угли, тёплый акцент' },
+  { k:'dragon',  cls:'theme-dragon',  name:'Драконья', sub:'20 млн', price:20000000,
+    note:'сталь и изумруд с золотыми искрами' }
+];
+const LEGEND_PRICE = PREMIUM_THEMES[0].price;   /* совместимость со старым кодом */
 
-let theme = { accent:'orange', bg:'night', legend:false, owned:false };
+/* prem — какая платная тема включена; owned — что куплено (по ключам) */
+let theme = { accent:'orange', bg:'night', legend:false, owned:false, prem:'', owns:{} };
 
 function loadTheme(){
   try{
@@ -7297,8 +7552,13 @@ function loadTheme(){
       const t = JSON.parse(raw);
       if(t && ACCENTS[t.accent]) theme.accent = t.accent;
       if(t && BGS[t.bg]) theme.bg = t.bg;
-      theme.legend = !!(t && t.legend);
-      theme.owned = !!(t && t.owned);
+      /* старые сейвы: owned было булевым, legend — флагом включения */
+      theme.owns = (t && t.owns && typeof t.owns === 'object') ? t.owns : {};
+      if(t && t.owned) theme.owns.gold = 1;
+      theme.prem = (t && t.prem) || (t && t.legend ? 'gold' : '');
+      if(theme.prem && !theme.owns[theme.prem]) theme.prem = '';
+      theme.legend = theme.prem === 'gold';
+      theme.owned = !!theme.owns.gold;
     }
   }catch(e){}
   applyTheme();
@@ -7310,14 +7570,19 @@ function applyTheme(){
   const B = document.body.classList;
   Object.keys(ACCENTS).forEach(k => B.toggle('a-' + k, theme.accent === k));
   Object.keys(BGS).forEach(k => B.toggle('bg-' + k, theme.bg === k));
-  B.toggle('theme-legend', !!theme.legend);
+  PREMIUM_THEMES.forEach(t => B.toggle(t.cls, theme.prem === t.k));
+  theme.legend = theme.prem === 'gold';
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.setAttribute('content', theme.legend ? '#1a1204' : BGS[theme.bg].c1);
+  const premColor = theme.prem === 'inferno' ? '#160603' : theme.prem === 'dragon' ? '#050d12'
+                  : theme.prem === 'gold' ? '#1a1204' : null;
+  if(meta) meta.setAttribute('content', premColor || BGS[theme.bg].c1);
 }
+function premByKey(k){ return PREMIUM_THEMES.filter(t => t.k === k)[0] || null; }
+function premOwned(k){ return !!(theme.owns && theme.owns[k]); }
 function setAccent(k){
   if(!ACCENTS[k]) return false;
-  /* выбор обычного акцента выключает легендарную тему (она остаётся купленной) */
-  theme.legend = false;
+  /* выбор обычного акцента выключает платную тему (она остаётся купленной) */
+  theme.prem = ''; theme.legend = false;
   theme.accent = k; saveTheme(); applyTheme(); SFX.click();
   return true;
 }
@@ -7326,21 +7591,30 @@ function setBg(k){
   theme.bg = k; saveTheme(); applyTheme(); SFX.click();
   return true;
 }
-function toggleLegend(){
-  if(!theme.owned) return false;
-  theme.legend = !theme.legend;
+function toggleLegend(key){
+  const t = premByKey(key || 'gold');
+  if(!t || !premOwned(t.k)) return false;
+  theme.prem = (theme.prem === t.k) ? '' : t.k;
+  theme.legend = theme.prem === 'gold';
   saveTheme(); applyTheme(); SFX.click(); renderAbout();
   return true;
 }
-function buyLegend(){
-  if(theme.owned) { theme.legend = true; saveTheme(); applyTheme(); return {ok:true}; }
-  if((state.coins||0) < LEGEND_PRICE) return {ok:false, why:'не хватает кредитов'};
-  state.coins -= LEGEND_PRICE;
-  theme.owned = true; theme.legend = true; theme.accent = 'orange';
+function buyLegend(key){
+  const t = premByKey(key || 'gold');
+  if(!t) return {ok:false, why:'нет такой темы'};
+  if(!theme.owns) theme.owns = {};
+  if(theme.owns[t.k]){ theme.prem = t.k; saveTheme(); applyTheme(); renderAbout(); return {ok:true}; }
+  if((state.coins||0) < t.price) return {ok:false, why:'не хватает кредитов'};
+  state.coins -= t.price;
+  theme.owns[t.k] = 1;
+  theme.prem = t.k; theme.legend = t.k === 'gold';
+  if(t.k === 'gold') theme.accent = 'orange';
   saveTheme(); applyTheme();
   save(); renderBalance(true); updateOpenBtn();
-  SFX.success(); FX.flash('#ffd76a'); FX.burst({count:140, colors:['#ffd76a','#fff0b8','#ffffff']});
-  toast('Легендарная тема открыта навсегда');
+  SFX.success(); musStinger();
+  FX.flash(t.k === 'dragon' ? '#4fe6c8' : t.k === 'inferno' ? '#ff7a2f' : '#ffd76a');
+  FX.burst({count:150, colors:[t.k === 'dragon' ? '#4fe6c8' : t.k === 'inferno' ? '#ff7a2f' : '#ffd76a','#ffffff','#ffe9ae']});
+  toast('Тема «' + t.name + '» открыта навсегда', 3000);
   renderAbout();
   return {ok:true};
 }
@@ -7351,18 +7625,26 @@ function renderThemeBlock(){
   const b = Object.entries(BGS).map(([k,v]) =>
     `<button class="thm-bg ${theme.bg===k?'on':''}" data-bg="${k}" title="${v.name}"
        style="background:linear-gradient(160deg,${v.c2},${v.c1})"><span></span></button>`).join('');
-  const leg = !theme.owned
-    ? `<button class="thm-legend" id="btnLegend">★ Легендарная тема<i>${LEGEND_PRICE.toLocaleString('ru-RU')}</i></button>`
-    : `<button class="thm-legend ${theme.legend?'on':''}" id="btnLegend">★ Легендарная тема<i>${theme.legend?'включена':'включить'}</i></button>`;
+  /* 4.6.0: три платные темы. Купленная показывает «включить/выключить»,
+     некупленная — цену; нажатие на некупленную спрашивает подтверждение. */
+  const prem = PREMIUM_THEMES.map((t, i) => {
+    const own = premOwned(t.k), on = theme.prem === t.k;
+    const tail = own ? (on ? 'включена' : 'есть') : t.sub;
+    return `<button class="thm-pt p${i} ${on?'on':''}" data-prem="${t.k}" title="${t.note}">
+      <span class="thm-dot"></span><b>${t.name}</b><small>${tail}</small>
+    </button>`;
+  }).join('');
   return `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)">
     <b style="color:var(--accent)">Оформление</b>
     <div class="thm">
       <div class="thm-row"><span class="thm-lbl">Цвет акцента</span>${a}</div>
       <div class="thm-row"><span class="thm-lbl">Фон</span>${b}</div>
-      ${leg}
+      <span class="thm-lbl">Платные темы · навсегда</span>
+      <div class="thm-prem">${prem}</div>
       <div class="hint" style="font-size:11px;color:#7f8ca5;line-height:1.4">
-        Легендарная тема — золотая, с живым блеском. Покупается один раз и остаётся навсегда.
-        ${theme.owned ? (theme.legend ? 'Тема куплена и включена. Нажмите на кнопку, чтобы выключить.' : 'Тема куплена — можно включить в любой момент.') : 'Награда для тех, кто накопил.'}
+        ${theme.prem
+          ? 'Включена тема «' + (premByKey(theme.prem) || {}).name + '». Нажмите её ещё раз, чтобы вернуться к обычному оформлению.'
+          : 'Тема покупается один раз и остаётся навсегда. Обычный цвет акцента её выключает, но не отменяет покупку.'}
       </div>
     </div>
   </div>`;
@@ -7372,16 +7654,18 @@ function themeBind(){
     el.addEventListener('click', ()=>{ setAccent(el.dataset.accent); renderAbout(); }));
   document.querySelectorAll('[data-bg]').forEach(el =>
     el.addEventListener('click', ()=>{ setBg(el.dataset.bg); renderAbout(); }));
-  const lg = document.getElementById('btnLegend');
-  if(lg) lg.addEventListener('click', ()=>{
-    if(theme.owned){ toggleLegend(); return; }
-    if((state.coins||0) < LEGEND_PRICE){
-      toast('Нужно ' + LEGEND_PRICE.toLocaleString('ru-RU') + ' кредитов');
-      SFX.error(); return;
-    }
-    if(!confirm('Купить легендарную тему за ' + LEGEND_PRICE.toLocaleString('ru-RU') + ' кредитов? Покупка навсегда.')) return;
-    buyLegend();
-  });
+  document.querySelectorAll('[data-prem]').forEach(el =>
+    el.addEventListener('click', ()=>{
+      const t = premByKey(el.dataset.prem);
+      if(!t) return;
+      if(premOwned(t.k)){ toggleLegend(t.k); return; }
+      if((state.coins||0) < t.price){
+        toast('Нужно ' + t.price.toLocaleString('ru-RU') + ' кредитов — у вас ' + (state.coins|0).toLocaleString('ru-RU'));
+        SFX.error(); return;
+      }
+      if(!confirm('Купить тему «' + t.name + '» за ' + t.price.toLocaleString('ru-RU') + ' кредитов? Покупка навсегда.')) return;
+      buyLegend(t.k);
+    }));
 }
 
 /* =========================================================
@@ -8305,7 +8589,7 @@ function updateNavBadges(){
   /* 3.12.3: барабан переехал в «Испытания» — в бейдже «Наград» его больше не считаем */
   if (rewLeft('hour') <= 0) rew++;
   if (rewLeft('day') <= 0) rew++;
-  if (typeof afkLeft === 'function' && afkLeft() > 0) rew++;
+  /* 4.6.0: АФК-билетов нет, в бейдж наград они больше не входят */
   if (typeof bossUnlocked === 'function' && bossUnlocked() && !state.bossOpened) rew++;
   if (typeof MISSIONS !== 'undefined') {
     MISSIONS.forEach(m => {
@@ -8481,15 +8765,7 @@ function openCase(free, opts){
   for(let i = 0; i < qty; i++){
     const guaranteed = caseCanPity(selCase) && (state.luck || 0) >= LUCK_MAX;
     let rar = questOpen ? 'rare' : (guaranteed ? 'epic' : rollRarity(selCase.odds));
-    /* билет удачи: ровно на один тир выше, и только если тир есть выше */
-    if(!guaranteed && (state.luckOn|0) > 0){
-      const next = rarTickUp(rar);
-      if(next !== rar){                 /* не тратим билет, если тир уже высокий */
-        rar = next;
-        state.luckOn = (state.luckOn|0) - 1;
-        save();
-      }
-    }
+    /* 4.6.0: билет удачи убран — тир определяется только шансами кейса и гарантией */
     let sk = rollSkin(rar, selCase);
     if(firstDrop && i === 0) sk = SKINS.find(s => s.n === 'Water Elemental') || sk;
     const it = makeItem(sk);
@@ -8521,6 +8797,31 @@ const SPIN_DURATION_BY_RARITY = {
   myth:     7000
 };
 const SPIN_DURATION_BATCH = 430;   /* мультиоткрытие всегда быстрое */
+
+/* ===== 4.6.0: у каждого кейса свой характер прокрутки =====
+   Раньше все 21 кейс крутились одинаково: одна лента, одна кривая, одна скорость.
+   Теперь пять пресетов — разница в разгоне, кривой торможения, частоте щелчков
+   и финальном эффекте. Экономику это не трогает: результат считается ДО прокрутки
+   (caseQueue), меняется только ощущение. */
+const SPIN_STYLES = {
+  quiet:  { dur:.88, ease:'cubic-bezier(.12,.74,.06,1)', tick:.034, kick:0,   name:'плавная' },
+  rush:   { dur:.64, ease:'cubic-bezier(.05,.86,.02,1)', tick:.052, kick:.15, name:'быстрая' },
+  steady: { dur:1.00, ease:'cubic-bezier(.11,.72,.05,1)', tick:.042, kick:.30, name:'ровная' },
+  heavy:  { dur:1.32, ease:'cubic-bezier(.20,.60,.02,1)', tick:.060, kick:.55, name:'тяжёлая' },
+  storm:  { dur:1.55, ease:'cubic-bezier(.24,.50,.02,1)', tick:.070, kick:.85, name:'шторм' }
+};
+/* какой кейс каким характером крутится: дешёвые — спокойные, дорогие — шторм */
+const CASE_SPIN = {
+  start:'quiet', tin:'quiet', night:'quiet', desert:'quiet',
+  prisma:'rush', lab:'rush', neon:'rush', chrome:'rush', cyber:'rush',
+  arsenal:'steady', guard:'steady', ash:'steady', vortex:'steady',
+  blood:'heavy', emerald:'heavy', elite:'heavy', obsidian:'heavy',
+  titan:'storm', legend:'storm', black:'storm', knives:'storm'
+};
+function spinStyleOf(c){
+  const k = (c && CASE_SPIN[c.id]) || 'steady';
+  return { key:k, ...SPIN_STYLES[k] };
+}
 let currentSpinState = null;
 
 function showSkipButton(durMs){
@@ -8564,6 +8865,8 @@ function processCaseQueue(){
   const res = caseQueue.shift();
   const winSkin = res.skin, winItem = res.item;
   batchResults.push(res);
+  /* 4.6.0: во время прокрутки звучит сцена «рулетка» */
+  if(!isBatchOpening) musSet('spin');
 
   const winIdx = fillTrack(winSkin);
   const track = $('#rlTrack');
@@ -8580,11 +8883,19 @@ function processCaseQueue(){
   /* --- АДАПТИВНАЯ ДЛИТЕЛЬНОСТЬ --- */
   /* 4.3.2: первый дроп крутится дольше — это его единственный шанс запомниться */
   const isFirst = !!(winItem && winItem.first);
+  /* 4.6.0: длительность = база по редкости × характер кейса */
+  const style = spinStyleOf(selCase);
+  const baseDur = SPIN_DURATION_BY_RARITY[winSkin.r] || 3000;
   const dur = isBatchOpening
     ? SPIN_DURATION_BATCH
-    : (isFirst ? 5000 : (SPIN_DURATION_BY_RARITY[winSkin.r] || 3000));
+    : Math.round((isFirst ? 5000 : baseDur) * style.dur);
+  /* характер кейса видно и по ленте: подпись стиля под рулеткой */
+  const rlw = $('#rlFrame') || track.parentElement;
+  if(rlw){ rlw.dataset.spin = style.key; }
+  const cap = $('#rlSpinCap');
+  if(cap) cap.textContent = 'прокрутка: ' + style.name;
 
-  track.style.transition = `transform ${dur}ms cubic-bezier(.11,.72,.05,1)`;
+  track.style.transition = `transform ${dur}ms ${style.ease}`;
   track.style.transform = `translateX(${target.toFixed(1)}px)`;
 
   showSkipButton(dur);
@@ -8595,7 +8906,7 @@ function processCaseQueue(){
     const pos = Math.abs(m.m41);
     if(Math.floor(pos/itemW) !== Math.floor(lastPos/itemW)){
       lastPos = pos;
-      SFX.tick(isBatchOpening ? .022 : .042);
+      SFX.tick(isBatchOpening ? .022 : style.tick);
     }
     if(spinning) raf = requestAnimationFrame(tick);
   };
@@ -8617,6 +8928,11 @@ function processCaseQueue(){
 
     const cheap = itemVal(winItem) < selCase.price * 0.30;
     if(cheap){ batchBustSeen = true; }
+    /* 4.6.0: «характер» бьёт по экрану в момент остановки: дорогие кейсы заметно сильнее */
+    if(!isBatchOpening && style.kick > 0){
+      try{ FX.shake(style.kick); }catch(e){}
+      if(style.kick >= .55) try{ SFX.tick(.09); }catch(e){}
+    }
     if(isBatchOpening){
       addSkin(winSkin, winItem);
       sfxWin(winSkin.r);
@@ -8635,6 +8951,7 @@ function processCaseQueue(){
       if(isFirst && SFX.firstDrop) SFX.firstDrop(); else sfxWin(winSkin.r);
       if(cheap) setTimeout(()=>SFX.bust(), 420);
       showWin(winSkin, winItem);
+      musSet('menu');
       renderMissions();
       updateOpenBtn();
     }
@@ -8710,6 +9027,8 @@ function showWin(skin, item, alreadyOwned){
 
   /* эффекты по редкости: неоновые звёзды — цветом самой редкости, от редкого и выше */
   const tier = RAR_ORDER.indexOf(skin.r);
+  /* 4.6.0: триумф синтезом — короткий подъём, поверх сцены «меню» */
+  if(tier >= RAR_ORDER.indexOf('legend')) try{ musStinger(); }catch(e){}
   FX.flash(R.color);
   if(skin.r === 'myth'){
     FX.burst({count: 90, colors:[R.color, shade(R.color,.45), '#ffffff']});
@@ -9153,11 +9472,33 @@ function albumGoalPick(){
   return best;
 }
 function renderGoalCard(card){
+  const t = $('#qTitle'), d = $('#qText'), go = $('#qGo'), sk = $('#qSkip');
+  /* ===== 4.6.0: ГЛАВНАЯ ЦЕЛЬ =====
+     Пока набор АК-47 не собран, карточка цели говорит именно про него — одна большая
+     цель вместо списка мелких. Дальше (или если АК уже собран) работает прежняя логика:
+     ближайший набор альбома. */
+  const akSet = ALBUM_SETS.filter(x => x.k === MAIN_SET)[0];
+  const akSeen = albumSeen();
+  const akDone = akSet ? albumSetGot(akSet, akSeen) : 0;
+  const akAll = akSet ? albumSkinsOf(akSet).length : 0;
+  if(akSet && akDone < akAll && !mainQuestDone()){
+    const near = albumNearest(akSet, akSeen);
+    card.classList.add('on');
+    card.dataset.goal = 'main';
+    if(t) t.textContent = 'Главный квест · АК-47: ' + akDone + ' из ' + akAll;
+    if(d) d.innerHTML = 'Соберите весь набор и получите <b>«Призрак»</b> — уникальный АК-47, '
+      + 'которого нет ни в одном кейсе.'
+      + (near ? '<br>Ближайший: <b>' + near.skin.n + '</b> из кейса «' + near.cname + '» за '
+        + near.price + ' кр · ~' + near.pct.toFixed(1) + ' %' : '');
+    if(go) go.textContent = near ? 'Открыть кейс' : 'К кейсам';
+    if(sk){ sk.textContent = 'Все коллекции'; sk.hidden = false; }
+    for(let i = 0; i < 3; i++){ const el = $('#qS' + i); if(el) el.classList.toggle('on', true); }
+    return;
+  }
   const pick = albumGoalPick();
   if(!pick){ card.classList.remove('on'); questClearGlow(); return; }
   card.classList.add('on');
   card.dataset.goal = 'album';
-  const t = $('#qTitle'), d = $('#qText'), go = $('#qGo'), sk = $('#qSkip');
   if(t) t.textContent = 'Набор «' + pick.set.name + '»: ' + pick.got + ' из ' + pick.skins.length;
   if(d) d.innerHTML = 'Ближайший: <b>' + pick.near.skin.n + '</b> падает из кейса «' + pick.near.cname
     + '» за ' + pick.near.price + ' кр · ~' + pick.near.pct.toFixed(1) + ' %';
@@ -9704,8 +10045,15 @@ function invToolsClick(e){
   if(preset){
     const kind = preset.dataset.bulk;
     SFX.click();
+    /* 4.5.1: кнопки «✏️ Выбрать» больше нет — режим включает сама капсула.
+       Поэтому «Снять» теперь и снимает выделение, и выводит из режима:
+       иначе из массовых операций не было бы выхода. */
+    if(kind === 'none'){
+      invBulkSet([]);
+      if(invBulk) toggleBulkMode(false);
+      return;
+    }
     if(!invBulk) toggleBulkMode(true);
-    if(kind === 'none'){ invBulkSet([]); return; }
     const pick = invBulkPlan(kind);
     invBulkSet(pick);
     if(!pick.size) toast('Под этот пресет ничего не подошло');
@@ -11095,26 +11443,19 @@ function renderLevel(){
     <button class="btn-ghost" id="rebOpen" style="width:100%;margin-top:8px">
       🔁 Перерождение ${rebCount() ? '№' + (rebCount()+1) : ''} ${rebirthReady() ? '' : '· с ' + MIN_REB_LVL + '-го уровня'}
     </button>
-    <button class="btn-ghost" id="luckTickBtn" style="width:100%;margin-top:8px">
-      🍀 Билет удачи (тир выше, но не выше эпика) · <span id="luckTickTxt">${luckTickLeft()} из ${luckTickPerDay()}</span>
-      ${(state.luckOn|0) > 0 ? ' · готов: ' + (state.luckOn|0) : ''}
-    </button>
+    <!-- 4.6.0: билеты удачи убраны из игры. Остались кредиты, жетоны и пыль. -->
     <button class="btn-ghost" id="lvlToAch" style="width:100%;margin-top:12px">🏆 Достижения</button>`;
   const rb = $('#rebOpen');
   if(rb) rb.addEventListener('click', openRebirth);
-  const lt = $('#luckTickBtn');
-  if(lt) lt.addEventListener('click', ()=>{ luckTickTake(); renderLevel(); });
+  /* 4.6.0: кнопки билета удачи больше нет — обработчик не нужен */
 }
 function renderLuckTick(){
-  const el = $('#luckTickTxt');
-  if(!el) return;
-  el.textContent = `${luckTickLeft()} из ${luckTickPerDay()}`;
+  /* 4.6.0: билетов удачи нет — функция осталась заглушкой для совместимости */
+  return;
 }
 /* глянуть, сколько билетов удачи на сегодня осталось — используется в подсказке на кейсах */
 function luckTickHint(){
-  const n = luckTickLeft(), armed = state.luckOn|0;
-  if(armed) return `🍀 Билет удачи заряжен: следующий кейс на тир выше (${armed})`;
-  if(n) return `🍀 Билетов удачи: ${n}. Возьмите в профиле — поднимут редкость на тир`;
+  /* 4.6.0: механизм снят, подсказка пустая */
   return '';
 }
 /* ============ 3.10.0: ПЕРЕРОЖДЕНИЕ ============ */
@@ -11191,6 +11532,7 @@ function doRebirth(){
     runBestCase: state.runBestCase || '',
     runLog: (state.runLog || []).slice(-20),
     tirBest: state.tirBest | 0,
+    tirTrainDay: state.tirTrainDay || '',
     bestStreak: state.bestStreak | 0,
     drum2: JSON.parse(JSON.stringify(state.drum2 || {col:{}}))
   };
@@ -11211,7 +11553,7 @@ function doRebirth(){
     afk: state.afk || {last: 0, n: 0}, afkLog: state.afkLog || [],
     cos: keep.cos, dust: keep.dust,
     runBest: keep.runBest, runBestCase: keep.runBestCase, runLog: keep.runLog,
-    tirBest: keep.tirBest, bestStreak: keep.bestStreak, drum2: keep.drum2
+    tirBest: keep.tirBest, tirTrainDay: keep.tirTrainDay, bestStreak: keep.bestStreak, drum2: keep.drum2
   };
   state = fresh;
   uidSeq = 1;
@@ -11228,7 +11570,10 @@ function doRebirth(){
 }
 
 /* ============ 3.10.0: AFK-БИЛЕТЫ ============ */
-function afkOpenAll(){
+/* 4.6.0: АФК-билеты сняты с игры. Функции оставлены заглушками:
+   на них ссылаются старые сейвы и внешние стенды, и падать из-за этого нельзя. */
+function afkOpenAll(){ toast('АФК-билеты убраны: награды теперь только на вкладке «Награды»'); }
+function afkOldOpenAll(){
   const n = afkLeft();
   if(!n){ toast('Билетов пока нет: один даётся каждые 3 часа'); return; }
   const c = afkCase();
@@ -12401,11 +12746,10 @@ function renderRewardGrid(){
     // Кейс часа
     const hourLeft = rewLeft('hour');
     const hourStatus = hourLeft <= 0 ? 'available' : 'progress';
-    const afk = afkLeft();
-
+    /* 4.6.0: АФК-билеты убраны — это была четвёртая валюта с тем же смыслом, что кредиты.
+       Осталось два таймера: кейс часа и дневной кейс. */
     html += createRewCard('📦', 'Кейс часа', 'До легендарки', hourStatus, hourLeft, () => takeHourly());
     html += createRewCard('🎁', 'Дневной кейс', 'Редкий и выше', rewLeft('day') <= 0 ? 'available' : 'progress', rewLeft('day'), () => takeDaily());
-    html += createRewCard('💤', 'АФК-билеты', `${afk} шт. накоплено`, afk > 0 ? 'available' : 'progress', 0, () => afkOpenAll());
   }
   else if (rewCategory === 'missions') {
     checkMissionsReset();
@@ -12669,10 +13013,13 @@ function renderMiniModes(){
       : 'На этот час всё — новая десятка в начале следующего';
   }
   if(s){
-    const left = Math.max(0, TIR_SESSIONS - dayUsedCount('tir'));
-    s.textContent = left > 0
-      ? `Сессий сегодня: ${left} · 5 выстрелов, 20 секунд, центр — 150 · 3 подряд = ×2 · рекорд ${(state.tirBest||0)}`
-      : 'Сессии на сегодня кончились — приходите завтра';
+    const left = Math.max(0, TIR_SESSIONS - dayUsedCount('snip'));
+    const firstTrain = dayUsedCount('snip') === 0 && state.tirTrainDay !== todayKey();
+    s.textContent = firstTrain
+      ? `Первый заход — тренировка без наград · 5 выстрелов, 18 секунд · очки 150–300 по редкости`
+      : (left > 0
+        ? `Сессий сегодня: ${left} · 5 выстрелов, 18 секунд · очки по редкости · 3 подряд = ×2 · рекорд ${(state.tirBest||0)}`
+        : 'Сессии на сегодня кончились — тренироваться можно в любой момент');
   }
   if(d){
     const left = batLeft();
@@ -13034,8 +13381,12 @@ const TIR_SESSIONS = 2;
 const TIR_SHOTS = 5;
 const TIR_SECONDS = 18;      /* 4.5.0: было 20 — время тоже давит */
 const TIR_CARDS = 6;
-const TIR_PTS_CENTER = 150;
-const TIR_PTS_HIT = 100;
+/* 4.5.1: ОЧКИ ПО РЕДКОСТИ. Раньше все карточки стоили одинаково (150 центр / 100 край),
+   и эпик на 70 px был не наградой, а мишенью покрупнее — редкое падало реже, но билось легче.
+   Теперь цена следует за редкостью: центр ×1.5 от прежних, край ×1.0.
+   Максимум сессии 6 × 300 = 1800 (было 900), пороги наград подняты вслед за шкалой. */
+const TIR_PTS_CENTER = { common:150, uncommon:180, rare:225, epic:300 };
+const TIR_PTS_HIT    = { common:100, uncommon:120, rare:150, epic:200 };
 const TIR_DUST_PER_HIT = 30;
 /* 4.4.5 (v2): серия и мультивыстрел. Три попадания подряд заряжают следующую пулю —
    она сносит две карточки. Потолок счёта от этого не растёт: карточек по-прежнему
@@ -13066,7 +13417,10 @@ const TIR_SIZE = { common:54, uncommon:58, rare:64, epic:70 };
 const TIR_SPEED = { common:0.51, uncommon:0.72, rare:0.88, epic:1.09 };
 const TIR_VY = 0.45;                  /* доля вертикального качания от скорости */
 /* зона «центр» (150 очков): в прицеле она же уже, потому что бить всегда в центр */
-const TIR_CENTER_N = { classic:0.45, scope:0.35 };
+/* 4.5.1: в оптике зона центра 0.42 (было 0.35). Замер по модели: 0.35 при перезарядке
+   AWP 750 мс давала награду за 900 всего в 6 % заходов у среднего игрока, 0.55 — уже 41 %,
+   то есть втрое щедрее Glock. 0.42 держит AWP в коридоре 12–15 % и не делает её читом. */
+const TIR_CENTER_N = { classic:0.45, scope:0.42 };
 /* материал тарелки — случайный, только вид и обломки */
 const TIR_MATS = ['clay','wood','glass','metal','gold'];
 const TIR_MAT_W = { clay:30, wood:26, glass:22, metal:16, gold:6 };
@@ -13080,23 +13434,35 @@ let tirS = { run:false, dead:false, t0:0, tick:0, bullets:TIR_SHOTS, score:0,
 /* совместимость: снаружи (window.__sr, старые вызовы) тир звали через tir */
 let tir = tirS;
 
-function tirLeft(){ return Math.max(0, TIR_SESSIONS - dayUsedCount('tir')); }
+/* 4.5.1: НАЙДЕН И ИСПРАВЛЕН БАГ — счётчик сессий тира никогда не работал.
+   dayUsedCount('tir') читал state.tir, а поле называется state.snip, поэтому
+   ключ не находился и функция всегда возвращала 0: лимит «2 сессии в день»
+   не действовал, тир можно было играть бесконечно. Ключ приведён к имени поля. */
+function tirLeft(){ return Math.max(0, TIR_SESSIONS - dayUsedCount('snip')); }
 
 /* награда только от счёта. Пороги подобраны под шкалу 150/100 (максимум 750):
    100 = 1 попадание, 200 = 2, 300 = 3, 450 = 3 с центрами, 600 = 4 с центрами,
    700 = 5 попаданий с четырьмя центрами. */
 function tirReward(sc){
-  /* 4.4.5: потолок счёта вырос до 900 (мультивыстрел), поэтому добавлена ступень 850.
-     Её ценность 3 360 против 2 640 на 700-й — плюс 27 %, в пределах договорённых +30 %.
-     Дотянуться до неё можно только серией: пять центров без мультивыстрела дают 750. */
-  if(sc >= 850) return { c:'3 кейса ≤800 + жетон + 800 кредитов', cases:3, cmax:800, tok:1, coins:800, perfect:true };
-  if(sc >= 700) return { c:'2 кейса ≤800 + жетон + 800 кредитов', cases:2, cmax:800, tok:1, coins:800 };
-  if(sc >= 600) return { c:'кейс ≤1200', cases:1, cmax:1200, tok:0, coins:0 };
-  if(sc >= 450) return { c:'кейс ≤800',  cases:1, cmax:800,  tok:0, coins:0 };
-  if(sc >= 300) return { c:'кейс ≤500',  cases:1, cmax:500,  tok:0, coins:0 };
-  if(sc >= 200) return { c:'кейс ≤300',  cases:1, cmax:300,  tok:0, coins:0 };
-  if(sc >= 100) return { c:'кейс ≤150',  cases:1, cmax:150,  tok:0, coins:0 };
+  /* 4.5.1: шкала выросла вместе с очками по редкости (максимум 1800 вместо 900).
+     Ступени пересчитаны пропорционально: 150 — одно попадание края common,
+     300 — два, 450 — три, 600 — четыре, 750 — пять, 900 и 1100 — верхние.
+     Ценность верхних сохранена: 900 — это 2 кейса + жетон + 800 (как прежние 700),
+     1100 — 3 кейса + жетон + 800 (как прежние 850), то есть +27 % между ступенями. */
+  if(sc >= 1100) return { c:'3 кейса ≤800 + жетон + 800 кредитов', cases:3, cmax:800, tok:1, coins:800, perfect:true };
+  if(sc >= 900)  return { c:'2 кейса ≤800 + жетон + 800 кредитов', cases:2, cmax:800, tok:1, coins:800 };
+  if(sc >= 750)  return { c:'кейс ≤1200', cases:1, cmax:1200, tok:0, coins:0 };
+  if(sc >= 600)  return { c:'кейс ≤800',  cases:1, cmax:800,  tok:0, coins:0 };
+  if(sc >= 450)  return { c:'кейс ≤500',  cases:1, cmax:500,  tok:0, coins:0 };
+  if(sc >= 300)  return { c:'кейс ≤300',  cases:1, cmax:300,  tok:0, coins:0 };
+  if(sc >= 150)  return { c:'кейс ≤150',  cases:1, cmax:150,  tok:0, coins:0 };
   return { c:'50 кредитов', cases:0, cmax:0, tok:0, coins:50 };
+}
+/* следующая ступень — для экрана итогов («до 900 не хватило 60») */
+const TIR_STEPS = [150, 300, 450, 600, 750, 900, 1100];
+function tirNextStep(sc){
+  for(const v of TIR_STEPS) if(sc < v) return v;
+  return 0;
 }
 
 /* ---------- сцена ---------- */
@@ -13388,7 +13754,7 @@ function tirDrawHud(){
   if(sp) sp.classList.toggle('armed', tirS.streak >= TIR_STREAK);
   const S = $('#tirScore'); if(S) S.textContent = tirS.score.toLocaleString('ru-RU');
   const B = $('#tirBest');  if(B) B.textContent = (state.tirBest || 0).toLocaleString('ru-RU');
-  const T = $('#tirSess');  if(T) T.textContent = tirLeft();
+  const T = $('#tirSess');  if(T) T.textContent = tirS.train ? 'тр.' : tirLeft();
 }
 
 function xmaxSafe(g, maxX){ return Math.max((g.xMin != null ? g.xMin : 0), maxX); }
@@ -13570,7 +13936,7 @@ function tirShootAt(clientX, clientY){
     const g = hit.g;
     const cn = TIR_CENTER_N[state.tirView] || 0.45;
     const center = hit.nx <= cn && hit.ny <= cn;
-    const pts = center ? TIR_PTS_CENTER : TIR_PTS_HIT;
+    const pts = (center ? TIR_PTS_CENTER : TIR_PTS_HIT)[g.skin.r] || 100;
     const multi = tirS.streak >= TIR_STREAK;
     let killed = 1;
     cardDown(g, pts, px, py);
@@ -13671,21 +14037,25 @@ function tirEnd(){
   if(tirS.dead || !tirS.run) return;
   tirS.run = false; tirS.dead = true;
   if(tirS.raf){ cancelAnimationFrame(tirS.raf); tirS.raf = 0; }
-  dayTakeOnce('tir');
+  const train = !!tirS.train;
+  if(!train) dayTakeOnce('snip');
 
   const sc = tirS.score;
-  const isBest = sc > (state.tirBest || 0);
+  const isBest = !train && sc > (state.tirBest || 0);
   if(isBest) state.tirBest = sc;
 
-  /* трофеи — в инвентарь. addSkin сам пишет альбом и узор */
+  /* трофеи — в инвентарь. addSkin сам пишет альбом и узор.
+     В тренировке не выдаём ничего: иначе «бесплатные» сессии ломают экономику. */
   const got = [];
-  tirS.trophies.forEach(function(t){
+  if(!train) tirS.trophies.forEach(function(t){
     try{ addSkin(t.skin, t.item); got.push(t.skin); }catch(e){}
   });
-  const dust = tirS.hits * TIR_DUST_PER_HIT;
+  const dust = train ? 0 : tirS.hits * TIR_DUST_PER_HIT;
   if(dust) addDust(dust);
 
-  const rw = tirReward(sc);
+  const rw = train
+    ? { c:'тренировка — без награды', cases:0, cmax:0, tok:0, coins:0, train:true }
+    : tirReward(sc);
   save();
 
   const hit3 = tirS.hits >= 3;
@@ -13704,12 +14074,14 @@ function tirEnd(){
 
   const foot = $('#snipRes');
   if(foot){
-    const tro = got.length
-      ? got.map(function(sk){
-          const R = RAR[sk.r] || { color:'#8d9ab2' };
-          return '<span style="--tc:' + R.color + '">' + sk.n + '</span>';
-        }).join('')
-      : '<span style="--tc:#5a6472">ни одного попадания</span>';
+    const tro = train
+      ? '<span style="--tc:#ffd894">🎓 тренировка: трофеи не выдаются</span>'
+      : (got.length
+        ? got.map(function(sk){
+            const R = RAR[sk.r] || { color:'#8d9ab2' };
+            return '<span style="--tc:' + R.color + '">' + sk.n + '</span>';
+          }).join('')
+        : '<span style="--tc:#5a6472">ни одного попадания</span>');
     foot.innerHTML = '<div class="tir-sum" style="--tc:' + col + '">' +
         '<div class="tir-sum-ic">' + ic + '</div>' +
         '<div class="tir-sum-sc">' + sc + '<small> очков</small></div>' +
@@ -13718,16 +14090,20 @@ function tirEnd(){
           (tirS.multi ? ' · мультивыстрел ×' + tirS.multi : '') +
           (isBest ? ' · <b>новый рекорд</b>' : '') +
           (dust ? ' · +' + dust + ' пыли' : '') +
+          (tirNextStep(sc) ? ' · до ' + tirNextStep(sc) + ' не хватило ' + (tirNextStep(sc) - sc) : '') +
           '<br>Награда: <b>' + rw.c + '</b></div>' +
       '</div>' +
       '<div class="tir-tro">' + tro + '</div>' +
-      '<button class="btn-primary" id="tirTake" style="width:100%;min-height:46px;margin-top:6px">Забрать</button>';
+      '<button class="btn-primary" id="tirTake" style="width:100%;min-height:46px;margin-top:6px">' +
+        (train ? 'Понятно' : 'Забрать') + '</button>';
     const b = $('#tirTake');
     if(b) b.addEventListener('click', function(){ tirGrant(rw); });
   }
   const name = $('#tirName');
-  if(name) name.textContent = tirLeft() > 0 ? 'Сессия закончена · осталось сессий: ' + tirLeft()
-                                            : 'Сессия закончена · на сегодня всё';
+  if(name) name.textContent = train
+    ? 'Тренировка закончена · сессия не потрачена'
+    : (tirLeft() > 0 ? 'Сессия закончена · осталось сессий: ' + tirLeft()
+                     : 'Сессия закончена · на сегодня всё');
   tirS.reloadUntil = 0;
   const rl = $('#tirReload'); if(rl) rl.classList.remove('on');
   tirDrawHud();
@@ -13736,6 +14112,7 @@ function tirEnd(){
 
 function tirGrant(rw){
   $('#sniperModal').classList.remove('on');
+  if(rw.train){ renderMiniModes(); renderBalance(true); toast('Тренировка: награды нет'); return; }
   if(rw.coins) state.coins += rw.coins;
   if(rw.tok) addTokens(rw.tok);
   if(rw.cases) for(let k = 0; k < rw.cases; k++) tirOpenPend.push(rw.cmax);
@@ -13761,14 +14138,20 @@ function tirOpenNext(){
   }, 120);
 }
 
-function openSniper(){
+function openSniper(train){
   try{ SFX.click(); }catch(e){}
-  if(tirLeft() <= 0){ toast('Сессии тира на сегодня кончились. Новая — после полуночи'); return; }
+  /* 4.5.1: тренировка. Первый заход в день — всегда тренировочный (автоматически),
+     а дальше по кнопке «🎓 Тренировка». Она не тратит сессию, не даёт наград, пыли,
+     трофеев и не пишет рекорд — поэтому её можно звать сколько угодно. */
+  const autoTrain = dayUsedCount('snip') === 0 && state.tirTrainDay !== todayKey();
+  const isTrain = !!train || autoTrain;
+  if(!isTrain && tirLeft() <= 0){ toast('Сессии тира на сегодня кончились. Новая — после полуночи'); return; }
+  if(isTrain) state.tirTrainDay = todayKey();
   if(tirS && tirS.raf){ cancelAnimationFrame(tirS.raf); tirS.raf = 0; }
   tirS = { run:true, dead:false, t0:performance.now(), tick:0, bullets:TIR_SHOTS, score:0,
            hits:0, tg:[], raf:0, clock:0, trophies:[], streak:0, multi:0, decoys:0,
            panX:0, panY:0, reloadUntil:0, worldW:0, worldH:0, dragId:null,
-           dragX:0, dragY:0, dragT:0, moved:0 };
+           dragX:0, dragY:0, dragT:0, moved:0, train:isTrain };
   tir = tirS;
   const stripEl = $('#snipStrip');
   if(stripEl) stripEl.classList.toggle('scope', state.tirView === 'scope');
@@ -13779,9 +14162,11 @@ function openSniper(){
   const res = $('#snipRes'); if(res) res.innerHTML = '';
   const tap = $('#tirTapHint'); if(tap) tap.classList.remove('hide');
   const name = $('#tirName');
-  if(name) name.textContent = state.tirView === 'scope'
-    ? 'Веди пальцем по экрану · тап или «ОГОНЬ» — выстрел'
-    : 'Тапните по карточке — выстрел';
+  if(name) name.textContent = isTrain
+    ? '🎓 Тренировка: награды нет, сессия не тратится — только попадания и рекорд дня'
+    : (state.tirView === 'scope'
+        ? 'Веди пальцем по экрану · тап или «ОГОНЬ» — выстрел'
+        : 'Тапните по карточке — выстрел');
   const hint = $('#tirTapHint');
   if(hint) hint.textContent = state.tirView === 'scope'
     ? 'Прицел в центре · веди мир пальцем' : 'Тапните по карточке — выстрел';
@@ -14039,6 +14424,7 @@ function openTower() {
   }
   towerProbeTorch();
   $('#towerModal').classList.add('on');
+  musSet('tower');
   renderTower();
 }
 
@@ -14497,8 +14883,9 @@ document.addEventListener('keydown', e=>{
 
 $('#btnOpen').addEventListener('click', ()=>openCase(false));
 /* 3.3.0: испытания и крафт */
-$('#openSniper')?.addEventListener('click', openSniper);
-$('#openSniperTrial')?.addEventListener('click', openSniper);
+$('#openSniper')?.addEventListener('click', ()=>openSniper());
+$('#openSniperTrial')?.addEventListener('click', ()=>openSniper());
+$('#tirTrainBtn')?.addEventListener('click', ()=>openSniper(true));
 $('#openBatTrial')?.addEventListener('click', openBattle);
 $('#openRunTrial')?.addEventListener('click', openRun);
 $('#openTowerTrial')?.addEventListener('click', openTower);
@@ -14646,6 +15033,15 @@ function renderAbout(){
     ${albumMetricsBlock()}
     ${renderThemeBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
+      <b style="color:#ffd166">Что нового в 4.6.0</b><br>
+      <b>Музыка.</b> Три сцены синтезом на Web Audio — меню, прокрутка кейса, триумф.
+      Ни одного мегабайта mp3, работает офлайн. Кнопка 🎵 в шапке; общий тумблер звука глушит и её.<br>
+      <b>Главный квест.</b> Одна большая цель вместо семи шагов: соберите набор АК-47 и получите
+      «Призрак» — уникальный АК-47, которого нет ни в одном кейсе.<br>
+      <b>У каждого кейса свой характер прокрутки.</b> Дешёвые крутятся плавно, дорогие — «штормом»:
+      другая скорость, кривая торможения, щелчки и сила отдачи в момент остановки.<br>
+      <b>Три платные темы.</b> «Золотая», «Инферно», «Драконья» — навсегда, с блеском по шапке.<br>
+      <b>Валют стало три.</b> Билеты удачи и АФК-билеты убраны, накопленное пересчитано в кредиты.<br>
       <b style="color:#7dff9b">Что нового в 4.5.0 · Оптика</b><br>
       <b>Тир можно смотреть через оптику AWP.</b> Чёрный экран, круглый прицел с зелёной сеткой
       и метками дальномера — как в CS. Прицел стоит в центре, а под ним едет мир: ведёте
@@ -14740,11 +15136,10 @@ function renderAbout(){
       зато опыт будет капать на 8 % быстрее, заряд барабана — на 6 %, пыль — на 5 % за каждое перерождение.
       К цене продажи множителей нет и не будет. Пыль, косметика, достижения, рекорды и коллекция узоров остаются.
       Награда за уровень выдаётся один раз за всю игру — заново её не собрать.<br>
-      <b>Билеты удачи.</b> Вместо постоянного бонуса к шансу — билеты: поднимают редкость следующего
-      кейса ровно на один тир, но не выше эпической. Один в день, плюс по одному за каждое
-      перерождение (максимум 4). На дорогом результате билет не тратится — подождёт следующего кейса.<br>
-      <b>АФК-билеты.</b> Пока вас нет, копится билет: один каждые 3 часа, до 8 штук.
-      Один билет — бесплатное открытие любого кейса до 400 кредитов, все сразу одной кнопкой.
+      <b style="color:#8ff0b8">4.6.0: валют стало три.</b> Остались кредиты, жетоны и пыль.
+      Билеты удачи и АФК-билеты убраны — они делали то же самое под другими названиями.
+      Накопленные АФК-билеты пересчитаны в кредиты (по 360 за билет), ничего не потерялось.
+      Награды по таймерам остались две: кейс часа и дневной кейс.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(180,150,255,.10),rgba(120,80,255,.03));border:1px solid rgba(180,150,255,.24)">
       <b style="color:#c9b0ff">Что нового в 3.9.0</b><br>
@@ -14794,6 +15189,10 @@ function renderAbout(){
     <div class="about-snd" style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)">
       <span style="font-size:12.5px;color:#93a0b8">Звук</span>
       <button class="snd" id="btnSndAbout" type="button" title="Звук вкл/выкл">🔊</button>
+    </div>
+    <div class="about-snd" style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 0">
+      <span style="font-size:12.5px;color:#93a0b8">Музыка</span>
+      <button class="snd" id="btnMusAbout" type="button" title="Музыка вкл/выкл">🎵</button>
     </div>
     <div style="margin-top:14px;font-size:12.5px;color:#93a0b8;line-height:1.5">
       Кейсы со шансами, инвентарь и апгрейд. Шанс апгрейда = стоимость ставки ÷ цена цели;
@@ -15209,8 +15608,37 @@ document.addEventListener('click', (e)=>{
     else SFX.click();
   }, true);
   /* на телефоне звук разрешается только после касания — будим контекст сразу */
-  const wake = ()=>{ audio(); window.removeEventListener('pointerdown', wake); };
+  const wake = ()=>{
+    audio();
+    window.removeEventListener('pointerdown', wake);
+    /* 4.6.0: музыка стартует здесь же — раньше браузер звук не отдаст */
+    if(musOn) musSet(musWant || 'menu');
+  };
   window.addEventListener('pointerdown', wake, {once:true});
+  /* ---- кнопки музыки (шапка и «О игре») ---- */
+  const bm = document.getElementById('btnMus');
+  if(bm){
+    bm.textContent = musOn ? '🎵' : '🔇';
+    bm.classList.toggle('off', !musOn);
+    bm.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      audio();
+      const on = musToggle(!musOn);
+      if(on){ musWant = 'menu'; musSet('menu'); }
+      toast(on ? 'Музыка включена' : 'Музыка выключена');
+    });
+  }
+  const bma = document.getElementById('btnMusAbout');
+  if(bma){
+    bma.textContent = musOn ? '🎵' : '🔇';
+    bma.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      audio();
+      const on = musToggle(!musOn);
+      if(on){ musWant = 'menu'; musSet('menu'); }
+      toast(on ? 'Музыка включена' : 'Музыка выключена');
+    });
+  }
 })();
 
 /* =========================================================
@@ -15227,6 +15655,8 @@ function init(){
   try{ renderBoss(); }catch(e){}
   try{ updateTheme(); }catch(e){}
   try{ checkMissionsReset(); }catch(e){}
+  /* 4.6.0: набор АК-47 мог быть собран до этой версии — награду выдаём на старте */
+  try{ mainQuestCheck(); }catch(e){}
   try{ buildTicks(); }catch(e){}
   /* гарантированные рендеры старта — что бы ни упало выше */
   try{ renderBalance(false); }catch(e){}
@@ -16320,7 +16750,8 @@ function albumSeen(){
   Object.keys(src).forEach(id => { if(src[id]) out[id] = 1; });
   return out;
 }
-function albumSkinsOf(set){ return SKINS.filter(s => set.guns.indexOf(s.w) >= 0); }
+/* uniq-скины (награда главного квеста) в альбом не входят: наборы остаются 140 */
+function albumSkinsOf(set){ return SKINS.filter(s => set.guns.indexOf(s.w) >= 0 && !s.uniq); }
 function albumSetGot(set, seen){
   let n = 0;
   albumSkinsOf(set).forEach(s => { if(seen[s.id]) n++; });
@@ -16497,6 +16928,41 @@ function albumApplyFrame(){
   else if(n >= 1) el.classList.add('al-fr1');
 }
 
+/* ===== 4.6.0: ГЛАВНЫЙ КВЕСТ =====
+   Одна большая цель вместо семи мелких: собрать набор АК-47 и получить «Призрак» —
+   скин, которого нет ни в одном кейсе. Выдаётся один раз, помечается state.uniqGot. */
+const MAIN_SET = 'ak47';
+function mainQuestDone(){ return !!(state.uniqGot && state.uniqGot[MAIN_SET]); }
+function grantMainReward(){
+  if(mainQuestDone()) return false;
+  const sk = uniqueSkin();
+  if(!sk) return false;
+  if(!state.uniqGot) state.uniqGot = {};
+  state.uniqGot[MAIN_SET] = 1;
+  const it = makeItem(sk); it.uid = uidSeq++; it.uniq = 1; it.src = 'quest';
+  addSkin(sk, it);
+  save();
+  try{ SFX.bonus && SFX.bonus(); }catch(e){}
+  try{ musStinger(); }catch(e){}
+  try{
+    FX.flash('#c79bff');
+    FX.burst({count:150, colors:['#c79bff','#ffffff','#ffd166']});
+    FX.cannons(['#c79bff','#ffffff','#ffd166']);
+    FX.shake(1);
+  }catch(e){}
+  try{ showWin(sk, it, true); }catch(e){}
+  toast('Главный квест пройден: «' + sk.n + '» — скин, которого нет ни в одном кейсе', 3600);
+  renderAlbum(); renderInv && renderInv();
+  return true;
+}
+/* проверка на старте: набор мог быть собран до 4.6.0 — награда не должна потеряться */
+function mainQuestCheck(){
+  if(mainQuestDone()) return;
+  const set = ALBUM_SETS.filter(x => x.k === MAIN_SET)[0];
+  if(!set) return;
+  if(albumSetGot(set, albumSeen()) >= albumSkinsOf(set).length) grantMainReward();
+}
+
 function albumClaim(k){
   if(!state.albGot || typeof state.albGot !== 'object') state.albGot = {};
   if(state.albGot[k]) return;
@@ -16516,6 +16982,8 @@ function albumClaim(k){
   renderAlbum();
   /* 4.4.0: набор собран — закрываем главу карьеры (нарратив) */
   try{ storyChapterClosed(set.k); }catch(e){}
+  /* 4.6.0: набор АК-47 закрывает главный квест и отдаёт уникальный скин */
+  if(k === MAIN_SET) setTimeout(grantMainReward, 420);
 }
 
 function albumOpenDrop(id, got){
@@ -16882,6 +17350,12 @@ window.__sr = {
   boostCost, shieldCost, renderMods, modsReset,
   get mods(){ return { boost: upBoostCount, shield: upShieldOn, lucky: upLuckyOn }; },
   insureFee: boostCost, insureBack: function(){ return 0; },
+  /* 4.6.0: снаружи нужны музыка, темы, рулетки и главный квест — для тестов и стендов */
+  get musOn(){ return musOn; }, musSet, musToggle, musStop, musStinger,
+  PREMIUM_THEMES, buyLegend, toggleLegend, premOwned, applyTheme, renderThemeBlock,
+  SPIN_STYLES, spinStyleOf, CASE_SPIN,
+  albumClaim, albumSkinsOf, albumSetGot, albumTotals, albumSeen, ALBUM_SETS,
+  grantMainReward, mainQuestDone, mainQuestCheck, uniqueSkin, MAIN_SET,
   get fails(){ return state.fails||0; },
   MISSIONS, CASES, RAR_ORDER, KNIVES, floatMult, rollRarity, rollSkin, todayKey, RAR,
   caseCanPity, caseEV, casePrice, casePoolOf, caseAvgByRarity, rollSkin, rollRarity, makeItem, itemVal, patAvgOfSkin, luckAdd,
@@ -16897,6 +17371,8 @@ window.__sr = {
   get tokens(){ return state.tokens|0; }, setTokens(n){ state.tokens=n|0; renderTokens(); },
   spinUpgrade, openBoss, bossTick, renderBoss, bossUnlocked, FEED, PRICE_HIST, renderLuck,
   openSniper, tirFire, tirShootAt, tirEnd, openBattle, batGo, batLeft, openTower, renderTower, startTowerGame, towerLeft, TOWER_MULTS, TOWER_CHANCES,
+  /* 4.5.1: тир снаружи — состояние и шкала наград (нужно тестам и стендам) */
+  get tir(){ return tirS; }, tirLeft, tirStop, tirReward, tirNextStep, TIR_STEPS, TIR_PTS_CENTER, TIR_PTS_HIT, TIR_CENTER_N,
   tirReward, TIR_STREAK, TIR_GUNS, tirRenderGuns, tirRenderGun, tirGunCfg, tirSpawn,
   tirSetView, tirFireScope, tirPanBy, tirMiniRender, get tirState(){ return tirS; },
   /* 4.4.6 перенос прогресса */
@@ -17078,7 +17554,8 @@ window.__sr = {
     { id: "s136", n: "\u0422\u0430\u043B\u043E\u043D | \u041F\u0443\u0441\u0442\u043E\u0442\u0430", w: "talon", r: "legend", p: "void", pat: "circuit", val: 5200 },
     { id: "s137", n: "\u0413\u0435\u0439\u0448\u0430", w: "deagle", r: "legend", p: "sakura", pat: "scales", val: 3365 },
     { id: "s138", n: "\u041A\u043E\u0441\u043C\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C", w: "m4a4", r: "legend", p: "cosmic", pat: "dots", val: 1830 },
-    { id: "s139", n: "\u0411\u0430\u0431\u043E\u0447\u043A\u0430 | \u042F\u043D\u0442\u0430\u0440\u044C", w: "butterfly", r: "myth", p: "amber", pat: "marble", val: 15500 }
+    { id: "s139", n: "\u0411\u0430\u0431\u043E\u0447\u043A\u0430 | \u042F\u043D\u0442\u0430\u0440\u044C", w: "butterfly", r: "myth", p: "amber", pat: "marble", val: 15500 },
+    { id: "s140", n: "\u041F\u0440\u0438\u0437\u0440\u0430\u043A", w: "ak47", r: "myth", p: "void", pat: "marble", val: 18000, excl: true, uniq: true }
   ];
   /* 3.12.0: цены и эксклюзивность берём из игры. Раньше таблица моста была
      захардкожена и расходилась с реальными ценами (Asiimov 345 против 1000),
@@ -21090,12 +21567,7 @@ window.__sr = {
     if(tok > 0){
       tips.push(['🎟', '', 'У тебя <b>' + tok + (tok === 1 ? ' жетон' : (tok < 5 ? ' жетона' : ' жетонов')) + '</b> — это ≈ ' + money(tok * 200) + ' ₡ бесплатных открытий (кейс до ' + (A.TOKEN_MAX_PRICE||400) + ' ₡).']);
     }
-    if(A.afkLeft && A.afkLeft() > 0){
-      tips.push(['💤', 'tip-tip', 'AFK-билетов накопилось: <b>' + A.afkLeft() + '</b> из ' + (A.AFK_MAX||8) + '. Каждый — кейс до ' + (A.AFK_MAX_PRICE||400) + ' ₡.']);
-    }
-    if(A.luckTickLeft && A.luckTickLeft() > 0){
-      tips.push(['🍀', 'tip-tip', 'Билетов удачи не израсходовано: <b>' + A.luckTickLeft() + '</b>. Билет поднимает редкость следующего кейса на тир (не выше эпика).']);
-    }
+    /* 4.6.0: АФК-билеты и билеты удачи сняты — подсказок о них больше нет */
     const ready = [];
     if(A.rewReady){ ['drum','hour','day'].forEach(k => { if(A.rewReady(k)) ready.push(k === 'drum' ? 'барабан' : k === 'hour' ? 'часовой' : 'дневной'); }); }
     if(ready.length){
@@ -21125,10 +21597,7 @@ window.__sr = {
     /* --- что упущено --- */
     const miss = [];
     if(tok > 0) miss.push(['🎟', 'Жетоны', tok + ' шт.', tok * 200]);
-    const afkn = A.afkLeft ? A.afkLeft() : 0;
-    if(afkn > 0) miss.push(['💤', 'AFK-билеты', afkn + ' шт.', afkn * 200]);
-    const ltn = A.luckTickLeft ? A.luckTickLeft() : 0;
-    if(ltn > 0) miss.push(['🍀', 'Билеты удачи', ltn + ' шт.', ltn * 200]);
+    /* 4.6.0: снятые валюты в «упущенном» не считаем */
     let dustLeft = 0;
     if((st.dust|0) > 0){
       const cap = A.DUST_COIN_DAY_CAP || 500, per = A.DUST_PER_COIN || 5;
