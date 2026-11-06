@@ -1507,6 +1507,64 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .sx-msg.bad{color:#ff8f9f}
 .tirr-gun.awp{right:-22px;width:min(62%,280px)}
 .tirr-gun.usp{width:min(44%,190px)}
+/* 4.5.0: очистка ставки апгрейда. Раньше подсказка советовала «нажать «Сбросить»
+   под ставкой», а кнопки не существовало — очистить можно было только кликом
+   по слоту при трёх скинах. */
+.stake-clear{display:block;margin:6px auto 0;appearance:none;border:1px solid rgba(255,255,255,.16);
+  background:rgba(14,18,26,.7);color:#9fb0c8;font:800 10.5px/1 system-ui,sans-serif;
+  padding:7px 12px;border-radius:99px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.stake-clear:hover{color:#ff9f9f;border-color:rgba(255,120,120,.4)}
+.stake-clear:active{transform:scale(.97)}
+/* ===== 4.5.0: ОПТИКА AWP — режим стрельбы через прицел =====
+   Мир больше вьюпорта: прицел стоит в центре экрана, а едет МИР под ним —
+   это и есть «смотрю в оптику». Маску круга делает box-shadow: он тянется
+   на 100vmax вокруг круглого окна и обрезается границами сцены, так что
+   четыре div-шторки не нужны и FPS не страдает. */
+.tirr-world{position:absolute;left:0;top:0;width:100%;height:100%;will-change:transform}
+.tir-scene.scope .tirr-world{width:250%;height:172%}
+.tirr-scope{position:absolute;inset:0;z-index:11;pointer-events:none;display:none}
+.tir-scene.scope .tirr-scope{display:block}
+.tirr-scope-hole{position:absolute;left:50%;top:50%;width:min(64%,300px);aspect-ratio:1/1;
+  transform:translate(-50%,-50%);border-radius:50%;
+  box-shadow:0 0 0 100vmax rgba(2,3,5,.988), inset 0 0 36px 12px rgba(0,0,0,.9);
+  border:2px solid rgba(0,0,0,.95);transition:transform .07s ease-out}
+.tirr-scope.kick .tirr-scope-hole{transform:translate(-50%,-50%) scale(1.04)}
+.tirr-reticle{position:absolute;left:50%;top:50%;width:min(64%,300px);aspect-ratio:1/1;
+  transform:translate(-50%,-50%);color:#7dff9b;opacity:.88;
+  filter:drop-shadow(0 0 3px rgba(90,255,140,.55))}
+.tirr-reticle svg{width:100%;height:100%;display:block}
+.tirr-scope-cap{position:absolute;left:50%;top:calc(50% - min(32%,150px) - 16px);transform:translate(-50%,-50%);
+  font:800 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;color:rgba(125,255,155,.6);text-transform:uppercase}
+.tirr-mini{position:absolute;right:7px;top:42px;width:70px;height:54px;z-index:13;display:none;
+  border:1px solid rgba(125,255,155,.34);background:rgba(3,7,5,.62);border-radius:6px;overflow:hidden;
+  box-shadow:0 3px 12px -4px rgba(0,0,0,.9)}
+.tir-scene.scope .tirr-mini{display:block}
+.tirr-mini i{position:absolute;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;
+  background:#8ff0b8;box-shadow:0 0 4px rgba(143,240,184,.85)}
+.tirr-mini i.decoy{background:#7a8494;box-shadow:none}
+.tirr-mini .vp{position:absolute;border:1px solid rgba(255,255,255,.5);border-radius:2px}
+.tirr-fire{position:absolute;right:10px;bottom:calc(12% + 6px);z-index:14;display:none;
+  width:76px;height:76px;border-radius:50%;border:2px solid rgba(125,255,155,.6);
+  background:radial-gradient(circle at 50% 38%,rgba(40,80,50,.95),rgba(8,16,10,.95));
+  color:#c9ffd8;font:900 12px/1 system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.18);
+  -webkit-tap-highlight-color:transparent}
+.tir-scene.scope .tirr-fire{display:flex;align-items:center;justify-content:center}
+.tirr-fire:active{transform:scale(.95)}
+.tirr-fire.cool{opacity:.42}
+.tirr-reload{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);z-index:14;display:none;
+  width:110px;height:3px;border-radius:2px;background:rgba(255,255,255,.16);overflow:hidden}
+.tirr-reload.on{display:block}
+.tirr-reload b{display:block;height:100%;width:0;background:linear-gradient(90deg,#7dff9b,#c9ffd8)}
+/* тарелки: материал случайный, ломаются по-своему */
+.tirr-card .mat{position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:0 0 6px 6px;opacity:.75}
+.tirr-card[data-mat="clay"] .mat{background:#c0703c}
+.tirr-card[data-mat="wood"] .mat{background:#a9793f}
+.tirr-card[data-mat="glass"] .mat{background:#7fd8ff}
+.tirr-card[data-mat="metal"] .mat{background:#b8c2cf}
+.tirr-card[data-mat="gold"] .mat{background:linear-gradient(90deg,#ffd166,#fff3c4,#e0a52e)}
+.tirr-shard{position:absolute;width:5px;height:5px;z-index:12;pointer-events:none;border-radius:1px}
+
 
 
 .tir-foot{flex:0 0 auto;padding:8px 12px calc(10px + env(safe-area-inset-bottom));
@@ -3437,6 +3495,28 @@ header.hud .ver { display: none !important; }
   #srtEntry > div{padding-top:14px !important; padding-bottom:14px !important}
 }
 
+/* ===== 4.5.0: подсветка PNG-арта цветом редкости =====
+   Вектор рисовался в палитре скина и «цвел» сам, а фотография — просто фотография,
+   и в карточке цвет читался только по рамке. Здесь цвет редкости возвращается
+   свечением вокруг ствола и мягким пятном под ним. Правило стоит в конце таблицы
+   намеренно: выше по файлу есть старое .weapon-img{filter:...}, и оно перебивало. */
+.card .gwrap, .slot, #winCard .art, .craft-it .art, .run-piece, .rl-item{position:relative}
+.card .gwrap .weapon-img,
+.slot .weapon-img,
+#winCard .art .weapon-img,
+.craft-it .art .weapon-img,
+.run-piece .weapon-img,
+.rl-item .weapon-img,
+.bat-cell .weapon-img{
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.6))
+          drop-shadow(0 0 8px var(--c, var(--rar-line, #8b93a7)));
+}
+.card .gwrap::before, .craft-it .art::before, #winCard .art::before{
+  content:'';position:absolute;inset:-5px;border-radius:10px;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 50% 55%, var(--c, var(--rar-line, #8b93a7)), transparent 68%);
+  opacity:.22;
+}
+.card .gwrap > *, .craft-it .art > *, #winCard .art > *{position:relative;z-index:1}
 </style>
 <style id="albumCSS">
 /* ===== 4.3.6 · альбом «Коллекции» (вёрстка по прототипу человека) ===== */
@@ -3951,6 +4031,7 @@ header.hud .ver { display: none !important; }
       <div class="aim-tip" id="aimTip">Колесо крутится само — жать ничего не нужно</div>
       <div class="want-row" id="wantRow"></div>
       <div class="stake-row" id="stakeRow"></div>
+      <button class="stake-clear" id="stakeClear" type="button" hidden>✕ Очистить ставку</button>
       <div class="tension" id="tensionBar" hidden>
         <div class="tension-label"><span>Серия неудач</span><b id="tensionCount">0 / 5</b></div>
         <div class="tension-track"><div class="tension-fill" id="tensionFill"></div></div>
@@ -4570,7 +4651,26 @@ header.hud .ver { display: none !important; }
       <div class="tirr-lamps"><i></i><i></i><i></i></div>
       <div class="tirr-cones"></div>
       <div class="tirr-garland" id="tirrGarland"></div>
-      <div class="tirr-targets" id="tirrTargets"></div>
+      <div class="tirr-targets" id="tirrTargets"><div class="tirr-world" id="tirrWorld"></div></div>
+      <!-- 4.5.0: оптика. Маска круга — box-shadow вокруг окна, сетка — свой SVG -->
+      <div class="tirr-scope" id="tirrScope">
+        <div class="tirr-scope-hole"></div>
+        <div class="tirr-reticle" id="tirrReticle"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+          <circle cx="50" cy="50" r="41" stroke-width=".55" opacity=".5"/>
+          <circle cx="50" cy="50" r="26" stroke-width=".4" opacity=".28" stroke-dasharray="1 3"/>
+          <path d="M50 9v26M50 65v26M9 50h26M65 50h26" stroke-width=".9"/>
+          <path d="M50 46.5v7M46.5 50h7" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="1.1" fill="currentColor" stroke="none"/>
+          <path d="M50 20v4M50 76v4M20 50h4M76 50h4" stroke-width="1.1"/>
+          <path d="M41 50h3M56 50h3M50 41v3M50 56v3" stroke-width=".8" opacity=".9"/>
+          <path d="M28 72h6M28 72v-6M72 72h-6M72 72v-6M28 28h6M28 28v6M72 28h-6M72 28v6"
+                stroke-width=".8" opacity=".55"/>
+        </svg></div>
+        <div class="tirr-scope-cap">AWP · 6×</div>
+      </div>
+      <div class="tirr-mini" id="tirrMini"></div>
+      <button class="tirr-fire" id="tirFire" type="button">ОГОНЬ</button>
+      <div class="tirr-reload" id="tirReload"><b id="tirReloadBar"></b></div>
       <div class="tirr-gun" id="tirrGun"></div>
       <div class="tirr-muzzle" id="tirrMuzzle"></div>
       <div class="tirr-tracer" id="tirrTracer"></div>
@@ -5744,6 +5844,7 @@ function artRefresh(){
     if(typeof spinning !== 'undefined' && spinning){ artRefresh(); return; }
     try{ renderInv(); }catch(e){}
     try{ if(typeof renderCases === 'function') renderCases(); }catch(e){}
+    try{ if(typeof tirRenderGun === 'function') tirRenderGun(); }catch(e){}
     try{ if(typeof updateNavBadges === 'function') updateNavBadges(); }catch(e){}
   }, 240);
 }
@@ -6332,7 +6433,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.4.9';
+const VERSION = '4.5.0';
 const BUILD   = '2026-11-05';
 const SAVE_KEY = 'skinrush_v1';
 let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
@@ -6360,7 +6461,7 @@ let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
              /* 4.4.0 карьера-нарратив */
              rank:'', chapters:0,
              /* 4.4.5 тир v2: рекорд по шкале 900 и косметика оружия */
-             tirBest:0, tirV3:1, tirGun:'glock'};
+             tirBest:0, tirV3:1, tirGun:'glock', tirView:'scope'};
 let uidSeq = 1;
 
 /* =========================================================
@@ -6534,6 +6635,8 @@ function normalizeState(s){
   if(!s.tirV3){ s.tirBest = 0; s.tirV3 = 1; }
   /* 4.4.5: косметика оружия в тире. Старым сейвам — Glock, как было до v2. */
   if(['glock','usp','awp'].indexOf(s.tirGun) < 0) s.tirGun = 'glock';
+  /* 4.5.0: вид тира. Старые сейвы поля не знают — получают оптику как основной вид */
+  if(s.tirView !== 'classic' && s.tirView !== 'scope') s.tirView = 'scope';
   /* 4.4.6: рекорд тира НЕ обнуляем повторно. В 4.4.5 здесь стояло обнуление, и оно
      било по живым игрокам: у них рекорд набран в шкале 750, а новая шкала только ШИРЕ
      (900 при пяти центрах + мультивыстрел). Старые 750 в ней достижимы, значит честнее
@@ -10075,6 +10178,9 @@ function renderSlots(){
 
   renderWant();
   renderMods();
+  /* 4.5.0: кнопка очистки видна только когда в ставке что-то есть */
+  const clearBtn = $('#stakeClear');
+  if(clearBtn) clearBtn.hidden = stake.length === 0;
   /* точки ставки */
   const row = $('#stakeRow');
   if(row){
@@ -10190,7 +10296,7 @@ function openPick(mode){
       .sort((a,b)=>b.val - a.val);
     if(!list.length){
       grid.innerHTML = `<div class="empty-note" style="grid-column:1/-1">${
-        upStake.length >= 3 ? 'Уже выбрано 3 скина — нажмите «Сбросить» под ставкой.' : 'Инвентарь пуст — сначала откройте кейс.'}</div>`;
+        upStake.length >= 3 ? 'Уже выбрано 3 скина — нажмите «✕ Очистить ставку» под ставкой.' : 'Инвентарь пуст — сначала откройте кейс.'}</div>`;
       $('#pickModal').classList.add('on');
       return;
     }
@@ -12926,7 +13032,7 @@ function runFinish(){
    за 9000 превращает тир в фарм аукциона (расчёт в skin-rush-идеи.md, разд. 25). */
 const TIR_SESSIONS = 2;
 const TIR_SHOTS = 5;
-const TIR_SECONDS = 20;
+const TIR_SECONDS = 18;      /* 4.5.0: было 20 — время тоже давит */
 const TIR_CARDS = 6;
 const TIR_PTS_CENTER = 150;
 const TIR_PTS_HIT = 100;
@@ -12938,22 +13044,39 @@ const TIR_DUST_PER_HIT = 30;
 const TIR_STREAK = 3;
 /* обманки: 1–2 серые карточки поверх шести трофейных. Попал — теряешь ещё выстрел
    и обнуляешь серию. Трофейные карточки не заменяют: иначе обманка отнимала бы счёт. */
-const TIR_DECOY_2 = 0.45;             /* шанс, что обманок две, а не одна */
+/* 4.5.0: обманок всегда две. Раньше вторая выпадала с шансом 45 % — при таком темпе
+   «может повезти» читалось как случайность, а не как правило, и игрок не учился
+   смотреть по сторонам. Теперь правило жёсткое: две. */
+const TIR_DECOY_2 = 1;
 /* косметика оружия: бесплатно, только картинка, звук, трассер и отдача.
    Зона попадания и очки не меняются — иначе это была бы покупка силы. */
 const TIR_GUNS = {
-  glock: { n:'Glock-18', w:'glock', sfx:'shot',    tr:'255,232,168', ms:160 },
-  usp:   { n:'USP-S',    w:'usp',   sfx:'shotSup', tr:'168,216,255', ms:150 },
-  awp:   { n:'AWP',      w:'awp',   sfx:'shotAwp', tr:'200,255,176', ms:330 }
+  glock: { n:'Glock-18', w:'glock', sfx:'shot',    tr:'255,232,168', ms:160, rl:250 },
+  usp:   { n:'USP-S',    w:'usp',   sfx:'shotSup', tr:'168,216,255', ms:150, rl:300 },
+  awp:   { n:'AWP',      w:'awp',   sfx:'shotAwp', tr:'200,255,176', ms:330, rl:750 }
 };
+/* 4.5.0: перезарядка между выстрелами. У AWP длинная — это и есть её цена, поэтому
+   в прицеле AWP-режим ощущается тяжелее, хотя очки одинаковые. */
 function tirGunCfg(){ return TIR_GUNS[state.tirGun] || TIR_GUNS.glock; }
 const TIR_W = { common:8, uncommon:6, rare:4, epic:3 };   /* веса спавна */
 const TIR_SIZE = { common:54, uncommon:58, rare:64, epic:70 };
-const TIR_SPEED = { common:0.32, uncommon:0.45, rare:0.55, epic:0.68 };
+/* 4.5.0: скорость ×1.6 (было .32/.45/.55/.68). Замер по модели: сама по себе скорость
+   слабый рычаг, но вместе с двумя обманками, качанием по вертикали и 18 секундами
+   она забирает у верхней ступени примерно половину заходов (было 42 % → стало ~20 %). */
+const TIR_SPEED = { common:0.51, uncommon:0.72, rare:0.88, epic:1.09 };
+const TIR_VY = 0.45;                  /* доля вертикального качания от скорости */
+/* зона «центр» (150 очков): в прицеле она же уже, потому что бить всегда в центр */
+const TIR_CENTER_N = { classic:0.45, scope:0.35 };
+/* материал тарелки — случайный, только вид и обломки */
+const TIR_MATS = ['clay','wood','glass','metal','gold'];
+const TIR_MAT_W = { clay:30, wood:26, glass:22, metal:16, gold:6 };
+const TIR_MAT_SHARD = { clay:'#c0703c', wood:'#a9793f', glass:'#7fd8ff', metal:'#d7dee8', gold:'#ffd166' };
 
 let tirOpenPend = [];
 let tirS = { run:false, dead:false, t0:0, tick:0, bullets:TIR_SHOTS, score:0,
-             hits:0, tg:[], raf:0, clock:0, trophies:[], streak:0, multi:0, decoys:0 };
+             hits:0, tg:[], raf:0, clock:0, trophies:[], streak:0, multi:0, decoys:0,
+             panX:0, panY:0, reloadUntil:0, worldW:0, worldH:0, dragId:null,
+             dragX:0, dragY:0, dragT:0, moved:0 };
 /* совместимость: снаружи (window.__sr, старые вызовы) тир звали через tir */
 let tir = tirS;
 
@@ -13002,15 +13125,27 @@ function tirPickSkin(){
   return pool[0];
 }
 
-function tirPlaceCard(box, placed, W, H, i, skin, decoy){
-  const cw = decoy ? 52 : (TIR_SIZE[skin.r] || 58);
+/* материал тарелки: чистая косметика, на очки не влияет */
+function tirMatPick(){
+  let tot = 0;
+  for(const m of TIR_MATS) tot += TIR_MAT_W[m];
+  let r = Math.random() * tot;
+  for(const m of TIR_MATS){ r -= TIR_MAT_W[m]; if(r <= 0) return m; }
+  return 'clay';
+}
+
+function tirPlaceCard(box, placed, W, H, i, skin, decoy, opts){
+  opts = opts || {};
+  const depth = opts.depth || 1;                 /* 1 = близко, 0.62 = далеко */
+  const baseW = decoy ? 52 : (TIR_SIZE[skin.r] || 58);
+  const cw = Math.max(30, Math.round(baseW * depth));
+  const mat = decoy ? 'metal' : tirMatPick();
   const el = document.createElement('div');
   el.className = 'tirr-tg';
   let inner;
   if(decoy){
-    /* серую карточку видно сразу: пунктир, косые полосы, вместо цены — «−1» */
-    inner = '<div class="tirr-rope"></div>' +
-      '<div class="tirr-card decoy" style="--cw:' + cw + 'px;--c:#6b7480">' +
+    inner = (opts.world ? '' : '<div class="tirr-rope"></div>') +
+      '<div class="tirr-card decoy" data-mat="metal" style="--cw:' + cw + 'px;--c:#6b7480">' +
         '<span class="dot"></span>' +
         '<div class="art dc">☠</div>' +
         '<div class="nm">обманка</div>' +
@@ -13018,38 +13153,66 @@ function tirPlaceCard(box, placed, W, H, i, skin, decoy){
       '</div>';
   } else {
     const R = RAR[skin.r] || { color:'#5a6472' };
-    inner = '<div class="tirr-rope"></div>' +
-      '<div class="tirr-card" style="--cw:' + cw + 'px;--c:' + R.color + '">' +
+    inner = (opts.world ? '' : '<div class="tirr-rope"></div>') +
+      '<div class="tirr-card" data-mat="' + mat + '" style="--cw:' + cw + 'px;--c:' + R.color + '">' +
         '<span class="dot"></span>' +
         '<div class="art">' + svgWeapon(skin, { svg:true }) + '</div>' +
         '<div class="nm" style="color:' + R.color + '">' + skin.n + '</div>' +
         '<div class="pr">' + skin.val.toLocaleString('ru-RU') + '</div>' +
+        '<div class="mat"></div>' +
       '</div>';
   }
   el.innerHTML = inner;
+  if(depth < 0.85){
+    /* дальняя тарелка: чуть размыта и темнее — отсюда ощущение глубины без 3D */
+    el.style.filter = 'blur(' + ((0.85 - depth) * 2.2).toFixed(2) + 'px) brightness(' +
+                      (0.72 + depth * 0.28).toFixed(2) + ')';
+    el.style.zIndex = String(Math.round(depth * 10));
+  }
   box.appendChild(el);
-  const rect = el.getBoundingClientRect();
-  const w = rect.width || cw, h = rect.height || cw * 1.5;
-  /* три полосы по высоте, чтобы карточки не наезжали друг на друга */
-  const band = i % 3;
-  const minY = 26, spanY = Math.max(0, H - h - minY);
-  let y = minY + Math.round(spanY * (band === 0 ? 0.04 : band === 1 ? 0.50 : 0.96));
-  y = Math.max(minY, Math.min(H - h, y));
-  /* X: пробуем несколько раз, чтобы не лечь на уже поставленную карточку */
+  const w = cw, h = Math.round(cw * 1.52);
+  const bands = opts.bands || 3;
+  const band = i % bands;
+  /* 4.5.0: в прицеле карточку можно поставить только там, куда реально дотянется
+     прицел. Если положить её у самого края мира, panX упрётся в предел, и тарелка
+     навсегда останется за кадром — недостижимая цель. Поэтому зона размещения
+     сужена до «централизуемой»: [sw/2 … W-sw/2] по X и то же по Y. */
+  const area = opts.area || { x0: 8, x1: W - 8, y0: 8, y1: H - 8 };
+  const minY = Math.max(area.y0, opts.minY || 8);
+  const spanY = Math.max(0, (area.y1 - h) - minY);
+  const spot = bands <= 1 ? 0.5 : band / (bands - 1);
+  let y = minY + Math.round(spanY * spot);
+  y = Math.max(minY, Math.min(area.y1 - h, y));
   let x = 0;
-  for(let att = 0; att < 18; att++){
-    x = Math.random() * Math.max(0, W - w);
+  const axMin = area.x0, axMax = Math.max(area.x0, area.x1 - w);
+  for(let att = 0; att < 24; att++){
+    x = axMin + Math.random() * Math.max(0, axMax - axMin);
     let bad = false;
-    for(const p of placed){
-      if(x < p.x + p.w + 6 && x + w + 6 > p.x && y < p.y + p.h + 6 && y + h + 6 > p.y){ bad = true; break; }
+    for(const p2 of placed){
+      if(x < p2.x + p2.w + 8 && x + w + 8 > p2.x && y < p2.y + p2.h + 8 && y + h + 8 > p2.y){ bad = true; break; }
     }
     if(!bad) break;
   }
   placed.push({ x:x, y:y, w:w, h:h });
+  /* 4.5.0: карточки качаются и по вертикали. Раньше движение было только по
+     горизонтали, поэтому прицел «ехал по рельсе» — отсюда и ощущение лёгкости. */
+  const roam = Math.min(30, Math.max(6, Math.round((H - h) / 14)));
+  /* 4.5.0: карточка гуляет ТОЛЬКО внутри коридора, который прицел умеет навести.
+     Иначе она уезжает в полосу мира у края, panX упирается в предел, и цель
+     становится недостижимой — в тесте такие «мёртвые» карточки и нашлись. */
+  const xMin = opts.area ? (opts.area.x0 - w / 2) : 0;
+  const xMax = opts.area ? (opts.area.x1 - w / 2) : Math.max(0, W - w);
+  if(x < xMin) x = xMin;
+  if(x > xMax) x = xMax;
   const g = {
-    skin: skin, el: el, x: x, y: y, w: w, h: h, decoy: !!decoy,
-    vx: decoy ? TIR_SPEED.common * (W / 100) * 0.05 * 0.8
+    skin: skin, el: el, x: x, y: y, w: w, h: h, decoy: !!decoy, mat: mat, depth: depth,
+    xMin: xMin, xMax: xMax,
+    vx: decoy ? TIR_SPEED.common * (W / 100) * 0.05
               : TIR_SPEED[skin.r] * (W / 100) * 0.05 * (0.85 + Math.random() * 0.3),
+    vy: (Math.random() < 0.5 ? 1 : -1) * TIR_SPEED.common * (H / 100) * 0.05 * TIR_VY
+        * (0.7 + Math.random() * 0.8),
+    yMin: Math.max(2, y - roam),
+    yMax: Math.min(H - h - 2, y + roam),
     dir: Math.random() < 0.5 ? 1 : -1,
     alive: true
   };
@@ -13059,22 +13222,125 @@ function tirPlaceCard(box, placed, W, H, i, skin, decoy){
 }
 
 function tirSpawn(){
-  const box = $('#tirrTargets');
+  const world = (state.tirView === 'scope') ? $('#tirrWorld') : $('#tirrTargets');
+  const box = world || $('#tirrTargets');
   if(!box) return;
-  box.innerHTML = '';
+  const holder = $('#tirrWorld');
+  if(holder) holder.innerHTML = '';
+  const targets = $('#tirrTargets');
+  if(targets) targets.innerHTML = '';
+  if(holder && targets) targets.appendChild(holder);
   tirS.tg = [];
   tirS.decoys = 0;
-  const W = box.clientWidth || 320, H = box.clientHeight || 320;
+
+  const scope = state.tirView === 'scope';
+  const scene = $('#snipStrip');
+  const sceneW = scene ? scene.clientWidth : 320;
+  const sceneH = scene ? scene.clientHeight : 320;
+  /* мир в прицеле больше экрана: 250 % × 172 %, прицел стоит в центре */
+  const W = scope ? Math.round(sceneW * 2.5) : (targets ? targets.clientWidth : 320);
+  const H = scope ? Math.round(sceneH * 1.72) : (targets ? targets.clientHeight : 320);
+  tirS.worldW = W; tirS.worldH = H;
+
   const placed = [];
+  /* досягаемая зона: прицел стоит в центре экрана, значит центр любой карточки
+     должен уметь попасть в центр — по X от sw/2 до W-sw/2, по Y от sh/2 до H-sh/2 */
+  const area = scope
+    ? { x0: Math.round(sceneW / 2), x1: W - Math.round(sceneW / 2),
+        y0: Math.round(sceneH / 2), y1: H - Math.round(sceneH / 2) }
+    : null;
+  const optsBase = scope ? { world:true, bands:4, minY:12, area:area } : { bands:3 };
   for(let i = 0; i < TIR_CARDS; i++){
-    tirPlaceCard(box, placed, W, H, i, tirPickSkin(), false);
+    const o = Object.assign({}, optsBase);
+    if(scope) o.depth = 0.62 + Math.random() * 0.38;
+    tirPlaceCard(box, placed, W, H, i, tirPickSkin(), false, o);
   }
-  /* 4.4.5: обманки стоят ВДОБАВОК к шести трофейным — иначе они отнимали бы счёт. */
-  const dn = Math.random() < TIR_DECOY_2 ? 2 : 1;
-  for(let k = 0; k < dn; k++){
-    tirPlaceCard(box, placed, W, H, TIR_CARDS + k, null, true);
+  /* 4.5.0: обманок всегда две, вдобавок к шести трофейным */
+  for(let k = 0; k < 2; k++){
+    const o = Object.assign({}, optsBase);
+    if(scope) o.depth = 0.72 + Math.random() * 0.24;
+    tirPlaceCard(box, placed, W, H, TIR_CARDS + k, null, true, o);
     tirS.decoys++;
   }
+  /* в прицеле центрируем мир так, чтобы прицел смотрел в середину */
+  if(scope){
+    tirS.panX = -Math.round((W - sceneW) / 2);
+    tirS.panY = -Math.round((H - sceneH) / 2);
+    tirScopePan();
+    tirMiniRender();
+  }
+}
+
+/* ================= 4.5.0: оптика — панорама, мини-карта, режим ================= */
+function tirScopePan(){
+  const holder = $('#tirrWorld');
+  if(!holder) return;
+  holder.style.transform = 'translate3d(' + (tirS.panX || 0).toFixed(1) + 'px,' +
+                           (tirS.panY || 0).toFixed(1) + 'px,0)';
+}
+
+/* Сколько можно уехать: мир минус окно. Ограничение обязательно, иначе легко
+   утащить мир в пустоту и остаться с чёрным экраном без мишеней. */
+function tirPanBounds(){
+  const scene = $('#snipStrip');
+  const sw = scene ? scene.clientWidth : 320, sh = scene ? scene.clientHeight : 320;
+  return { minX: Math.min(0, sw - (tirS.worldW || sw)), maxX: 0,
+           minY: Math.min(0, sh - (tirS.worldH || sh)), maxY: 0 };
+}
+function tirPanBy(dx, dy){
+  const b = tirPanBounds();
+  tirS.panX = Math.max(b.minX, Math.min(b.maxX, (tirS.panX || 0) + dx));
+  tirS.panY = Math.max(b.minY, Math.min(b.maxY, (tirS.panY || 0) + dy));
+  tirScopePan();
+}
+
+/* мини-карта: дот на каждую живую тарелку + рамка того, что видно в прицеле */
+function tirMiniRender(){
+  const box = $('#tirrMini');
+  if(!box || state.tirView !== 'scope') return;
+  const scene = $('#snipStrip');
+  const sw = scene ? scene.clientWidth : 320, sh = scene ? scene.clientHeight : 320;
+  const W = tirS.worldW || sw, H = tirS.worldH || sh;
+  const bw = box.clientWidth || 70, bh = box.clientHeight || 54;
+  let html = '';
+  for(const g of tirS.tg){
+    if(!g.alive) continue;
+    const cx = ((g.x + g.w / 2) / W) * bw, cy = ((g.y + g.h / 2) / H) * bh;
+    html += '<i class="' + (g.decoy ? 'decoy' : '') + '" style="left:' + cx.toFixed(1) +
+            'px;top:' + cy.toFixed(1) + 'px"></i>';
+  }
+  const vx = ((-(tirS.panX || 0)) / W) * bw, vy = ((-(tirS.panY || 0)) / H) * bh;
+  html += '<span class="vp" style="left:' + vx.toFixed(1) + 'px;top:' + vy.toFixed(1) +
+          'px;width:' + ((sw / W) * bw).toFixed(1) + 'px;height:' + ((sh / H) * bh).toFixed(1) + 'px"></span>';
+  box.innerHTML = html;
+}
+
+/* полоска перезарядки: видно, почему выстрел не идёт */
+function tirReloadPaint(){
+  const wrap = $('#tirReload'), bar = $('#tirReloadBar'), btn = $('#tirFire');
+  const total = (tirGunCfg().rl || 250);
+  const left = Math.max(0, (tirS.reloadUntil || 0) - performance.now());
+  const on = left > 0 && tirS.run;
+  if(wrap) wrap.classList.toggle('on', !!on);
+  if(bar) bar.style.width = on ? (100 * (1 - left / total)).toFixed(0) + '%' : '0%';
+  if(btn) btn.classList.toggle('cool', !!on);
+}
+
+/* переключение вида: классика ↔ оптика */
+function tirSetView(v){
+  v = (v === 'classic') ? 'classic' : 'scope';
+  if(state.tirView === v){ renderMiniModes(); return; }
+  state.tirView = v;
+  try{ save(); }catch(e){}
+  const strip = $('#snipStrip');
+  if(strip) strip.classList.toggle('scope', v === 'scope');
+  if(tirS.run){
+    tirS.panX = 0; tirS.panY = 0; tirS.tg = [];
+    tirSpawn();
+    tirDrawHud();
+  }
+  tirRenderGuns();
+  renderMiniModes();
 }
 
 /* 4.4.5: картинка ствола по выбранной косметике. Меняется на лету и в открытой
@@ -13085,7 +13351,10 @@ function tirRenderGun(){
   const cfg = tirGunCfg();
   const sk = SKINS.filter(function(x){ return x.w === cfg.w; })[0];
   gun.className = 'tirr-gun ' + state.tirGun;
-  gun.innerHTML = sk ? svgWeapon(sk, { svg:true }) : '';
+  /* 4.5.0: крупный ствол в кадре рисуем PNG, если файл есть на сайте.
+     У AWP файла нет (awp.png = 404), поэтому он остаётся вектором — это не выбор,
+     а отсутствие картинки; появится файл — подхватится сам, код менять не нужно. */
+  gun.innerHTML = sk ? svgWeapon(sk) : '';
 }
 function tirRenderGuns(){
   const box = $('#tirGuns');
@@ -13093,7 +13362,13 @@ function tirRenderGuns(){
   box.innerHTML = Object.keys(TIR_GUNS).map(function(k){
     return '<button class="tir-gun-chip' + (state.tirGun === k ? ' on' : '') +
            '" data-gun="' + k + '">' + TIR_GUNS[k].n + '</button>';
-  }).join('');
+  }).join('') +
+  '<button class="tir-gun-chip view' + (state.tirView === 'scope' ? ' on' : '') +
+  '" data-view="' + (state.tirView === 'scope' ? 'classic' : 'scope') + '" title="Вид тира">' +
+  (state.tirView === 'scope' ? '🔭 Оптика' : '🎯 Классика') + '</button>';
+  Array.prototype.forEach.call(box.querySelectorAll('[data-view]'), function(btn){
+    btn.addEventListener('click', function(){ try{ SFX.click(); }catch(e){} tirSetView(btn.dataset.view); });
+  });
   Array.prototype.forEach.call(box.querySelectorAll('[data-gun]'), function(btn){
     btn.addEventListener('click', function(){
       if(state.tirGun === btn.dataset.gun) return;
@@ -13116,6 +13391,8 @@ function tirDrawHud(){
   const T = $('#tirSess');  if(T) T.textContent = tirLeft();
 }
 
+function xmaxSafe(g, maxX){ return Math.max((g.xMin != null ? g.xMin : 0), maxX); }
+
 function tirLoop(t){
   if(!tirS.run) return;
   const box = $('#tirrTargets');
@@ -13125,11 +13402,20 @@ function tirLoop(t){
   for(const g of tirS.tg){
     if(!g.alive) continue;
     g.x += g.dir * g.vx * dt;
-    const maxX = W - g.w;
-    if(g.x <= 0){ g.x = 0; g.dir = 1; }
-    else if(g.x >= maxX){ g.x = Math.max(0, maxX); g.dir = -1; }
+    const minX = (g.xMin != null) ? g.xMin : 0;
+    const maxX = (g.xMax != null) ? g.xMax : (W - g.w);
+    if(g.x <= minX){ g.x = minX; g.dir = 1; }
+    else if(g.x >= maxX){ g.x = xmaxSafe(g, maxX); g.dir = -1; }
+    /* 4.5.0: качание по вертикали в своей полосе — карточка не идёт по рельсе */
+    if(g.vy){
+      g.y += g.vy * dt;
+      if(g.y <= g.yMin){ g.y = g.yMin; g.vy = Math.abs(g.vy); }
+      else if(g.y >= g.yMax){ g.y = g.yMax; g.vy = -Math.abs(g.vy); }
+    }
     g.el.style.transform = 'translate3d(' + g.x.toFixed(1) + 'px,' + g.y.toFixed(1) + 'px,0)';
   }
+  /* перезарядка: полоска под прицелом и остывшая кнопка */
+  tirReloadPaint();
   /* таймер */
   const left = TIR_SECONDS - (performance.now() - tirS.t0) / 1000;
   const tl = $('#tirTimer');
@@ -13171,7 +13457,10 @@ function tirHole(px, py){
 function tirShootAt(clientX, clientY){
   if(!tirS.run || tirS.dead) return;
   if(tirS.bullets <= 0) return;
+  /* 4.5.0: перезарядка. У AWP 0.75 с — это её цена, очки от этого не меняются. */
+  if(tirS.reloadUntil && performance.now() < tirS.reloadUntil) return;
   tirS.bullets--;
+  tirS.reloadUntil = performance.now() + (tirGunCfg().rl || 250);
 
   const scene = $('#snipStrip');
   const sr = scene ? scene.getBoundingClientRect() : { left:0, top:0, width:0, height:0 };
@@ -13179,8 +13468,12 @@ function tirShootAt(clientX, clientY){
   const tbox = $('#tirrTargets');
   const br = tbox ? tbox.getBoundingClientRect() : sr;
   /* попадание считаем в системе контейнера мишеней: он начинается не с верха сцены,
-     и без пересчёта каждая карточка «съезжает» вверх на высоту потолка */
-  const bx = clientX - br.left, by = clientY - br.top;
+     и без пересчёта каждая карточка «съезжает» вверх на высоту потолка.
+     4.5.0: в прицеле мир ещё и сдвинут панорамой, поэтому вычитаем panX/panY —
+     иначе пуля «промахивалась» бы ровно на величину сдвига. */
+  const pX = (state.tirView === 'scope') ? (tirS.panX || 0) : 0;
+  const pY = (state.tirView === 'scope') ? (tirS.panY || 0) : 0;
+  const bx = clientX - br.left - pX, by = clientY - br.top - pY;
 
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gcfg = tirGunCfg();
@@ -13250,6 +13543,11 @@ function tirShootAt(clientX, clientY){
     g.el.classList.add('dead');
     tirS.score += pts;
     tirS.hits++;
+    /* 4.5.0: тарелка ломается по-своему. Это только вид: материал случайный,
+       на очки не влияет. Стекло — колкие треугольники, металл — искры,
+       глина — пыль, дерево — щепа, золото — блёстки. */
+    tirShards(x, y, g.mat);
+    tirMiniRender();
     tirS.trophies.push({ skin: g.skin, item: makeItem(g.skin) });
     const R = RAR[g.skin.r] || { color:'#ffffff' };
     try{ if(FX && FX.burst) FX.burst({ count:18, x:x, y:y, colors:[R.color, '#ffffff'] }); }catch(e){}
@@ -13270,7 +13568,8 @@ function tirShootAt(clientX, clientY){
     setTimeout(function(){ if(g.el.parentNode) g.el.parentNode.removeChild(g.el); }, 600);
   } else if(hit){
     const g = hit.g;
-    const center = hit.nx <= 0.45 && hit.ny <= 0.45;
+    const cn = TIR_CENTER_N[state.tirView] || 0.45;
+    const center = hit.nx <= cn && hit.ny <= cn;
     const pts = center ? TIR_PTS_CENTER : TIR_PTS_HIT;
     const multi = tirS.streak >= TIR_STREAK;
     let killed = 1;
@@ -13311,6 +13610,50 @@ function tirShootAt(clientX, clientY){
   if(tirS.bullets <= 0 || left === 0){
     setTimeout(function(){ tirEnd(); }, 700);
   }
+}
+
+/* осколки от тарелки: 10–14 коротких искр цветом материала */
+function tirShards(x, y, mat){
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;
+  const scene = $('#snipStrip');
+  if(!scene) return;
+  const col = TIR_MAT_SHARD[mat] || '#c9d4e2';
+  const n = mat === 'glass' ? 14 : (mat === 'metal' ? 12 : 10);
+  for(let i = 0; i < n; i++){
+    const el = document.createElement('div');
+    el.className = 'tirr-shard';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.background = col;
+    el.style.borderRadius = mat === 'glass' ? '0' : '50%';
+    el.style.width = el.style.height = (mat === 'glass' ? 4 + Math.random() * 4 : 3 + Math.random() * 3) + 'px';
+    scene.appendChild(el);
+    const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 44;
+    const dx = Math.cos(a) * d, dy = Math.sin(a) * d + 22;
+    el.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: 'translate(' + dx.toFixed(1) + 'px,' + (dy * 0.55).toFixed(1) + 'px) rotate(' + (180 * Math.random()).toFixed(0) + 'deg)', opacity: .9, offset: .55 },
+      { transform: 'translate(' + (dx * 1.15).toFixed(1) + 'px,' + (dy + 26).toFixed(1) + 'px) rotate(' + (360 * Math.random()).toFixed(0) + 'deg)', opacity: 0 }
+    ], { duration: 520 + Math.random() * 220, easing: 'cubic-bezier(.25,.7,.4,1)' });
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 800);
+  }
+}
+
+/* 4.5.0: выстрел в центр перекрестья (режим оптики) */
+function tirFireScope(){
+  if(!tirS.run || tirS.dead) return;
+  const strip = $('#snipStrip');
+  if(!strip) return;
+  const r = strip.getBoundingClientRect();
+  /* отдача видна на самой оптике: круг на миг дёргается */
+  const sc = $('#tirrScope');
+  if(sc && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    sc.classList.remove('kick'); void sc.offsetWidth; sc.classList.add('kick');
+    setTimeout(function(){ sc.classList.remove('kick'); }, 90);
+  }
+  tirShootAt(r.left + r.width / 2, r.top + r.height / 2);
+  tirMiniRender();
 }
 
 /* старые вызовы (кнопка, пробел, window.__sr) бьют в центр сцены */
@@ -13385,6 +13728,8 @@ function tirEnd(){
   const name = $('#tirName');
   if(name) name.textContent = tirLeft() > 0 ? 'Сессия закончена · осталось сессий: ' + tirLeft()
                                             : 'Сессия закончена · на сегодня всё';
+  tirS.reloadUntil = 0;
+  const rl = $('#tirReload'); if(rl) rl.classList.remove('on');
   tirDrawHud();
   renderMiniModes(); renderBalance(true); renderInv && renderInv();
 }
@@ -13421,15 +13766,25 @@ function openSniper(){
   if(tirLeft() <= 0){ toast('Сессии тира на сегодня кончились. Новая — после полуночи'); return; }
   if(tirS && tirS.raf){ cancelAnimationFrame(tirS.raf); tirS.raf = 0; }
   tirS = { run:true, dead:false, t0:performance.now(), tick:0, bullets:TIR_SHOTS, score:0,
-           hits:0, tg:[], raf:0, clock:0, trophies:[], streak:0, multi:0, decoys:0 };
+           hits:0, tg:[], raf:0, clock:0, trophies:[], streak:0, multi:0, decoys:0,
+           panX:0, panY:0, reloadUntil:0, worldW:0, worldH:0, dragId:null,
+           dragX:0, dragY:0, dragT:0, moved:0 };
   tir = tirS;
+  const stripEl = $('#snipStrip');
+  if(stripEl) stripEl.classList.toggle('scope', state.tirView === 'scope');
   tirGarland();
   tirRenderGuns();
   tirRenderGun();
   $('#sniperModal').classList.add('on');
   const res = $('#snipRes'); if(res) res.innerHTML = '';
   const tap = $('#tirTapHint'); if(tap) tap.classList.remove('hide');
-  const name = $('#tirName'); if(name) name.textContent = 'Тапните по карточке — выстрел';
+  const name = $('#tirName');
+  if(name) name.textContent = state.tirView === 'scope'
+    ? 'Веди пальцем по экрану · тап или «ОГОНЬ» — выстрел'
+    : 'Тапните по карточке — выстрел';
+  const hint = $('#tirTapHint');
+  if(hint) hint.textContent = state.tirView === 'scope'
+    ? 'Прицел в центре · веди мир пальцем' : 'Тапните по карточке — выстрел';
   const tl = $('#tirTimer'); if(tl) tl.textContent = TIR_SECONDS.toFixed(1);
   const pill = $('#tirTimerPill'); if(pill) pill.classList.remove('urgent');
   tirDrawHud();
@@ -13701,7 +14056,7 @@ function renderTower() {
       <div class="hint" style="margin-bottom:10px;text-align:center">Сессий сегодня: <b style="color:#ffd08a">${towerLeft()}</b> из ${TOWER_DAY_MAX}. Выберите скин для ставки: пройдёте этаж — множитель вырастет, не пройдёте — скин сгорит.</div>
       <div class="pick-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;max-height:300px;overflow-y:auto">
         ${inv.map(x => `
-          <div class="card" data-uid="${x.uid}" style="padding:6px;cursor:pointer;text-align:center">
+          <div class="card" data-uid="${x.uid}" data-rarity="${x.skin.r}" style="padding:6px;cursor:pointer;text-align:center">
             <div style="height:40px;display:flex;align-items:center;justify-content:center">${svgWeapon(x.skin)}</div>
             <div style="font-size:9.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.skin.n}</div>
             <div style="font-size:10px;color:#ffd08a;font-weight:800">${x.val}</div>
@@ -14151,27 +14506,64 @@ $('#openTowerTrial')?.addEventListener('click', openTower);
 (function(){
   const strip = $('#snipStrip');
   if(!strip) return;
+  /* 4.5.0: два режима.
+     • Классика — как было: тап бьёт в точку касания.
+     • Оптика — прицел в центре, палец ТАЩИТ МИР (мир едет под прицелом). Короткое
+       касание без сдвига — выстрел в центр перекрестья, чтобы не приходилось
+       искать кнопку. Кнопка «ОГОНЬ» делает то же самое.
+     Разделяем по сдвигу и времени: < 9 px за < 240 мс — это тап, всё остальное — панорама. */
   strip.addEventListener('pointerdown', e => {
     if(e.target.closest && e.target.closest('.tirr-hud')) return;
+    if(e.target.closest && e.target.closest('.tirr-fire')) return;
+    if(state.tirView === 'scope'){
+      tirS.dragId = e.pointerId || 1;
+      tirS.dragX = e.clientX; tirS.dragY = e.clientY;
+      tirS.dragT = performance.now(); tirS.moved = 0;
+      strip.setPointerCapture && e.pointerId != null && strip.setPointerCapture(e.pointerId);
+      return;
+    }
     tirShootAt(e.clientX, e.clientY);
   });
-  strip.addEventListener('keydown', e => {
-    if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); tirFire(); }
-  });
-  /* свободный прицел только для мыши: на тач он оказался бы под пальцем */
   strip.addEventListener('pointermove', e => {
+    if(state.tirView === 'scope' && tirS.dragId != null){
+      const dx = e.clientX - tirS.dragX, dy = e.clientY - tirS.dragY;
+      tirS.moved += Math.abs(dx) + Math.abs(dy);
+      tirPanBy(dx, dy);
+      tirS.dragX = e.clientX; tirS.dragY = e.clientY;
+      return;
+    }
     const cross = $('#tirrCross');
     if(!cross) return;
-    if(e.pointerType !== 'mouse'){ cross.classList.remove('on'); return; }
+    if(e.pointerType !== 'mouse' || state.tirView === 'scope'){ cross.classList.remove('on'); return; }
     const r = strip.getBoundingClientRect();
     cross.classList.add('on');
     cross.style.left = (e.clientX - r.left) + 'px';
     cross.style.top = (e.clientY - r.top) + 'px';
   });
+  strip.addEventListener('pointerup', e => {
+    if(state.tirView !== 'scope' || tirS.dragId == null) return;
+    const quick = (performance.now() - tirS.dragT) < 240 && tirS.moved < 9;
+    tirS.dragId = null;
+    if(quick) tirFireScope();
+    else tirMiniRender();
+  });
+  strip.addEventListener('pointercancel', () => { tirS.dragId = null; });
+  strip.addEventListener('keydown', e => {
+    if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); tirFire(); }
+  });
   strip.addEventListener('pointerleave', () => {
     const cross = $('#tirrCross'); if(cross) cross.classList.remove('on');
   });
 })();
+/* 4.5.0: очистить ставку апгрейда одним нажатием, без confirm —
+   скины остаются в инвентаре, терять нечего */
+$('#stakeClear')?.addEventListener('click', function(){
+  upStake = []; upSrc = null;
+  try{ SFX.click(); }catch(e){}
+  renderSlots();
+});
+/* 4.5.0: кнопка «ОГОНЬ» — выстрел в центр прицела */
+$('#tirFire')?.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); tirFireScope(); });
 $('#openBat')?.addEventListener('click', openBattle);
 $('#openRun')?.addEventListener('click', openRun);
 $('#openTower')?.addEventListener('click', openTower);
@@ -14253,7 +14645,18 @@ function renderAbout(){
     </div>
     ${albumMetricsBlock()}
     ${renderThemeBlock()}
-    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,120,120,.14),rgba(180,40,40,.04));border:1px solid rgba(255,120,120,.32)">
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
+      <b style="color:#7dff9b">Что нового в 4.5.0 · Оптика</b><br>
+      <b>Тир можно смотреть через оптику AWP.</b> Чёрный экран, круглый прицел с зелёной сеткой
+      и метками дальномера — как в CS. Прицел стоит в центре, а под ним едет мир: ведёте
+      пальцем — поворачиваетесь. Короткий тап или кнопка «ОГОНЬ» — выстрел. В углу мини-карта
+      с тарелками и рамкой того, что видно. Тарелки качаются по вертикали, дальние мельче и
+      в дымке, ломаются по-своему: стекло осколками, металл искрами, глина пылью, дерево
+      щепой, золото блёстками. Перезарядка после выстрела — у AWP дольше всех.
+      <br><br>
+      <b>Тир стал сложнее:</b> скорость тарелок ×1.6, обманок всегда две (было 1–2),
+      на сессию 18 секунд вместо 20. Ступень 850 теперь берут примерно втрое реже.
+      Кому нужен прежний вид — чип «🎯 Классика» рядом с выбором оружия.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(140,170,255,.16),rgba(70,110,220,.04));border:1px solid rgba(140,170,255,.34)">
       <b style="color:#a9c2ff">Что нового в 4.4.9</b><br>
@@ -16494,7 +16897,8 @@ window.__sr = {
   get tokens(){ return state.tokens|0; }, setTokens(n){ state.tokens=n|0; renderTokens(); },
   spinUpgrade, openBoss, bossTick, renderBoss, bossUnlocked, FEED, PRICE_HIST, renderLuck,
   openSniper, tirFire, tirShootAt, tirEnd, openBattle, batGo, batLeft, openTower, renderTower, startTowerGame, towerLeft, TOWER_MULTS, TOWER_CHANCES,
-  tirReward, TIR_STREAK, TIR_GUNS, tirRenderGuns, tirRenderGun, tirGunCfg, tirSpawn, get tirState(){ return tirS; },
+  tirReward, TIR_STREAK, TIR_GUNS, tirRenderGuns, tirRenderGun, tirGunCfg, tirSpawn,
+  tirSetView, tirFireScope, tirPanBy, tirMiniRender, get tirState(){ return tirS; },
   /* 4.4.6 перенос прогресса */
   savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
   openCraft, craftDo, renderCraft, renderMiniModes,
@@ -20168,18 +20572,10 @@ window.__sr = {
     b.classList.toggle('guest', !nm);
     b.title = nm || 'Профиль / вход';
   }
-  function addTradingEntry(){
-    var p=document.getElementById('panel-upgrade');
-    if(!p||document.getElementById('btnProfUp')) return;
-    var d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:flex-end;margin:0 0 8px';
-    d.innerHTML='<button class="lvlchip" id="btnProfUp" style="cursor:pointer" title="Профиль / вход">👤 Профиль</button>';
-    p.insertBefore(d, p.firstChild);
-    d.querySelector('#btnProfUp').addEventListener('click',loginOrProfile);
-  }
-
-  document.addEventListener('DOMContentLoaded',function(){ try{ SR=window.__sr; addBtn(); addTradingEntry(); updBtnName(); }catch(e){} });
-  if(document.readyState!=='loading'){ try{ SR=window.__sr; addBtn(); addTradingEntry(); updBtnName(); }catch(e){} }
+  /* 4.5.0: кнопка «👤 Профиль» с вкладки «Апгрейд» убрана по просьбе человека —
+     она дублировала кнопку в шапке и мешала на маленьких экранах. */
+  document.addEventListener('DOMContentLoaded',function(){ try{ SR=window.__sr; addBtn(); updBtnName(); }catch(e){} });
+  if(document.readyState!=='loading'){ try{ SR=window.__sr; addBtn(); updBtnName(); }catch(e){} }
   if(typeof window!=='undefined'){ setInterval(updBtnName, 2500); document.addEventListener('sr:login', updBtnName); }
   document.addEventListener('sr:login', function(){ var m=document.getElementById('srProfModal'); if(m && m.classList.contains('on')){ render(); rankBlock(); } });
 })();
