@@ -835,6 +835,169 @@ body.theme-legend header::after{
 body.theme-legend header{position:relative;overflow:hidden}
 @keyframes shimmer{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
 
+/* 4.7.3: плашка «Испытания скоро» */
+.trs-soon{display:flex;align-items:center;gap:10px;margin:2px 0 12px;padding:11px 12px;border-radius:14px;
+  background:linear-gradient(150deg,rgba(255,176,46,.13),rgba(120,90,255,.07));
+  border:1px solid rgba(255,176,46,.34)}
+.trs-ic{width:36px;height:36px;flex:0 0 36px;border-radius:11px;display:grid;place-items:center;font-size:18px;
+  background:rgba(255,176,46,.14);border:1px solid rgba(255,176,46,.4)}
+.trs-txt{min-width:0;flex:1}
+.trs-t{font-size:12.5px;font-weight:900;color:#f2f6ff}
+.trs-t b{color:#ffd08a}
+.trs-d{font-size:10.5px;color:#8b98b0;margin-top:2px;line-height:1.35}
+.trs-go{flex:0 0 auto;border:0;border-radius:10px;padding:8px 11px;font:inherit;font-size:11px;font-weight:900;
+  color:#241503;background:linear-gradient(180deg,#ffc857,#f09000);cursor:pointer}
+.trs-go:active{transform:translateY(1px)}
+
+/* =========================================================
+   4.7.0: МЯГКИЙ ГИД (вариант D) — скрытие лишнего + одна подсказка
+   Никаких новых экранов: тот же интерфейс, просто на каждом шаге
+   видно только то, что нужно сейчас. Класс .tut-hide снимает всё
+   лишнее с !important, иначе display:flex у кнопок его перебьёт.
+   ========================================================= */
+.tut-hide{display:none !important}
+#tutHint{
+  position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:120;
+  transform:translateX(-50%) translateY(14px);opacity:0;pointer-events:none;
+  width:min(340px,92vw);padding:10px 12px 11px;border-radius:14px;
+  background:linear-gradient(160deg,rgba(28,22,14,.96),rgba(14,12,10,.97));
+  border:1px solid rgba(255,176,46,.38);
+  box-shadow:0 12px 34px -12px rgba(0,0,0,.9), inset 0 0 22px -14px rgba(255,176,46,.9);
+  transition:opacity .25s ease, transform .25s ease}
+#tutHint.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+/* 4.7.1: если внизу плашка накрывает кнопку (окно выигрыша), она встаёт сверху */
+#tutHint.at-top{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px))}
+#tutHint.at-top::after{bottom:auto;top:-7px;transform:translateX(-50%) rotate(225deg)}
+#tutHint::after{
+  content:'';position:absolute;left:50%;bottom:-7px;width:12px;height:12px;transform:translateX(-50%) rotate(45deg);
+  background:rgba(16,13,10,.97);border-right:1px solid rgba(255,176,46,.38);border-bottom:1px solid rgba(255,176,46,.38)}
+.tut-h-top{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:900;letter-spacing:.14em;
+  text-transform:uppercase;color:#ffb02e;margin-bottom:4px}
+.tut-h-top i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;background:rgba(255,176,46,.16);border:1px solid rgba(255,176,46,.5);
+  font-size:10px;color:#ffd08a}
+.tut-h-txt{font-size:12.5px;line-height:1.45;color:#e9eefb;font-weight:600}
+.tut-h-txt b{color:#ffd08a}
+.tut-h-btns{display:flex;gap:6px;margin-top:8px}
+.tut-h-btns button{flex:1;border:0;border-radius:9px;padding:7px;font:inherit;font-size:11.5px;
+  font-weight:800;cursor:pointer;transition:.15s}
+.tut-h-go{background:linear-gradient(180deg,#ffb02e,#e2820f);color:#241503}
+.tut-h-go:active{transform:translateY(1px)}
+.tut-h-skip{background:rgba(255,255,255,.07);color:#a9b6c9}
+/* на низких экранах подсказка поднимается выше панели действий, иначе накрывает кнопку «Открыть» */
+@media (max-height: 680px){
+  #tutHint{bottom:calc(134px + env(safe-area-inset-bottom,0px));padding:8px 10px 9px}
+  .tut-h-txt{font-size:11.5px;line-height:1.36}
+  .tut-h-btns{margin-top:6px}
+  .tut-h-btns button{padding:6px;font-size:11px}
+}
+/* шаг «лента крутится»: убираем всё, кроме самой ленты — чтобы взгляд был в одном месте */
+body[data-tut="1"] #mainNav,
+body[data-tut="1"] .hud,
+body[data-tut="1"] #caseActionBar,
+body[data-tut="1"] #casesList,
+body[data-tut="1"] #questCard{display:none !important}
+/* пульсация цели — своя, чтобы не зависеть от подсветки квеста */
+.tut-pulse{animation:tutPulse 1.5s ease-in-out infinite;position:relative;z-index:2}
+@keyframes tutPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,176,46,.55), 0 0 16px -4px rgba(255,176,46,.6)}
+  50%{box-shadow:0 0 0 7px rgba(255,176,46,0), 0 0 26px -2px rgba(255,176,46,.95)}
+}
+/* карта пути */
+#tutMap{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;
+  background:rgba(4,6,11,.82);backdrop-filter:blur(4px);padding:16px}
+#tutMap.on{display:flex}
+.tm-card{width:min(400px,94vw);max-height:88vh;overflow:auto;border-radius:18px;padding:18px 16px 14px;
+  background:radial-gradient(120% 70% at 80% 0%,rgba(255,176,46,.16),transparent 62%),linear-gradient(160deg,#191f2c,#0d1017);
+  border:1px solid rgba(255,176,46,.28);box-shadow:0 24px 70px -20px #000}
+.tm-t{font-size:16px;font-weight:900;letter-spacing:.02em;color:#fff}
+.tm-s{font-size:11.5px;color:#8b98b0;margin:3px 0 12px}
+.tm-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:12.5px;color:#cdd8e8;font-weight:600}
+.tm-row:last-of-type{border-bottom:0}
+.tm-row i{font-style:normal;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:900;flex:0 0 auto}
+.tm-row.ok i{background:rgba(67,201,122,.18);color:#5ce496;border:1px solid rgba(67,201,122,.5)}
+.tm-row.no i{background:rgba(255,255,255,.06);color:#6f7d93;border:1px solid rgba(255,255,255,.14)}
+.tm-row.no{color:#93a0b8}
+.tm-go{width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px;font:inherit;font-size:13.5px;
+  font-weight:900;cursor:pointer;background:linear-gradient(180deg,#ffb02e,#e2820f);color:#241503}
+
+
+/* =========================================================
+   4.7.0: ФОРМА ВХОДА В ТОНАХ ИГРЫ
+   Было: синяя коробка с двумя полями «Ник (2–16)» и «Пароль (мин 4)».
+   Стало: тёмный экран с оранжевым свечением как у кейса, живой превью
+   профиля (аватар + ник), крупное поле с костями внутри, одна главная
+   кнопка «В игру». Смысл: человек видит, как будет выглядеть в игре.
+   ========================================================= */
+#srtEntry{
+  position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;
+  padding:max(14px, env(safe-area-inset-top,0px)) 14px max(14px, env(safe-area-inset-bottom,0px));
+  background:
+    radial-gradient(900px 620px at 50% 118%, rgba(255,138,40,.20), transparent 62%),
+    radial-gradient(700px 420px at 12% -8%, rgba(255,176,46,.12), transparent 60%),
+    linear-gradient(170deg,#0b0f18,#07090f 70%);
+  overflow:auto}
+#srtEntry::before{
+  content:'';position:fixed;inset:-20%;pointer-events:none;opacity:.5;
+  background:conic-gradient(from 200deg at 50% 90%, transparent 0deg, rgba(255,150,40,.16) 40deg, transparent 90deg);
+  animation:srtRays 9s linear infinite}
+@keyframes srtRays{to{transform:rotate(360deg)}}
+.srL-card{
+  position:relative;width:min(380px,94vw);max-height:92vh;overflow:auto;
+  padding:18px 16px 16px;border-radius:20px;
+  background:linear-gradient(165deg,rgba(26,31,44,.98),rgba(12,15,22,.99));
+  border:1px solid rgba(255,176,46,.26);
+  box-shadow:0 26px 70px -22px #000, inset 0 1px 0 rgba(255,255,255,.06);
+  text-align:center}
+.srL-badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:9.5px;font-weight:900;
+  letter-spacing:.18em;text-transform:uppercase;color:#ffc46a;
+  background:rgba(255,176,46,.12);border:1px solid rgba(255,176,46,.34)}
+.srL-logo{margin:9px 0 2px;font-size:26px;font-weight:900;letter-spacing:.06em;line-height:1;
+  background:linear-gradient(180deg,#fff3d6,#ffb02e 55%,#e2820f);-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 3px 14px rgba(255,150,40,.5))}
+.srL-logo span{display:inline;color:transparent}
+.srL-sub{font-size:11.5px;line-height:1.45;color:#93a0b8;margin:6px 2px 13px}
+.srL-prev{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;
+  background:linear-gradient(150deg,rgba(255,176,46,.10),rgba(255,255,255,.02));
+  border:1px solid rgba(255,176,46,.20);margin-bottom:13px;text-align:left}
+.srL-av{width:44px;height:44px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:19px;font-weight:900;color:#2a1804;
+  background:radial-gradient(circle at 34% 28%,#ffe6b4,#ffb02e 55%,#d0760a);
+  box-shadow:0 6px 18px -6px rgba(255,150,40,.9), inset 0 1px 0 rgba(255,255,255,.5)}
+.srL-prev-nm{font-size:14.5px;font-weight:800;color:#fff;letter-spacing:.01em;
+  max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srL-prev-sub{font-size:10.5px;color:#8b98b0;font-weight:700;margin-top:2px;letter-spacing:.04em}
+.srL-lbl{display:block;text-align:left;font-size:9.5px;font-weight:900;letter-spacing:.14em;
+  text-transform:uppercase;color:#7f8ca5;margin:0 0 5px 3px}
+.srL-field{position:relative;margin-bottom:11px}
+.srL-field input{width:100%;box-sizing:border-box;padding:12px 56px 12px 13px;border-radius:12px;
+  border:1px solid rgba(255,176,46,.24);background:#0a0d14;color:#f2f6ff;
+  font:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;transition:.15s}
+.srL-field input::placeholder{color:#5a667c;font-weight:600}
+.srL-field input:focus{outline:0;border-color:rgba(255,176,46,.75);
+  box-shadow:0 0 0 3px rgba(255,176,46,.14)}
+.srL-field input.has-val{border-color:rgba(255,176,46,.5)}
+.srL-field .srL-dice{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:38px;height:34px;border:0;border-radius:9px;cursor:pointer;font-size:16px;
+  background:rgba(255,176,46,.14);color:#ffd08a;transition:.15s}
+.srL-field .srL-dice:active{transform:translateY(-50%) scale(.94)}
+.srL-primary{width:100%;margin-top:3px;padding:13px;border:0;border-radius:13px;cursor:pointer;
+  font:inherit;font-size:15px;font-weight:900;letter-spacing:.03em;color:#2a1804;
+  background:linear-gradient(180deg,#ffc857,#f09000);
+  box-shadow:0 12px 26px -12px rgba(255,160,40,.95), inset 0 1px 0 rgba(255,255,255,.45);
+  transition:.15s}
+.srL-primary:active{transform:translateY(1px)}
+.srL-second{width:100%;margin-top:8px;padding:11px;border-radius:12px;cursor:pointer;
+  font:inherit;font-size:13px;font-weight:800;color:#e5eefc;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);transition:.15s}
+.srL-second:active{background:rgba(255,255,255,.1)}
+.srL-guest{display:block;width:100%;margin-top:10px;padding:7px;border:0;background:transparent;
+  cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;color:#6f7d93;text-decoration:underline;
+  text-decoration-color:rgba(111,125,147,.4)}
+#srtMsg{min-height:15px;margin-top:9px;font-size:11.5px;font-weight:700;line-height:1.4}
+
 /* ===== 4.6.0: три платные темы вместо одной.
    Сделаны «в духе CS»: золото, огонь с углями, дракон со сталью.
    Наследуют механику золотой — меняются только цвета и узор фона. ===== */
@@ -2568,6 +2731,15 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   font-size: 11px; color: #ffd08a; text-shadow: 0 1px 3px #000;
 }
 
+/* ===== 4.7.2: шторка на время загрузки =====
+   Заставка появляется через ~0,4 с после разбора ядра, а до этого был виден
+   уже отрисованный интерфейс — короткая, но заметная вспышка меню.
+   Шторка лежит ниже заставки (z-index 91 против 92) и снимается, как только
+   заставка пошла. Если заставка почему-то не запустилась — снимается по таймеру. */
+/* 4.7.3: стили дублируют инлайн (на случай, если <style> ещё не разобран),
+   но гасим шторку ТОЛЬКО отсюда и с !important — инлайн перебивается лишь так. */
+html.sr-booted #bootCover{opacity:0 !important;visibility:hidden !important}
+
 /* ===== 4.3.1: ЗАСТАВКА (рулетка → кейс → вылет оружия → титр) ===== */
 #srIntro, #srIntro *{box-sizing:border-box}
 #srIntro{
@@ -2775,13 +2947,9 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .week-goal.done { border-color: rgba(110,231,160,.45); }
 .week-goal.done .wg-fill { background: linear-gradient(90deg, #6ee7a0, #34b87a); }
 
-/* рулетка ника */
-#srtNickRoulette {
-  width: 100%; margin: -4px 0 10px; cursor: pointer; padding: 8px;
-  border-radius: 8px; font-size: 12px; font-weight: 800;
-  border: 1px solid rgba(255,154,31,.4); background: rgba(255,154,31,.1); color: #ffd08a;
-}
-#srtNickRoulette:active { transform: scale(.98); }
+/* рулетка ника: в новой форме это маленькая кнопка внутри поля (стиль .srL-dice).
+   Старое правило с width:100% удалено — по id оно перебивало кнопку и растягивало
+   её на всю ширину поля, из-за чего кости наезжали на текст (баг 4.7.0). */
 
 /* 4.1.1: нижняя капсула инструментов инвентаря — в стиле верхней линии */
 .inv-tools-nav {
@@ -3067,6 +3235,46 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 
 /* === НАГРАДЫ: СЕТКА КАРТОЧЕК === */
 .rew-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding-bottom: 20px; }
+
+/* ===== 4.7.5: КАРТА РЕЙДА «БОСС ДНЯ» =====
+   Вместо одной карточки с кнопкой — список этапов, как набор в «Коллекциях»:
+   видно, что именно нужно сделать, сколько осталось и куда идти. */
+.raid{grid-column:1/-1;border:1px solid rgba(255,110,90,.32);border-radius:18px;
+  background:linear-gradient(160deg,rgba(60,18,14,.55),rgba(16,20,28,.9));padding:12px 12px 13px}
+.raid-head{display:flex;align-items:center;gap:10px}
+.raid-av{width:42px;height:42px;flex:0 0 42px;border-radius:12px;display:grid;place-items:center;font-size:20px;
+  background:linear-gradient(160deg,#7a1f18,#2a1010);border:1px solid rgba(255,120,80,.5);
+  box-shadow:0 0 18px -6px rgba(255,90,60,.8)}
+.raid-nm{min-width:0;flex:1}
+.raid-nm b{display:block;font-size:13.5px;font-weight:900;color:#ffe0d4}
+.raid-nm small{display:block;font-size:10.5px;color:#b99a91;margin-top:1px}
+.raid-hp{height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin:11px 0 4px}
+.raid-hp i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#ff5a3c,#ffb02e);transition:width .35s}
+.raid-hp-lbl{display:flex;justify-content:space-between;font-size:10px;color:#a2918c;letter-spacing:.05em}
+.raid-map{margin:11px 0 2px}
+.raid-node{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);margin-bottom:7px}
+.raid-node.done{background:rgba(80,220,140,.08);border-color:rgba(80,220,140,.32)}
+.raid-node.now{border-color:rgba(255,176,46,.6);box-shadow:0 0 16px -8px rgba(255,176,46,.9)}
+.raid-ic{width:32px;height:32px;flex:0 0 32px;border-radius:9px;display:grid;place-items:center;font-size:16px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.raid-node.done .raid-ic{background:rgba(80,220,140,.18);border-color:rgba(80,220,140,.5)}
+.raid-body{min-width:0;flex:1}
+.raid-t{font-size:12px;font-weight:900;color:#f2f6ff;display:flex;justify-content:space-between;gap:8px}
+.raid-t span{color:#ffd08a;font-variant-numeric:tabular-nums}
+.raid-node.done .raid-t span{color:#7ddca8}
+.raid-d{font-size:10px;color:#8b98b0;margin-top:2px;line-height:1.3}
+.raid-bar{height:5px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}
+.raid-bar i{display:block;height:100%;background:linear-gradient(90deg,#ff9a1f,#ffd166);border-radius:4px}
+.raid-node.done .raid-bar i{background:linear-gradient(90deg,#3fbf7f,#7dffb0)}
+.raid-btn{flex:0 0 auto;border:0;border-radius:9px;padding:7px 9px;font:inherit;font-size:10.5px;font-weight:900;
+  color:#241503;background:linear-gradient(180deg,#ffc857,#f09000);cursor:pointer}
+.raid-btn:disabled{background:rgba(255,255,255,.08);color:#6f7b8c;cursor:default}
+.raid-node.done .raid-btn{background:rgba(80,220,140,.2);color:#9ff0c0}
+.raid-go{width:100%;border:0;border-radius:12px;padding:12px;margin-top:9px;font:inherit;font-size:13px;font-weight:900;
+  color:#2a0b06;background:linear-gradient(180deg,#ff7a52,#e03a1c);cursor:pointer}
+.raid-go:disabled{background:rgba(255,255,255,.07);color:#6f7b8c;cursor:default}
+.raid-note{font-size:10px;color:#8b98b0;margin-top:6px;line-height:1.35}
 .rew-card {
   position: relative; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
   background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
@@ -3604,7 +3812,18 @@ header.hud .ver { display: none !important; }
   position:relative; z-index:1;
 }
 /* Полку и цветную тень убрал совсем: на телефоне любая горизонтальная градиентная
-   полоса под стволом читалась как «прямая линия». Цвет даёт только рамка карточки. */
+   полоса под стволом читалась как «прямая линия».
+   4.7.1: свечение вернул, но другим способом — радиальный градиент ПОЗАДИ картинки
+   (не filter:drop-shadow). Радиальный сам сходит на нет, поэтому обрезка по
+   прямоугольнику не видна: линий нет, а ствол снова светится цветом редкости. */
+.card .gwrap::after,
+#winCard .art::after,
+.craft-it .art::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 62% 52% at 50% 50%,var(--rar-line) 0%,transparent 78%);
+  opacity:.9}
+.card[data-rarity="legend"] .gwrap::after,
+.card[data-rarity="myth"] .gwrap::after{opacity:.95}
 </style>
 <style id="albumCSS">
 /* ===== 4.3.6 · альбом «Коллекции» (вёрстка по прототипу человека) ===== */
@@ -3676,6 +3895,22 @@ header.hud .ver { display: none !important; }
 .al-art{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:3px;min-height:0;position:relative;z-index:1}
 .al-art svg{width:100%;height:100%;max-height:48px;max-width:100%;overflow:visible}
 .al-card.got .al-art svg{filter:drop-shadow(0 2px 3px rgba(0,0,0,.7)) drop-shadow(0 0 5px var(--c));color:var(--c)}
+/* 4.7.3: оружие в коллекции теперь PNG — селектор по svg его не находил, и свечение
+   пропало. Даём свет радиальным градиентом позади картинки (линий не даёт). */
+.al-card.got::after{content:'';position:absolute;left:8%;right:8%;top:6%;bottom:34%;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 62% 56% at 50% 50%,var(--c) 0%,transparent 76%);opacity:.5}
+.al-card.got .weapon-img{filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
+
+/* свёрнутые наборы: раскрыты первые три, остальные по нажатию */
+.al-set-head{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.al-set.collapsed .al-body{display:none}
+.al-set.collapsed .al-set-head{margin-bottom:0}
+.al-chev{width:22px;height:22px;flex:0 0 22px;border-radius:7px;display:grid;place-items:center;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:10px;color:#a9b6c9;
+  transition:transform .2s ease}
+.al-set.collapsed .al-chev{transform:rotate(-90deg)}
+.al-set-more{flex:0 0 auto;font-size:9.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+  color:#7f8ca5;margin-left:2px}
 .al-card:not(.got) .al-art svg{color:#3a4250;filter:brightness(.55) saturate(.3);opacity:.55}
 .al-name{font-size:9px;font-weight:800;text-align:center;line-height:1.15;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:100%;position:relative;z-index:1}
@@ -3817,6 +4052,9 @@ header.hud .ver { display: none !important; }
 </style>
 </head>
 <body>
+<!-- 4.7.2: пока заставка не начала играть, экран закрыт этой шторкой.
+     Без неё на холодном старте на 0,1–0,4 с проглядывало меню игры. -->
+<div id="bootCover" style="position:fixed;inset:0;z-index:99999;pointer-events:none;opacity:1;transition:opacity .28s ease;background:radial-gradient(circle at 50% 45%,#1a1206 0%,#04060a 65%)"></div>
 <canvas id="bgfx"></canvas>
 <canvas id="confetti"></canvas>
 <div id="flash"></div>
@@ -3874,6 +4112,24 @@ header.hud .ver { display: none !important; }
       <button class="wi-go" id="wiGo">Погнали</button>
       <button class="wi-skip" id="wiSkip">Я разберусь сам</button>
     </div>
+  </div>
+</div>
+
+<!-- 4.7.0: одна подсказка мягкого гида и карта пути в конце -->
+<div id="tutHint" role="status" aria-live="polite">
+  <div class="tut-h-top"><i>1</i><span id="tutStepLbl">Шаг 1 из 8</span></div>
+  <div class="tut-h-txt" id="tutTxt"></div>
+  <div class="tut-h-btns" id="tutBtns">
+    <button class="tut-h-go" id="tutGo" type="button">Дальше</button>
+    <button class="tut-h-skip" id="tutSkip" type="button">Пропустить гид</button>
+  </div>
+</div>
+<div id="tutMap" role="dialog" aria-label="Твой путь">
+  <div class="tm-card">
+    <div class="tm-t">Твой путь</div>
+    <div class="tm-s">Этот список показывается один раз. Дальше цель живёт в карточке квеста.</div>
+    <div id="tutMapRows"></div>
+    <button class="tm-go" id="tutMapGo" type="button">Понял</button>
   </div>
 </div>
 
@@ -4292,6 +4548,16 @@ header.hud .ver { display: none !important; }
     </section>
 
     <section class="panel" id="panel-rewards">
+      <!-- 4.7.3: «Испытания» скрыты первые сутки — раньше это читалось как «игры пропали».
+           Здесь видно, что вкладка есть, когда откроется, и можно открыть сразу. -->
+      <div class="trs-soon" id="trialsSoon" hidden>
+        <div class="trs-ic">🕹</div>
+        <div class="trs-txt">
+          <div class="trs-t">Испытания откроются <b id="trsLeft">через 24 ч</b></div>
+          <div class="trs-d">Тир, башня, барабан, забег и баттл — пять режимов на каждый день</div>
+        </div>
+        <button class="trs-go" id="trsOpen" type="button">Открыть сейчас</button>
+      </div>
       <!-- Верхняя сводка и марафон -->
       <div class="rew-header">
         <div class="rew-daily-summary">
@@ -6385,7 +6651,11 @@ const ANCHOR_N = {common:4, uncommon:3, rare:2, epic:2, legend:2, myth:1};
 let _anchorCache = null;
 function anchorPool(){
   if(_anchorCache) return _anchorCache;
-  const base = SKINS.filter(s => !s.excl);
+  /* 4.7.5: ножи из якорей убраны. Раньше единственный дешёвый нож («Заводской»)
+     подмешивался якорем в КАЖДЫЙ кейс, включая стартовый за 175 — то есть нож
+     падал наравне с обычными стволами и обесценивал сам факт ножа.
+     Теперь ножи живут в «Ножевом» и в дорогих кейсах (см. casePoolOf). */
+  const base = SKINS.filter(s => !s.excl && KNIVES.indexOf(s.w) < 0);
   const out = {};
   RAR_ORDER.forEach(r => {
     /* якоря разложены по разным оружиям, чтобы не тащить в пул дубли одного ствола */
@@ -6423,6 +6693,20 @@ function casePoolOf(c){
         if(!seen[s.id]){ seen[s.id] = 1; out.push(s); }
       });
     });
+    /* 4.7.5: в дорогих кейсах ножи начинаются с эпической редкости.
+       «Дорогой» — тот, где объявлена мифика (Обсидиан, Титан, Легенда, Чёрный рынок).
+       Раньше настоящие ножи были только в отдельном «Ножевом», а в остальных
+       мелькал один дешёвый. Цена кейса считается от пула, поэтому возврат
+       остаётся 90 %, а цена пересчитывается сама. */
+    if(c.odds.myth){
+      const fromEpic = RAR_ORDER.indexOf('epic');
+      SKINS.forEach(s => {
+        if(s.excl || KNIVES.indexOf(s.w) < 0) return;
+        if(RAR_ORDER.indexOf(s.r) < fromEpic) return;
+        if(!c.odds[s.r] || seen[s.id]) return;
+        seen[s.id] = 1; out.push(s);
+      });
+    }
     return out;
   }
   return SKINS.filter(s =>
@@ -6532,12 +6816,14 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.6.0';
+const VERSION = '4.7.5';
 const BUILD   = '2026-11-05';
 const SAVE_KEY = 'skinrush_v1';
-let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
+let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0, freeCase:1,
              /* 4.2.0 первый вход */
              quest:{s:0, firstUid:0}, gift:'', introDone:0,
+             /* 4.7.0: мягкий гид — шаг 0..8, флаг включённости, время открытия испытаний */
+             tut:{step:0, on:1, trialsAt:0},
              week:{start:0, n:0, done:0},
              snip:{date:'', n:0}, bat:{hour:'', n:0}, dustEx:{date:'', c:0}, hist:[],
              tokens:0, cd:{drum:0, hour:0, day:0}, xp:0, lvl:1,
@@ -6842,7 +7128,7 @@ function loadBak(){
     if(!raw) return false;
     const d = JSON.parse(raw);
     if(!d || typeof d !== 'object') return false;
-    const norm = normalizeState(Object.assign({coins:0, inv:[], opened:0, xp:0, lvl:1}, d));
+    const norm = normalizeState(Object.assign({coins:0, inv:[], opened:0, xp:0, lvl:1, freeCase:1}, d));
     if(!norm) return false;
     state = norm;
     uidSeq = Math.max(1, state._uidNext || 1);
@@ -6876,7 +7162,7 @@ function load(){
     saveExisted = true;
     const d = JSON.parse(raw);
     if(!d || typeof d !== 'object') return;
-    const def = {coins:0, inv:[], opened:0, best:0, lastBonus:0,
+    const def = {coins:0, inv:[], opened:0, best:0, lastBonus:0, freeCase:1,
                  tokens:0, cd:{drum:0, hour:0, day:0}, xp:0, lvl:1,
                  sold:0, bossTotal:0, ach:[], seen:[], seenW:[],
                  fails:0, upOk:0, upFail:0,
@@ -6886,6 +7172,7 @@ function load(){
                  luck:0, winStreak:0, bossDay:'', bossDone:0, bossOpened:false,
                  upToday:0, sellToday:0, snip:{date:'', n:0}, duel:{date:'', n:0}, hist:[],
                  quest:{s:0, firstUid:0}, gift:'', introDone:0, week:{start:0, n:0, done:0},
+                 tut:{step:0, on:1, trialsAt:0},
                  newItems:[], tower:{date:'', n:0}, marathon:{day:1, lastLogin:'', claimed:[]}};
     const merged = Object.assign(def, d);
     const norm = normalizeState(merged);
@@ -8367,7 +8654,11 @@ function renderCases(){
   if(allBtn) allBtn.innerHTML = '<span class="cf-ic">📦</span> Все ' + CASES.length;
   const box = $('#casesList');
   if(!box) return;
-  const list = casesFiltered();
+  /* 4.7.0: пока идёт гид, в списке только «Стартовый» — 20 кейсов сразу пугают */
+  let list = casesFiltered();
+  if(typeof tutActive === 'function' && tutActive() && tutStepNow() < 7){
+    list = CASES.filter(c => c.id === 'start');
+  }
   renderCaseHero();
   renderBestDrop();
   renderDropStats();
@@ -8614,9 +8905,14 @@ function updateOpenBtn(){
   renderLuck();
   const btn = $('#btnOpen');
   const totalCost = selCase.price * openQty;
-  const can = state.coins >= totalCost && !spinning;
+  /* 4.7.1: первый кейс новичка бесплатный — иначе на старте 0 кредитов,
+     кнопка неактивна, и гид на первом же шаге упирается в тупик. */
+  const freeFirst = (state.freeCase|0) > 0 && selCase.id === 'start' && openQty === 1;
+  const can = (freeFirst || state.coins >= totalCost) && !spinning;
   btn.disabled = !can;
-  btn.textContent = spinning ? 'Крутится…' : `Открыть ${openQty} шт. за ${totalCost.toLocaleString('ru-RU')}`;
+  btn.textContent = spinning ? 'Крутится…'
+    : freeFirst ? 'Открыть кейс — бесплатно'
+    : `Открыть ${openQty} шт. за ${totalCost.toLocaleString('ru-RU')}`;
   const tb = $('#btnOpenTok');
   const tokOk = tokenCaseOk(selCase);
   if(tb){
@@ -8723,6 +9019,9 @@ function openCase(free, opts){
   free = !!free;
   /* freebie — кейс за наш счёт (награда снайпера): ни жетона, ни кредитов */
   const freebie = !!(opts && opts.freebie);
+  /* 4.7.2: самый первый кейс новичка — бесплатный, и по обещанию подсказки
+     в нём гарантированно редкий скин (раньше падало что попало, вплоть до common). */
+  const freeFirst = (state.freeCase|0) > 0 && selCase.id === 'start' && !free && !freebie && !(opts && opts.quest);
   const qty = free || freebie ? 1 : Math.max(1, openQty | 0);
   const totalCost = selCase.price * qty;
   const questOpen = !!(opts && opts.quest);   /* 4.2.0: бесплатный кейс квеста */
@@ -8743,6 +9042,13 @@ function openCase(free, opts){
     /* 4.2.0: первый кейс в квесте — бесплатный, не идёт ни в миссии, ни в цель недели */
     state.opened += 1;
     save();
+  } else if(freeFirst){
+    /* 4.7.1: самый первый кейс игры — за счёт заведения */
+    state.freeCase = 0;
+    state.opened += 1;
+    renderBalance(true);
+    save();
+    addXp(10);
   } else {
     if(state.coins < totalCost){ toast('Не хватает кредитов'); return; }
     state.coins -= totalCost;
@@ -8754,6 +9060,8 @@ function openCase(free, opts){
     addXp(10 * qty);
     weekAdd(qty);            /* 4.2.0: цель недели считает только платные */
   }
+  /* 4.7.5: платные и жетонные открытия идут в этап «Разведка» карты рейда */
+  if(!questOpen && !freebie) { try{ raidTick('case'); }catch(e){} }
   addCharge(DRUM_CHARGE.open * qty);
   addDust(DUST_PER_OPEN * qty);
 
@@ -8764,10 +9072,10 @@ function openCase(free, opts){
   caseQueue = [];
   for(let i = 0; i < qty; i++){
     const guaranteed = caseCanPity(selCase) && (state.luck || 0) >= LUCK_MAX;
-    let rar = questOpen ? 'rare' : (guaranteed ? 'epic' : rollRarity(selCase.odds));
+    let rar = (questOpen || freeFirst) ? 'rare' : (guaranteed ? 'epic' : rollRarity(selCase.odds));
     /* 4.6.0: билет удачи убран — тир определяется только шансами кейса и гарантией */
     let sk = rollSkin(rar, selCase);
-    if(firstDrop && i === 0) sk = SKINS.find(s => s.n === 'Water Elemental') || sk;
+    if((firstDrop || freeFirst) && i === 0) sk = SKINS.find(s => s.n === 'Water Elemental') || sk;
     const it = makeItem(sk);
     if(questOpen) it.first = 1;      /* 4.2.0: вечный бейдж «первый дроп» */
     it.src = 'case';                 /* 4.3.8: источник дропа — для звёзд престижа */
@@ -8779,6 +9087,8 @@ function openCase(free, opts){
     luckAdd(rar);
     caseQueue.push({ skin: sk, item: it, guaranteed });
   }
+  /* 4.7.0: гид переходит с шага «открой кейс» на «смотри прокрутку» */
+  try{ tutEvent('case_open'); }catch(e){}
   achCheck();
   batchResults = [];
   batchBustSeen = false;
@@ -9022,6 +9332,7 @@ function showWin(skin, item, alreadyOwned){
   const fbd = $('#winFirst');
   if(fbd) fbd.hidden = !item.first;
   $('#winModal').classList.add('on');
+  try{ tutEvent('win_show'); }catch(e){}
   if(item.first){ questState().firstUid = item.uid; questEvent('opened'); }
   if(window.__feedReady) FEED.mine(skin, val, skin.r === 'myth' && KNIVES.indexOf(skin.w) >= 0 ? 'knife' : 'open');
 
@@ -9102,6 +9413,8 @@ function addSkin(skin, item){
   if(state.newItems.length > 20) state.newItems.shift(); // Храним только последние 20
   state.inv.push(rec);
   PRICE_HIST.record(it.id, itemVal(it));
+  /* 4.7.5: этап «Арсенал» карты рейда — получен ствол дня */
+  try{ raidNoteSkin(skin); }catch(e){}
   save();
   renderInvCount();
   return it;
@@ -9117,10 +9430,14 @@ $('#winKeep').addEventListener('click', ()=>{
   save();
   toast(wasOwned ? 'Оставлено в инвентаре' : 'Скин добавлен в инвентарь');
   renderInv(); renderSlots();
+  try{ tutEvent('win_close'); }catch(e){}
 });
 $('#winSell').addEventListener('click', ()=>{
   if(!pendingWin) return;
   const v = itemVal(pendingWin.item);
+  /* 4.7.2: если продан первый скин квеста — запоминаем сумму, чтобы тренировочная
+     ставка на шаге апгрейда была сопоставимой, а не за 4 кредита */
+  try{ if(pendingWin.item && pendingWin.item.first) questState().soldVal = v; }catch(e){}
   state.coins += v;
   if(v > (state.bestDrop||0)) state.bestDrop = v;
   state.mSell = (state.mSell||0) + 1;
@@ -9130,7 +9447,7 @@ $('#winSell').addEventListener('click', ()=>{
     state.inv = state.inv.filter(x => x.uid !== uid);
     if(upStake.indexOf(uid) >= 0) upStake = upStake.filter(u => u !== uid);
   }
-  bossTick('sell');
+  bossTick('sell', v);
   addCharge(DRUM_CHARGE.sell);
   addDust(Math.max(1, Math.round(v * DUST_SELL_PCT)));
   renderBalance(true); save();
@@ -9140,6 +9457,7 @@ $('#winSell').addEventListener('click', ()=>{
   pendingWin = null;
   renderInv(); renderMissions();
   soldEvent();
+  try{ tutEvent('win_close'); }catch(e){}
 });
 
 /* =========================================================
@@ -9274,6 +9592,11 @@ function invSorted(){
 }
 
 function renderInv(reset){
+  /* 4.7.0: на четвёртом шаге гида подсветка ищет первую карточку — она появляется
+     только после отрисовки, поэтому обновляем подсказку здесь, а не на событии */
+  if(typeof tutActive === 'function' && tutActive() && typeof tutStepNow === 'function' && tutStepNow() === 4){
+    setTimeout(function(){ try{ tutHint(4); }catch(e){} }, 60);
+  }
   invBulkCache = null;
   renderFilters();
   renderInvCount();
@@ -9359,6 +9682,14 @@ function renderInv(reset){
     el.addEventListener('click', ()=>{
       if(el._lpFired){ el._lpFired = false; return; }   /* это был долгий тап */
       if(invBulk){ pickCard(x.uid); return; }
+      /* 4.7.0: на четвёртом шаге гида первый тап сразу открывает карточку.
+         В обычной игре тап выделяет, второй — открывает; новичку это неочевидно,
+         а подсказка обещает «нажми и откроется меню». */
+      if(typeof tutActive === 'function' && tutActive() && typeof tutStepNow === 'function' && tutStepNow() === 4){
+        invSelectedUid = x.uid;
+        openCard(x);
+        return;
+      }
       if(invSelectedUid === x.uid){
         // Повторный клик — открывает детали
         openCard(x);
@@ -9403,16 +9734,32 @@ function renderInv(reset){
 /* 4.3.3: пока открыт экран входа, заставка молчит — иначе она играет
    ПОД формой (z-index ниже), а время уходит. Ждём закрытия входа. */
 function introWaitEntry(cb){
-  var t0 = Date.now();
+  var t0 = Date.now(), started = false;
   var tick = function(){
     var e = document.getElementById('srtEntry');
-    if(!e || Date.now() - t0 > 180000){ cb(); return; }
+    if(e) started = true;
+    /* 4.7.0: форма создаётся в мосте чуть позже — даём ей появиться */
+    if((started && !e) || Date.now() - t0 > 180000){ cb(); return; }
+    if(!started && Date.now() - t0 > 4000 && !e){ cb(); return; }
     setTimeout(tick, 250);
   };
-  tick();
+  setTimeout(tick, 300);
 }
 function introPlay(){
+  /* 4.7.0: ПОРЯДОК ПЕРВОГО ВХОДА СМЕНИЛСЯ.
+     Было: сначала форма ника, заставка ждала её закрытия (и играла под ней).
+     Стало: заставка → ник → «Привет!» → мягкий гид. */
   var next = function(){
+    var named = false;
+    try{ named = !!(typeof srtCurrentName === 'function' && srtCurrentName()); }catch(e){}
+    if(!named){
+      try{ if(typeof window.SRT_LOGIN === 'function') window.SRT_LOGIN(); }catch(e){}
+      introWaitEntry(function(){
+        try{ if(typeof welcomeThenQuest === 'function'){ welcomeThenQuest(); return; } }catch(e){}
+        try{ questStart(); }catch(e){}
+      });
+      return;
+    }
     try{ if(typeof welcomeThenQuest === 'function'){ welcomeThenQuest(); return; } }catch(e){}
     try{ questStart(); }catch(e){}
   };
@@ -9420,19 +9767,24 @@ function introPlay(){
   /* Сцена заставки живёт отдельным <script> в конце файла. На медленном
      телефоне разбор ядра заканчивается позже, чем сработает этот таймер,
      поэтому ждём её появления до 4 с, а не обрываем заставку молча. */
+  var bootDone = function(){ try{ document.documentElement.classList.add('sr-booted'); }catch(e){} };
   var tryStart = function(){
     var left = 40;
     var step = function(){
       if(typeof window !== 'undefined' && typeof window.__srIntroPlay === 'function'){
-        try{ window.__srIntroPlay(next); return; }catch(e){}
+        bootDone();                       /* заставка сейчас покажется — шторку убираем */
+        try{ window.__srIntroPlay(next); return; }catch(e){ bootDone(); }
       }
       if(left-- > 0){ setTimeout(step, 100); return; }
+      bootDone();
       next();
     };
     step();
   };
-  /* 4.3.3: сначала даём появиться экрану входа, и только потом решаем */
-  setTimeout(function(){ introWaitEntry(tryStart); }, 250);
+  /* 4.7.0: заставка играет СРАЗУ, форма входа ждёт своей очереди внутри next().
+     Раньше здесь стояло ожидание закрытия формы — из-за него на первом запуске
+     экран почти 6 секунд оставался пустым. */
+  setTimeout(tryStart, 60);
 }
 
 /* ---------- квест ---------- */
@@ -9441,6 +9793,315 @@ const QUEST_STEPS = [
   {t:'Продай его', d:'Редкий скин можно продать: кредиты пойдут на апгрейд. Нажми «Продать» в окне выигрыша.', b:'К инвентарю'},
   {t:'Сделай апгрейд', d:'Ставка уже выбрана, цель — в 1,25 раза дороже. Шанс около 70 %. Промах не страшен: щит уже оплачен, скин останется у тебя — сможешь пробовать снова.', b:'Начать апгрейд'}
 ];
+
+
+/* =========================================================
+   4.7.0: МЯГКИЙ ГИД (вариант D) — движок
+   Восемь шагов от «открой кейс» до «вот весь интерфейс». Никаких новых
+   экранов: обычный UI, у которого на каждом шаге видно только нужное,
+   а на единственное следующее действие — пульсация и короткий текст.
+   Игрок ничем не заперт: «Пропустить гид» открывает всё сразу.
+   ========================================================= */
+const TUT_LAST = 9;   /* шаги 0..8, девятый — «гид пройден» */
+/* с какого шага открывается вкладка.
+   4.7.2: полный интерфейс открывается на шаге 8 — ПОСЛЕ того, как игрок сам
+   прошёл второй круг «кейс → продажа → апгрейд». Раньше всё открывалось сразу
+   после первого апгрейда, и второй круг оставался непонятым. */
+const TUT_TAB_AT = { cases:0, inv:3, upgrade:5, album:8, rewards:8, trials:9 };
+const TUT_HINTS = {
+  0:{ t:'Нажми <b>«Открыть кейс»</b> — он бесплатный, и внутри гарантированно редкий скин.',
+      target:'#btnOpen', go:'Открыть кейс' },
+  1:{ t:'Лента крутится. Смотри, куда встанет — выигрыш уже решён, это только показ.',
+      target:'#rlFrame', go:'', auto:true },
+  2:{ t:'Твой первый скин. Нажми <b>«Продать»</b> — кредиты пойдут на апгрейд. Или оставь себе.',
+      target:'#winSell', go:'', keep:true },
+  3:{ t:'Скин теперь в <b>инвентаре</b>. Загляни туда.', target:'.tab-item[data-tab="inv"]', go:'В инвентарь' },
+  4:{ t:'Нажми на карточку скина — откроется меню с продажей и апгрейдом.',
+      target:'#invGrid .card', go:'Открыть скин' },
+  5:{ t:'Ставка и цель уже выбраны, щит оплачен. Шанс <b>%CH%</b> — просто нажми.',
+      target:'#btnUp', go:'Апгрейд' },
+  6:{ t:'Смотрим результат. Промах не страшен: щит вернёт скин, и можно жать ещё — сколько нужно.',
+      target:'#btnUp', go:'', wait:true },
+  7:{ t:'Круг замкнулся. Теперь сам: <b>открой ещё один кейс</b>, потом продай дроп и сделай апгрейд.',
+      target:'#btnOpen', go:'' },
+  8:{ t:'Вот и весь интерфейс. Дальше цель одна — <b>собрать набор АК-47</b>.',
+      target:'.tab-item[data-tab="album"]', go:'Понял' }
+};
+
+function tutS(){
+  if(!state.tut || typeof state.tut !== 'object') state.tut = { step:0, on:1, trialsAt:0 };
+  if(typeof state.tut.step !== 'number') state.tut.step = 0;
+  if(typeof state.tut.on !== 'number') state.tut.on = 1;
+  return state.tut;
+}
+function tutStepNow(){ const t = tutS(); return t.on ? Math.min(TUT_LAST, t.step | 0) : TUT_LAST; }
+function tutActive(){ const t = tutS(); return !!t.on && (t.step | 0) < TUT_LAST; }
+function tutShow(el, show){ if(el) el.classList.toggle('tut-hide', !show); }
+
+/* главная функция: что видно на текущем шаге */
+/* показать подсказку и подсветить цель */
+function tutHint(step){
+  let h = TUT_HINTS[step];
+  /* если скин продали в окне выигрыша, инвентарь пуст — ведём сразу к апгрейду */
+  if(step === 3 && !(state.inv || []).length){
+    h = { t:'Скин продан — кредиты уже в шапке. Дальше апгрейд: возьмём тренировочный скин.',
+          target:'#balance', go:'Дальше' };
+  }
+  /* 4.7.2: на шаге апгрейда показываем НАСТОЯЩИЙ шанс, а не «около 70 %» */
+  if(step === 5){
+    const c = Math.round((function(){ try{ return upgradeChance(); }catch(e){ return 0; } })() * 100);
+    h = Object.assign({}, h, { t: h.t.replace('%CH%', (c > 0 ? c + ' %' : 'около 70 %')) });
+  }
+  /* 4.7.2: шаг «второй круг» живёт в трёх положениях */
+  if(step === 7){
+    const t7 = tutS().t7 | 0;
+    if(t7 === 0) h = { t:'Круг замкнулся. Теперь сам: <b>открой ещё один кейс</b>, потом продай дроп и сделай апгрейд.',
+                       target:'#btnOpen', go:'' };
+    else if(t7 === 1) h = { t:'Дроп в руках. <b>Продай его</b> — или оставь себе, если нравится.',
+                            target:'#winSell', go:'' };
+    else h = { t:'Ставка взведена. Жми <b>«Апгрейд»</b> — и интерфейс откроется целиком.',
+               target:'#btnUp', go:'Апгрейд' };
+  }
+  const box = $('#tutHint');
+  if(!box || !h){ tutClearHint(); return; }
+  const txt = $('#tutTxt'), lbl = $('#tutStepLbl'), ic = box.querySelector('.tut-h-top i');
+  const go = $('#tutGo'), sk = $('#tutSkip');
+  if(txt) txt.innerHTML = h.t;
+  if(lbl) lbl.textContent = 'Шаг ' + (step + 1) + ' из ' + TUT_LAST;
+  if(ic) ic.textContent = String(step + 1);
+  /* кнопка есть только там, где есть действие; в шагах «ждём» и «выбирай сам» её нет */
+  if(go){
+    go.hidden = !h.go;
+    if(h.go) go.textContent = h.go;
+  }
+  if(sk) sk.hidden = !!h.wait;
+  box.classList.remove('at-top');
+  box.classList.add('on');
+  document.querySelectorAll('.tut-pulse').forEach(e => e.classList.remove('tut-pulse'));
+  if(h.target){
+    const el = document.querySelector(h.target);
+    if(el) el.classList.add('tut-pulse');
+  }
+  /* 4.7.1–4.7.3: плашка не должна накрывать НИ ОДНУ кнопку.
+     Раньше проверяли только прямоугольник цели — и промахивались, когда поверх
+     оказывалось окно выигрыша, награда или карточка скина (у цели координаты
+     были другие). Теперь честно щупаем, что лежит под плашкой. */
+  const place = () => { box.classList.toggle('at-top', tutHintCovered(box)); };
+  place();
+  setTimeout(place, 280);
+  setTimeout(place, 800);
+}
+/* под плашкой есть что-то нажимаемое? */
+function tutHintCovered(box){
+  if(!box || !document.elementsFromPoint) return false;
+  const b = box.getBoundingClientRect();
+  const pts = [];
+  for(let i = 0; i <= 4; i++){
+    for(let j = 0; j <= 3; j++){
+      pts.push([b.left + 10 + (b.width - 20) * i / 4, b.top + 10 + (b.height - 20) * j / 3]);
+    }
+  }
+  const SEL = 'button,a[href],input,select,textarea,.tab-item,.card,.slot,.al-card,.al-near,.al-claim';
+  for(const p of pts){
+    const els = document.elementsFromPoint(p[0], p[1]) || [];
+    for(const el of els){
+      if(!el || el.nodeType !== 1) continue;
+      if(el === box || box.contains(el) || el.closest('#tutHint')) continue;
+      if(el.closest(SEL)) return true;
+    }
+  }
+  return false;
+}
+function tutClearHint(){
+  const box = $('#tutHint');
+  if(box) box.classList.remove('on');
+  document.querySelectorAll('.tut-pulse').forEach(e => e.classList.remove('tut-pulse'));
+}
+/* перейти на шаг */
+function tutStep(n, opts){
+  const t = tutS();
+  t.step = Math.max(0, Math.min(TUT_LAST, n | 0));
+  if(t.step >= TUT_LAST){
+    t.on = 0;
+    t.trialsAt = t.trialsAt || (Date.now() + 24 * 3600 * 1000);
+  }
+  /* на шаге «вот весь интерфейс» ставим срок для «Испытаний» */
+  if(t.step === 8 && !t.trialsAt) t.trialsAt = Date.now() + 24 * 3600 * 1000;
+  /* гид закончился — бесплатный щит больше не наш */
+  if(!t.on) { try{ upFreeShield = false; }catch(e){} }
+  save();
+  tutApply();
+  /* 4.7.0: на шаге апгрейда всё уже выбрано за игрока — ему остаётся нажать */
+  if(t.on && t.step === 5){
+    /* карточку скина закрываем: ставка и цель уже готовы, игроку нужен экран апгрейда.
+       Через setTimeout — openCard сам включает модалку уже ПОСЛЕ этого события. */
+    setTimeout(function(){ var cm = $('#cardModal'); if(cm) cm.classList.remove('on'); }, 0);
+    try{ questSetupUpgrade(); }catch(e){}
+  }
+  /* 4.7.2: второй круг начинается с кейсов — возвращаем игрока на вкладку кейсов,
+     иначе подсказка «открой кейс» висит над экраном апгрейда */
+  if(t.on && t.step === 7){
+    t.t7 = 0;
+    save();
+    try{ switchTab('cases'); }catch(e){}
+    try{ renderCases(); }catch(e){}
+    try{ updateOpenBtn(); }catch(e){}
+  }
+  if(t.on && TUT_HINTS[t.step]) tutHint(t.step); else tutClearHint();
+  /* дошли до «взрослого» интерфейса — показываем карту пути один раз */
+  if(t.step === 8 && !(opts && opts.silentMap)) setTimeout(tutMap, 420);
+}
+/* события игры, которые двигают гид */
+function tutEvent(kind){
+  const t = tutS();
+  if(!t.on) return;
+  const at = t.step | 0;
+  if(kind === 'case_open' && at === 0) tutStep(1);
+  else if(kind === 'win_show' && at === 1) tutStep(2);
+  else if(kind === 'win_close' && at === 2) tutStep(3);
+  else if(kind === 'inv_open' && at === 3) tutStep((state.inv || []).length ? 4 : 5);
+  else if(kind === 'card_open' && at === 4) tutStep(5);
+  else if(kind === 'up_start' && at === 5) tutStep(6);
+  else if(kind === 'up_fail' && (at === 6 || at === 7)){
+    /* Провал не перепрыгиваем: щит вернул ставку, готовим её заново — игроку
+       достаточно нажать ещё раз. 4.7.2: считаем попытки и говорим прямо, что
+       попыток может понадобиться несколько (раньше подсказка «около 70 %»
+       создавала ощущение, что с первого раза обязано выйти). */
+    t.tries = (t.tries | 0) + 1;
+    save();
+    const n = t.tries | 0;
+    const txt = at === 6
+      ? 'Промах (попытка ' + n + '). <b>Щит вернул ставку</b> — жми ещё, пока не выйдет.'
+      : 'Промах (попытка ' + n + '). Ставка цела — жми ещё раз.';
+    const box = $('#tutHint'), tt = $('#tutTxt');
+    if(box && tt){ tt.innerHTML = txt; box.classList.add('on'); }
+    setTimeout(function(){
+      try{ questSetupUpgrade(); }catch(e){}
+      try{ tutHint(at); }catch(e){}
+      try{ if(tt) tt.innerHTML = txt; }catch(e){}   /* не даём вернуть старый текст */
+    }, 900);
+  }
+  else if(kind === 'up_win' && at === 6) tutStep(7);
+  else if(kind === 'case_open' && at === 7){
+    /* второй круг: кейс открыт, ждём продажу и апгрейд */
+    t.t7 = 1; save();
+    tutHint(7);
+  }
+  else if(kind === 'win_close' && at === 7 && (t.t7 | 0) === 1){
+    t.t7 = 2; save();
+    setTimeout(function(){
+      try{ questSetupUpgrade(); }catch(e){}
+      try{ tutHint(7); }catch(e){}
+    }, 700);
+  }
+  else if(kind === 'up_win' && at === 7) tutStep(8);
+}
+/* карта пути — единственный список в игре, показывается один раз */
+function tutMapRows(){
+  const q = questState();
+  const akSet = ALBUM_SETS.filter(x => x.k === 'ak47')[0];
+  const akGot = akSet ? albumSetGot(akSet, albumSeen()) : 0;
+  const akAll = akSet ? albumSkinsOf(akSet).length : 0;
+  const rows = [
+    {ok: (state.opened | 0) > 0, t:'Открыть кейс'},
+    {ok: (state.sold | 0) > 0 || (state.mSell | 0) > 0, t:'Продать скин'},
+    {ok: q.s >= 3 || (state.upOk | 0) > 0, t:'Сделать апгрейд'},
+    {ok: q.s >= 3 && mainQuestDone(), t:'Собрать набор АК-47 (' + akGot + ' из ' + akAll + ')'},
+    {ok: false, t:'Получить первый эпик'},
+    {ok: false, t:'Победить босса дня'}
+  ];
+  return rows.map(r => '<div class="tm-row ' + (r.ok ? 'ok' : 'no') + '"><i>' + (r.ok ? '✓' : '•') + '</i><span>'
+    + r.t + '</span></div>').join('');
+}
+function tutMap(){
+  const m = $('#tutMap');
+  if(!m) return;
+  const box = $('#tutMapRows');
+  if(box) box.innerHTML = tutMapRows();
+  m.classList.add('on');
+}
+/* «Пропустить гид» и «Я разберусь сам»: открыть всё сразу, без стрелок */
+function tutUnlockAll(){
+  const t = tutS();
+  t.on = 0; t.step = TUT_LAST; t.allTrials = 1;
+  save();
+  tutApply(); tutClearHint();
+  try{ switchTab('cases'); }catch(e){}
+  try{ renderCases(); }catch(e){}
+  toast('Гид выключен — всё открыто. Если что, подсказки живут в карточке квеста', 3200);
+}
+/* запуск гида с нуля: стартовый кейс, только нужное на экране, первая подсказка */
+function tutBegin(){
+  const t = tutS();
+  t.on = 1; t.step = 0;
+  const st = CASES.filter(c => c.id === 'start')[0];
+  if(st){ selCase = st; try{ casesPage = 0; }catch(e){} }
+  save();
+  try{ switchTab('cases'); }catch(e){}
+  try{ renderCases(); }catch(e){}
+  try{ updateOpenBtn(); }catch(e){}
+  tutApply();
+  tutHint(0);
+}
+
+function tutApply(){
+  const step = tutStepNow(), t = tutS();
+  /* --- вкладки --- */
+  document.querySelectorAll('.tab-item[data-tab]').forEach(el => {
+    const tab = el.dataset.tab;
+    const need = (TUT_TAB_AT[tab] === undefined) ? 0 : TUT_TAB_AT[tab];
+    let show = step >= need;
+    /* «Испытания» — второе открытие: не сразу, а через сутки после конца гида
+       (или мгновенно, если игрок выбрал «разберусь сам»). Иначе всё открывается
+       одним щелчком, и новизны в интерфейсе не остаётся. */
+    if(tab === 'trials' && step >= TUT_LAST){
+      show = !!(t.allTrials || (t.trialsAt && Date.now() >= t.trialsAt));
+    }
+    if(show && el.getAttribute('data-locked') === '1'){
+      el.removeAttribute('data-locked');
+      el.classList.add('unlocked-bump');
+      setTimeout(() => el.classList.remove('unlocked-bump'), 900);
+    }
+    el.classList.toggle('tut-hide', !show);
+  });
+  /* --- шапка: показываем только то, что уже есть --- */
+  tutShow($('#balance'), step >= 2);
+  tutShow($('#dustChip'), step >= 5);
+  tutShow($('#tokens'), step >= 8);
+  tutShow($('#lvlChip'), step >= 8);
+  tutShow($('#btnDiary'), step >= 8);
+  /* --- кейсы: до 8-го шага только «Стартовый» и ни одной лишней панели --- */
+  const full = step >= 8;
+  ['#caseFilter','#caseHero','#weekGoal','#bestDrop','#luckBar','#dropStats','#ticker','#casesNext']
+    .forEach(sel => tutShow($(sel), full));
+  tutShow($('#qtyRow'), full);
+  tutShow($('#questCard'), full);
+  /* --- инвентарь и апгрейд: фильтры прячем, пока скинов мало --- */
+  const invN = (state.inv || []).length;
+  tutShow($('#invFilters'), full || invN >= 5);
+  if(step < 8 && $('.tab-item[data-tab="cases"]')) { /* вкладки уже обработаны */ }
+  document.body.classList.toggle('tut-on', tutActive());
+  document.body.dataset.tut = String(step);
+  /* на первых шагах единственный кейс — стартовый */
+  if(step < 8 && selCase && selCase.id !== 'start'){
+    const st = CASES.filter(c => c.id === 'start')[0];
+    if(st){ selCase = st; }
+  }
+  /* 4.7.2: на втором круге игроку нужны кредиты на кейс. Если он выбрал «оставить
+     скин», денег нет — гид добавляет ровно стоимость стартового кейса, чтобы
+     обучение не упиралось в тупик. */
+  if(step === 7 && t.on && !t.t7cash && (t.t7 | 0) === 0){
+    const st = CASES.filter(c => c.id === 'start')[0];
+    const need = st ? st.price : 175;
+    if((state.coins | 0) < need){
+      state.coins = need;
+      t.t7cash = 1;
+      save();
+      try{ renderBalance(true); }catch(e){}
+      try{ toast('Гид добавил ' + need + ' кредитов на второй кейс', 2600); }catch(e){}
+    }
+  }
+}
 
 function questState(){
   if(!state.quest) state.quest = {s:0, firstUid:0};
@@ -9571,6 +10232,10 @@ function questOpenCase(){
   const first = CASES.find(c => c.price <= 170) || CASES[0];
   selCase = first;
   renderCases();
+  /* 4.7.2: этим же путём идёт кнопка «Открыть кейс» в подсказке гида —
+     гасим флаг бесплатного кейса, иначе второй заход тоже был бы бесплатным */
+  state.freeCase = 0;
+  save();
   openCase(false, {quest:true, firstDrop:true});
 }
 
@@ -9579,20 +10244,31 @@ function questSetupUpgrade(){
   const q = questState();
   let it = state.inv.find(x => x.uid === q.firstUid) || state.inv[0];
   if(!it){
-    /* предмета нет (например, продали всё) — даём тренировочный скин */
-    const cheap = SKINS.filter(s => s.r === 'common').sort((a,b) => a.val - b.val)[0] || SKINS[0];
-    addSkin(cheap);
+    /* Предмета нет (например, продали всё) — даём тренировочный скин.
+       4.7.2: раньше брался самый дешёвый common, и апгрейд приносил «+2 кредита».
+       Теперь ценность подбираем близко к тому, что игрок выручил за первый скин. */
+    const aim = Math.max(120, Math.round(q.soldVal || 200));
+    const pool = SKINS.filter(s => !s.uniq && (s.r === 'rare' || s.r === 'uncommon' || s.r === 'epic'));
+    let best = pool[0], bestD = Infinity;
+    pool.forEach(s => { const d = Math.abs(s.val - aim); if(d < bestD){ bestD = d; best = s; } });
+    addSkin(best);
     it = state.inv[state.inv.length - 1];
     toast('Держи тренировочный скин для апгрейда');
   }
   const v = itemVal(it);
   upStake = [it.uid];
   upSrc = {uid: it.uid, id: it.id};
-  /* цель подбираем так, чтобы шанс вышел около 70 % */
-  const wantVal = v * 1.25;
-  const pool = SKINS.filter(s => s.val > v * 1.05 && s.val < v * 3);
-  let best = pool[0] || null, bestD = Infinity;
-  pool.forEach(s => { const d = Math.abs(s.val - wantVal); if(d < bestD){ bestD = d; best = s; } });
+  /* цель подбираем не «в 1,25 раза», а по фактическому шансу: берём тот скин,
+     у которого итоговый шанс ближе к 72 %. Раньше округление до ближайшей цены
+     давало то 43 %, то 70 %, и подсказка «около 70 %» врала. */
+  const want = 0.72;
+  const pool = SKINS.filter(s => s.val > v * 1.02 && s.val < v * 4 && !s.uniq);
+  let best = null, bestD = Infinity;
+  pool.forEach(s => {
+    const ch = Math.min(0.90, Math.min(0.95, UP_BASE + lvlBonusPct(state.lvl) / 100) * (v / s.val) * pityMul());
+    const d = Math.abs(ch - want);
+    if(d < bestD){ bestD = d; best = s; }
+  });
   if(best){ upDst = best.id; upBot = null; }
   else { upDst = 'MRKT'; }
   upBoostCount = 0;
@@ -9638,10 +10314,14 @@ function welcomeThenQuest(){
   if(go) go.addEventListener('click', () => {
     close(); state.welcomeSeen = 1; save();
     try{ questStart(); }catch(e){}
+    /* 4.7.0: «Погнали» запускает мягкий гид с первого шага */
+    try{ tutBegin(); }catch(e){}
   }, {once:true});
   if(sk) sk.addEventListener('click', () => {
     close(); state.welcomeSeen = 1; save();
     try{ questDone(); }catch(e){ try{ questStart(); }catch(_){} }
+    /* 4.7.0: «Я разберусь сам» — открываем всё сразу, без стрелок */
+    try{ tutUnlockAll(); }catch(e){}
   }, {once:true});
 }
 
@@ -10106,7 +10786,7 @@ function updateInvActionBar(){
     state.coins += it.val;
     state.inv.splice(i, 1);
     state.mSell = (state.mSell || 0) + 1;
-    bossTick('sell');
+    bossTick('sell', it.val);
     soldEvent();   /* 4.3.9: этот путь продажи квест первого входа тоже обязан видеть */
     addDust(Math.max(1, Math.round(it.val * DUST_SELL_PCT)));
     invSelectedUid = null;
@@ -10177,6 +10857,7 @@ setInterval(() => {
   const timers = document.querySelectorAll('.rew-timer[data-timer]');
   if(!timers.length) return;
   if (rewCategory === 'timers') {
+    try{ renderTrialsSoon(); }catch(e){}
     if (rewLeft('hour') <= 0 || rewLeft('day') <= 0) renderRewards();
     else timers.forEach(el => { el.textContent = fmtLeft(rewLeft('hour') > 0 ? rewLeft('hour') : rewLeft('day')); });
   }
@@ -10191,6 +10872,7 @@ setInterval(() => {
 
 function openCard(x){
   const s = x.skin, R = RAR[s.r];
+  try{ tutEvent('card_open'); }catch(e){}
   $('#cardTitle').textContent = s.n;
   $('#cardBody').innerHTML = `
     <div style="height:110px;display:flex;align-items:center;justify-content:center">${svgWeapon(s)}</div>
@@ -10233,7 +10915,7 @@ function openCard(x){
     state.inv.splice(i,1);
     state.coins += x.val;
     state.mSell = (state.mSell||0) + 1;
-    bossTick('sell');
+    bossTick('sell', x.val);
     soldEvent();
     PRICE_HIST.record(x.id, x.val);
     addCharge(DRUM_CHARGE.sell);
@@ -10830,6 +11512,7 @@ let upPhase = 'idle';          /* idle | spin */
    Деньги за модификаторы берём только на первом запуске, иначе щит
    списывался бы дважды за одну попытку. */
 function spinUpgrade(isReroll){
+  try{ if(!isReroll) tutEvent('up_start'); }catch(e){}
   if(upPhase !== 'idle' || spinningWheel) return;
   const chFull = upgradeChance();
   if(!(chFull > 0)) return;
@@ -10911,7 +11594,15 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
     return;
   }
 
-  if(!win && !shield && !upFreeShield){   /* 4.3.2: бесплатный щит квеста держит до первого успеха */
+  /* 4.7.5: ставка уходит ВСЕГДА, кроме провала под щитом.
+     Раньше списание стояло только в ветке «провал без щита» — и при выигрыше
+     поставленные скины оставались в инвентаре, а сверху добавлялся выигранный.
+     Получалось, что при удачном апгрейде ничего не тратится: игрок копил инвентарь
+     без потерь и выкачивал кредиты. Теперь как в оригинале: ставишь — теряешь,
+     получаешь только цель. Щит (платный или квестовый) по-прежнему возвращает
+     ставку при провале, но при выигрыше не спасает её от списания. */
+  const keepStake = (!win && (shield || upFreeShield));
+  if(!keepStake){
     upStake.forEach(uid => {
       const i = state.inv.findIndex(it => it.uid === uid);
       if(i >= 0) state.inv.splice(i,1);
@@ -10926,6 +11617,7 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
   $('#pctCap').innerHTML = 'шанс<br>апгрейда';
 
   questEvent('upgraded');
+  try{ tutEvent(win ? 'up_win' : 'up_fail'); }catch(e){}
 
   if(win){
     upFreeShield = false;          /* 4.3.2: гасим только на успехе */
@@ -10938,6 +11630,7 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
       newItem = makeItem(target);
       state.inv.push({uid: newItem.uid, id: newItem.id, fl: newItem.fl, st: newItem.st});
       try{ albumNote(target, 'up'); }catch(e){}
+      try{ raidNoteSkin(target); }catch(e){}
       wonVal = itemVal(newItem);
     }
     state.upOk = (state.upOk||0) + 1;
@@ -11082,6 +11775,165 @@ function renderMissions(){
 const BOSS_NEED_UP = 3;
 const BOSS_NEED_SELL = 5;
 
+/* ---------- 4.7.5: КАРТА РЕЙДА БОССА ДНЯ ----------
+   Человек попросил: в боссе дня должно быть ВИДНО, что делать — как в коллекциях.
+   Поэтому условий больше не два счётчика, а четыре этапа с прогрессом и кнопками:
+   кейсы → продажа → апгрейд → ствол дня. Ствол и суммы меняются по дням недели,
+   чтобы рейд не был одинаковым каждый день. Каждый этап снимает 25 HP,
+   награда этапа — только ПЫЛЬ (кредиты не даём: иначе сток уезжает за 92 %).
+   Финальный эксклюзивный скин по-прежнему один за день. */
+const RAID_STAGE_DUST = [15, 20, 25, 30];
+const RAID_DAYS = [
+  /* 0 — воскресенье, дальше по порядку; ствол дня и суммы разные */
+  {gun:'awp',    cases:3, sell:500, ups:2, nm:'Ночной аукцион'},
+  {gun:'ak47',   cases:3, sell:400, ups:2, nm:'Инспектор склада'},
+  {gun:'m4a4',   cases:3, sell:450, ups:2, nm:'Мастер цеха'},
+  {gun:'deagle', cases:3, sell:400, ups:2, nm:'Курьер из пустыни'},
+  {gun:'mp9',    cases:3, sell:350, ups:2, nm:'Тихий поставщик'},
+  {gun:'usp',    cases:3, sell:450, ups:2, nm:'Снайпер-наводчик'},
+  {gun:'scar20', cases:3, sell:600, ups:2, nm:'Хозяин рынка'}
+];
+function raidPlan(){ return RAID_DAYS[new Date().getDay()]; }
+function raidS(){
+  /* сначала суточный сброс босса: иначе при первом за день вызове здесь ещё лежит
+     вчерашний bossOpened, и новый рейд сразу помечался бы пройденным */
+  try{ bossReset(); }catch(e){}
+  const t = todayKey();
+  if(!state.raid || state.raid.d !== t){
+    /* если босс сегодня уже открыт старым путём — рейд считаем пройденным,
+       чтобы игрок не проходил его второй раз за день */
+    const done = state.bossOpened ? 1 : 0;
+    state.raid = {d:t, c:0, sell:0, up:0, gun:0, got:0, done, fin: done};
+    if(done){ const p = raidPlan(); state.raid.c = p.cases; state.raid.sell = p.sell; state.raid.up = p.ups; state.raid.gun = 1; state.raid.got = 15; }
+    save();
+  }
+  if(state.raid.got == null) state.raid.got = 0;
+  return state.raid;
+}
+function raidStages(){
+  const p = raidPlan(), r = raidS();
+  return [
+    {k:'case', ic:'📦', t:'Разведка',  d:'Открой кейсов: ' + p.cases,
+     cur: Math.min(r.c|0, p.cases), goal: p.cases, go:'cases', goT:'Кейсы'},
+    {k:'sell', ic:'💸', t:'Сбыт',      d:'Продай скинов на ' + p.sell + ' кр',
+     cur: Math.min(r.sell|0, p.sell), goal: p.sell, go:'inv', goT:'Продать'},
+    {k:'up',   ic:'🔄', t:'Прокачка',  d:'Удачных апгрейдов: ' + p.ups,
+     cur: Math.min(r.up|0, p.ups), goal: p.ups, go:'up', goT:'Апгрейд'},
+    {k:'gun',  ic:'🎯', t:'Арсенал',   d:'Добудь ' + (GUN_RU[p.gun] || p.gun) + ' — кейс, апгрейд или контракт',
+     cur: (r.gun|0) ? 1 : 0, goal: 1, go:'gun', goT:'Где взять'}
+  ];
+}
+function raidDoneCount(){ return raidStages().filter(x => x.cur >= x.goal).length; }
+function raidComplete(){ return raidDoneCount() >= 4; }
+/* награда за пройденные этапы: пыль, один раз на этап */
+function raidAward(){
+  const st = raidStages(), r = raidS();
+  let bits = 0;
+  st.forEach((x,i) => { if(x.cur >= x.goal) bits |= (1 << i); });
+  const fresh = bits & ~(r.got|0);
+  if(!fresh) return;
+  r.got = (r.got|0) | fresh;
+  let dust = 0, names = [];
+  st.forEach((x,i) => { if(fresh & (1 << i)){ dust += RAID_STAGE_DUST[i]; names.push(x.t); } });
+  save();
+  if(dust > 0){
+    try{ addDust(dust); toast('Этап рейда «' + names.join(', ') + '»: +' + dust + ' пыли', 2400); }catch(e){}
+  }
+}
+function raidTick(kind, val){
+  const p = raidPlan(), r = raidS();
+  let changed = false;
+  if(kind === 'case' && !r.done){ if((r.c|0) < p.cases){ r.c = (r.c|0) + 1; changed = true; } }
+  if(kind === 'sell' && !r.done){ if((r.sell|0) < p.sell){ r.sell = Math.min(p.sell, (r.sell|0) + (val|0)); changed = true; } }
+  if(kind === 'up'   && !r.done){ if((r.up|0)   < p.ups){ r.up = (r.up|0) + 1; changed = true; } }
+  if(!changed) return;
+  raidAward();
+  save();
+  try{ if(rewCategory === 'boss') renderRewardGrid(); }catch(e){}
+}
+/* скин нужного ствола получен (кейс, апгрейд, контракт) */
+function raidNoteSkin(skin){
+  if(!skin) return;
+  const p = raidPlan(), r = raidS();
+  if(r.done || r.gun) return;
+  if(skin.w !== p.gun) return;
+  r.gun = 1;
+  raidAward();
+  save();
+  try{ if(rewCategory === 'boss') renderRewardGrid(); }catch(e){}
+}
+/* куда вести по кнопке «Где взять»: самый дешёвый кейс, в пуле которого есть ствол дня */
+function raidGunCase(){
+  const p = raidPlan();
+  const list = CASES.filter(c => !c.knives && casePoolOf(c).some(x => x.w === p.gun))
+                    .sort((a,b) => a.price - b.price);
+  return list.length ? list[0].id : null;
+}
+function raidLeftText(){
+  const d = new Date();
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0, 0);
+  const ms = Math.max(0, end - d);
+  const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000);
+  return 'до сброса ' + (h > 0 ? h + ' ч ' + m + ' мин' : m + ' мин');
+}
+function raidHtml(){
+  const p = raidPlan(), r = raidS(), st = raidStages();
+  const done = st.filter(x => x.cur >= x.goal).length;
+  const hp = Math.max(0, 100 - done * 25);
+  const opened = !!state.bossOpened;
+  const ready = opened ? false : (raidComplete() || bossUnlocked());
+  let nodes = '';
+  st.forEach((x,i) => {
+    const full = x.cur >= x.goal;
+    const now = !full && st.findIndex(y => y.cur < y.goal) === i;
+    const pct = Math.min(100, x.cur / x.goal * 100);
+    nodes += '<div class="raid-node ' + (full ? 'done' : now ? 'now' : '') + '">'
+      + '<div class="raid-ic">' + (full ? '✓' : x.ic) + '</div>'
+      + '<div class="raid-body">'
+      +   '<div class="raid-t">' + x.t + ' <span>' + (x.goal > 1 ? x.cur + ' / ' + x.goal : (full ? 'готово' : '0 / 1')) + '</span></div>'
+      +   '<div class="raid-d">' + x.d + '</div>'
+      +   '<div class="raid-bar"><i style="width:' + pct.toFixed(0) + '%"></i></div>'
+      + '</div>'
+      + '<button class="raid-btn" data-raid-go="' + x.go + '"' + (full ? ' disabled' : '') + '>'
+      +   (full ? '✓' : x.goT) + '</button>'
+      + '</div>';
+  });
+  return '<div class="raid">'
+    + '<div class="raid-head">'
+    +   '<div class="raid-av">☠️</div>'
+    +   '<div class="raid-nm"><b>' + p.nm + '</b><small>Босс дня · ' + raidLeftText() + '</small></div>'
+    +   '<div class="raid-t" style="flex:0 0 auto">' + done + ' / 4</div>'
+    + '</div>'
+    + '<div class="raid-hp"><i style="width:' + hp + '%"></i></div>'
+    + '<div class="raid-hp-lbl"><span>HP ' + hp + ' / 100</span><span>этап −25</span></div>'
+    + '<div class="raid-map">' + nodes + '</div>'
+    + '<button class="raid-go" id="raidGo"' + (ready ? '' : ' disabled') + '>'
+    +   (opened ? 'Босс сегодня уже открыт' : ready ? 'Добить босса' : 'Сначала пройди этапы') + '</button>'
+    + '<div class="raid-note">'
+    +   (opened ? 'Новый рейд — после полуночи.' :
+       'За этапы дают пыль (15/20/25/30). За весь рейд — эксклюзивный скин, один на день.')
+    + '</div>'
+    + '</div>';
+}
+function raidGo(kind){
+  if(kind === 'cases'){ try{ switchTab('cases'); }catch(e){} return; }
+  if(kind === 'inv'){ try{ switchTab('inv'); }catch(e){} return; }
+  if(kind === 'up'){ try{ switchTab('upgrade'); toast('Выбери ставку и цель — считаем шанс', 2200); }catch(e){} return; }
+  if(kind === 'gun'){
+    const cid = raidGunCase();
+    if(cid){ try{ albumGotoCase(cid); toast('Ствол дня ищи в этом кейсе', 2400); }catch(e){} }
+    else { try{ switchTab('craft'); }catch(e){} }
+    return;
+  }
+}
+function raidFinish(){
+  if(state.bossOpened) return;
+  if(!(raidComplete() || bossUnlocked())){ toast('Сначала пройди этапы рейда'); return; }
+  const r = raidS(); r.fin = 1; save();
+  try{ SFX.success(); FX.shake(0.8); FX.flash('#ff5a3c'); }catch(e){}
+  setTimeout(()=>{ try{ openBoss(); }catch(e){} try{ renderRewards(); updateNavBadges(); }catch(e){} }, 700);
+}
+
 function bossToday(){ return todayKey() + '|' + (state.bossDone||0); }
 function bossReset(){
   const t = todayKey();
@@ -11097,12 +11949,17 @@ function bossReset(){
   }
 }
 function bossUnlocked(){
+  /* 4.7.5: с картой рейда условие — четыре этапа. Старое (3 апгрейда или 5 продаж)
+     оставлено рабочим: у кого-то эти счётчики уже набраны, и отбирать доступ нельзя. */
+  try{ if(raidComplete()) return true; }catch(e){}
   return (state.upToday||0) >= BOSS_NEED_UP || (state.sellToday||0) >= BOSS_NEED_SELL;
 }
-function bossTick(kind){
+function bossTick(kind, val){
   bossReset();
   if(kind === 'up'){ state.upToday = (state.upToday||0) + 1; }
   if(kind === 'sell'){ state.sellToday = (state.sellToday||0) + 1; }
+  /* 4.7.5: тот же вызов кормит карту рейда (val — сумма продажи) */
+  try{ raidTick(kind === 'sell' ? 'sell' : kind, val|0); }catch(e){}
   save();
   renderBoss();
 }
@@ -11131,12 +11988,30 @@ function renderBoss(){
   const btn = document.getElementById('btnBoss');
   if(btn && !btn.disabled) btn.addEventListener('click', openBoss);
 }
+/* 4.7.5: пул босса и веса.
+   БАГ: здесь стояло SKINS.filter(s => s.excl), а у «Призрака» (награда главного
+   квеста за набор АК-47) стоит excl:true вместе с uniq:true — значит ежедневный
+   босс мог выдать уникальный скин, который задуман как финальная награда.
+   Раньше шансы были равные, и «Аврора» за 145 выпадала в тот же день, что и
+   легендарка за 2 615: половина дней ощущалась пустой. */
+const BOSS_W = {epic:45, legend:35, rare:10, myth:10};
+function bossPool(){ return SKINS.filter(s => s.excl && !s.uniq); }
+function bossPick(){
+  const pool = bossPool(), byR = {};
+  pool.forEach(s => { (byR[s.r] = byR[s.r] || []).push(s); });
+  const rs = Object.keys(BOSS_W).filter(r => (byR[r] || []).length);
+  if(!rs.length) return pool[0];
+  const total = rs.reduce((a,r) => a + BOSS_W[r], 0);
+  let x = Math.random() * total, pick = rs[0];
+  for(const r of rs){ x -= BOSS_W[r]; if(x <= 0){ pick = r; break; } }
+  const list = byR[pick];
+  return list[Math.floor(Math.random() * list.length)];
+}
 function openBoss(){
   setTimeout(()=>{ state.bossTotal = (state.bossTotal||0) + 1; save(); achCheck(); }, 400);
   if(!bossUnlocked() || state.bossOpened) return;
   audio();
-  const pool = SKINS.filter(s => s.excl);
-  const sk = pool[Math.floor(Math.random()*pool.length)];
+  const sk = bossPick();
   const item = makeItem(sk, {fl: 0.01 + Math.random()*0.06});
   item.uid = uidSeq++;
   state.inv.push({uid:item.uid, id:item.id, fl:item.fl, st:true});
@@ -11184,6 +12059,8 @@ function switchTab(name){
     invBulk = false; invPick.clear(); invBulkArmed = '';
     if(typeof renderBulkBar === 'function') renderBulkBar();
   }
+  /* 4.7.0: гид учит, что скин лежит в инвентаре */
+  if (name === 'inv') { try{ tutEvent('inv_open'); }catch(e){} }
   // сброс бейджа наград при заходе
   if (name === 'rewards') {
     const dot = document.getElementById('navRewDot');
@@ -12621,7 +13498,24 @@ function rewIcon(key){
   if(key === 'hour') return '📦';
   return '🎁';
 }
+/* 4.7.3: «Испытания» спрятаны до конца гида + сутки. Чтобы это не читалось как
+   «игры пропали», в «Наградах» висит плашка с таймером и кнопкой «Открыть сейчас». */
+function renderTrialsSoon(){
+  const box = document.getElementById('trialsSoon');
+  if(!box) return;
+  const t = tutS();
+  const tab = document.querySelector('.tab-item[data-tab="trials"]');
+  const hiddenTab = !tab || tab.classList.contains('tut-hide');
+  const passed = !t.on && !(t.allTrials|0) && t.trialsAt && Date.now() < t.trialsAt;
+  if(!hiddenTab || !passed){ box.hidden = true; return; }
+  box.hidden = false;
+  const left = Math.max(0, t.trialsAt - Date.now());
+  const hh = Math.floor(left / 3600000), mm = Math.floor(left % 3600000 / 60000);
+  const lbs = document.getElementById('trsLeft');
+  if(lbs) lbs.textContent = 'через ' + (hh > 0 ? hh + ' ч ' + mm + ' мин' : mm + ' мин');
+}
 function renderRewards(){
+  renderTrialsSoon();
   updateRewardHeader();
   renderMarathon();
   renderRewardGrid();
@@ -12781,27 +13675,10 @@ function renderRewardGrid(){
     });
   }
   else if (rewCategory === 'boss') {
-    const unlocked = bossUnlocked();
-    const opened = state.bossOpened;
-    const status = opened ? 'claimed' : (unlocked ? 'available' : 'progress');
-
-    let cardHtml = `
-      <div class="rew-card ${status}" style="grid-column: 1 / -1">
-        <div class="rew-card-top">
-          <div class="rew-card-ic">☠️</div>
-          <div class="rew-card-title">Босс дня</div>
-        </div>
-        <div class="rew-card-desc">${opened ? 'Открыт сегодня' : unlocked ? 'Эксклюзивный скин готов!' : 'Сделайте 3 апгрейда или продайте 5 скинов'}</div>
-        <button class="rew-btn ${status==='available'?'active':''}" ${status==='available'?'data-open-boss="1"':''}>
-          ${opened ? 'Получено' : unlocked ? 'Открыть' : 'Заперт'}
-        </button>
-      </div>`;
-
-    if ((rewFilter === 'available' && status === 'available') ||
-        (rewFilter === 'progress' && status === 'progress') ||
-        (rewFilter === 'claimed' && status === 'claimed')) {
-      html += cardHtml;
-    }
+    /* 4.7.5: карта рейда показывается при любом фильтре — иначе игрок нажимает
+       «Доступно» и не видит, что именно нужно сделать, то есть ровно то, от чего
+       уходим. Фильтры в этой категории просто не применяются. */
+    html += raidHtml();
   }
   else if (rewCategory === 'achievements') {
     ACH.forEach(a => {
@@ -12841,6 +13718,12 @@ function renderRewardGrid(){
   grid.querySelectorAll('[data-open-boss]').forEach(b => {
     b.addEventListener('click', () => { openBoss(); setTimeout(()=>{ renderRewards(); updateNavBadges(); }, 200); });
   });
+  /* 4.7.5: кнопки карты рейда */
+  grid.querySelectorAll('[data-raid-go]').forEach(b => {
+    b.addEventListener('click', () => { SFX.click(); raidGo(b.dataset.raidGo); });
+  });
+  const raidBtn = document.getElementById('raidGo');
+  if(raidBtn) raidBtn.addEventListener('click', () => { SFX.click(); raidFinish(); });
   grid.querySelectorAll('[data-claim-key]').forEach(b => {
     b.addEventListener('click', () => {
       const fn = (window.__sr_actions || {})[b.dataset.claimKey];
@@ -15586,6 +16469,64 @@ document.addEventListener('click', (e)=>{
   if(typeof window.SRT_PROFILE==='function'){ window.SRT_PROFILE(); }
 });
 
+/* ---- 4.7.3: «Открыть сейчас» для Испытаний ---- */
+(function(){
+  const b = document.getElementById('trsOpen');
+  if(b) b.addEventListener('click', () => {
+    const t = tutS();
+    t.allTrials = 1;
+    save();
+    try{ tutApply(); }catch(e){}
+    try{ renderTrialsSoon(); }catch(e){}
+    try{ switchTab('trials'); }catch(e){}
+    try{ toast('Испытания открыты — заходи', 2400); }catch(e){}
+  });
+})();
+
+/* ---- 4.7.0: кнопки мягкого гида ---- */
+(function(){
+  const go = document.getElementById('tutGo');
+  const sk = document.getElementById('tutSkip');
+  if(go) go.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const t = tutS(); const at = t.step | 0;
+    SFX.click();
+    if(at === 0){
+      /* первый кейс бесплатный — он идёт квестовым путём (без кредитов) */
+      try{ questOpenCase(); }catch(e){}
+      return;
+    }
+    if(at === 3){
+      if(!(window.__sr && window.__sr.state.inv.length)){ tutStep(5); return; }
+      switchTab('inv'); renderInv(true); return;
+    }
+    if(at === 4){
+      const c = document.querySelector('#invGrid .card');
+      if(c){ c.click(); return; }
+      tutStep(5); return;
+    }
+    if(at === 5){
+      const b = document.getElementById('btnUp');
+      if(b && !b.disabled){ b.click(); return; }
+      toast('Апгрейд ещё не готов'); return;
+    }
+    if(at === 8){ tutStep(TUT_LAST); const m = document.getElementById('tutMap'); if(m) m.classList.remove('on'); return; }
+    tutStep(at + 1);
+  });
+  if(sk) sk.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(!confirm('Пропустить обучение? Интерфейс откроется целиком, подсказок не будет.')) return;
+    tutUnlockAll();
+  });
+  const mg = document.getElementById('tutMapGo');
+  if(mg) mg.addEventListener('click', ()=>{
+    SFX.click();
+    const m = document.getElementById('tutMap');
+    if(m) m.classList.remove('on');
+    tutStep(TUT_LAST, {silentMap:true});
+  });
+})();
+
 /* ---- кнопка звука и общие щелчки ---- */
 (function(){
   const b = document.getElementById('btnSnd');
@@ -15649,6 +16590,12 @@ function init(){
   try{ loadTheme(); }catch(e){}
   /* 4.3.2: блокировка вкладок — только новому игроку */
   try{ if(saveExisted) unlockAllTabs(); }catch(e){}
+  /* 4.7.0: у кого сейв уже был — гид не нужен, интерфейс открыт целиком */
+  try{
+    const t = tutS();
+    if(saveExisted && t.step < TUT_LAST){ t.on = 0; t.step = TUT_LAST; t.allTrials = 1; }
+    tutApply();
+  }catch(e){}
   try{ FX.init(); }catch(e){}
   try{ FEED.init(); }catch(e){}
   try{ renderLuck(); }catch(e){}
@@ -16306,7 +17253,13 @@ async function rkAttach(nick, pass){
       .map(x => 'updateMask.fieldPaths=' + x).join('&');
     const body = { fields: {
       nick: { stringValue: nick }, nickKey: { stringValue: key },
-      worth: fbInt(Math.max(0, rkStats().worth)), bestDrop: fbInt(Math.max(0, rkStats().bestDrop)),
+      /* 4.7.4: bestDrop обязан быть обрезан до LIM.bestDrop. Правила Firestore
+         проверяют num(bestDrop, 32900) при СОЗДАНИИ строки, а здесь уходило «как есть».
+         У кого лучший дроп дороже лимита (апгрейд на дорогую цель даёт и 250 тыс.),
+         строка не создавалась вовсе: 403 PERMISSION_DENIED. Так застрял игрок «Сава»:
+         worth 1 148 430, а в таблице его нет. */
+      worth: fbInt(Math.max(0, rkStats().worth)),
+      bestDrop: fbInt(Math.min(LIM.bestDrop, Math.max(0, rkStats().bestDrop))),
       opened: fbInt(rkStats().opened|0), upOk: fbInt(rkStats().upOk|0),
       updatedAt: fbInt(Date.now()) } };
     const c = await fbFetch(`${FB_ROOT}/players/${a.uid}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
@@ -16411,6 +17364,29 @@ async function fbSend(s){
 
   const cur = await fbFetch(url, { headers:H });
   if(cur.status === 0) return { net:false };
+  /* 4.7.4: строки нет — создаём её сами. Раньше здесь возвращался NOT_FOUND, и игрок
+     оставался вне таблицы навсегда: каждое следующее отправление упиралось в то же 404.
+     Ровно это было у «Савы» после того, как создание строки отклонили правила. */
+  if(cur.status === 404){
+    const nk = (rk.player && rk.player.nick) || '';
+    if(nk){
+      const maskNew = ['nick','nickKey','worth','bestDrop','opened','upOk','updatedAt']
+        .map(x => 'updateMask.fieldPaths=' + x).join('&');
+      const bodyNew = { fields: {
+        nick:      { stringValue: nk },
+        nickKey:   { stringValue: nk.toLowerCase() },
+        worth:     fbInt(Math.max(0, Math.min(LIM.worth, Math.round(s.worth)||0))),
+        bestDrop:  fbInt(Math.min(LIM.bestDrop, Math.max(0, Math.round(s.bestDrop)||0))),
+        opened:    fbInt(Math.min(LIM.opened, Math.max(0, s.opened|0))),
+        upOk:      fbInt(Math.min(LIM.upOk, Math.max(0, s.upOk|0))),
+        updatedAt: fbInt(Date.now()) } };
+      const cr = await fbFetch(`${url}?${maskNew}`, { method:'PATCH', headers:H, body: JSON.stringify(bodyNew) });
+      if(cr.status === 0) return { net:false };
+      if(cr.data && cr.data.error) return { status:cr.status, err:fbErr(cr.data) };
+      return { status:200, ok:true, created:true };
+    }
+    return { status:404, err:'Строки игрока нет — войдите в профиль заново' };
+  }
   if(cur.status !== 200) return { status:cur.status, err:fbErr(cur.data) };
   const c = fbParse(cur.data);
 
@@ -16820,6 +17796,23 @@ function albCard(s, got, secret){
   </div>`;
 }
 
+/* 4.7.3: по умолчанию раскрыты первые три набора, остальные — по кнопке.
+   Выбор игрока запоминается в state.albOpen. */
+function albumSetOpen(key, idx){
+  if(!state.albOpen || typeof state.albOpen !== 'object') state.albOpen = {};
+  const v = state.albOpen[key];
+  if(v === undefined) return idx < 3;
+  return !!v;
+}
+function albumToggleSet(key, idx){
+  if(!state.albOpen || typeof state.albOpen !== 'object') state.albOpen = {};
+  const cur = albumSetOpen(key, idx);
+  state.albOpen[key] = cur ? 0 : 1;
+  save();
+  renderAlbum();
+  try{ SFX.click(); }catch(e){}
+}
+
 function renderAlbum(){
   const box = document.getElementById('albumBox');
   if(!box) return;
@@ -16850,7 +17843,8 @@ function renderAlbum(){
   const ordered = ALBUM_SETS.slice().sort((a,b) =>
     (albumSeasonBoost(b) ? 1 : 0) - (albumSeasonBoost(a) ? 1 : 0));
 
-  ordered.forEach(set => {
+  ordered.forEach((set, setIdx) => {
+    const open = albumSetOpen(set.k, setIdx);
     const skins = albumSkinsOf(set);
     const got = albumSetGot(set, seen);
     const full = got >= skins.length;
@@ -16859,13 +17853,16 @@ function renderAlbum(){
     const secret = full ? null : albumSecretSkin(set);
     const lvlStar = albumStarLevel(set);
     const starN = (state.albStar && state.albStar[set.k]) || 0;
-    html += `<div class="al-set ${full?'done':''} ${hot?'hot':''} ${albumSeasonBoost(set)?'season':''} ${lvlStar?'prest'+lvlStar:''}" data-set="${set.k}">
+    html += `<div class="al-set ${full?'done':''} ${hot?'hot':''} ${albumSeasonBoost(set)?'season':''} ${lvlStar?'prest'+lvlStar:''} ${open?'':'collapsed'}" data-set="${set.k}">
       <div class="al-set-head">
         <div class="al-set-ic">${set.ic}</div>
         <div class="al-set-title">${set.name}${lvlStar?`<em class="al-prest">Престиж ${lvlStar}</em>`:''}<small>${set.sub}</small></div>
         <div class="al-set-count">${got} / ${skins.length}</div>
+        ${open?'':'<span class="al-set-more">раскрыть</span>'}
+        <div class="al-chev">▾</div>
       </div>
-      <div class="al-coins">${skins.map(s => `<i class="${seen[s.id]?'on':''}"></i>`).join('')}</div>`;
+      <div class="al-coins">${skins.map(s => `<i class="${seen[s.id]?'on':''}"></i>`).join('')}</div>
+      <div class="al-body">`;
     if(full && starN > 0){
       const toNext = lvlStar >= 2 ? 0 : (lvlStar === 1 ? ALB_STAR2 - starN : ALB_STAR1 - starN);
       html += `<div class="al-stars"><span>⭐ ${starN}</span>
@@ -16900,7 +17897,7 @@ function renderAlbum(){
         <div class="al-pd">${full?(claimed?'Награда получена · собирай звёзды дублями':'Нажми, чтобы забрать: '+ALB_DUST+' пыли'):ALB_DUST+' пыли за собранный набор'}</div>
       </div>
       ${full && !claimed ? `<button class="al-claim" data-claim="${set.k}">Забрать</button>` : ''}
-    </div></div>`;
+    </div></div></div>`;
   });
   box.innerHTML = html;
 
@@ -16913,6 +17910,15 @@ function renderAlbum(){
   });
   box.querySelectorAll('.al-claim').forEach(b => {
     b.addEventListener('click', e => { e.stopPropagation(); albumClaim(b.dataset.claim); });
+  });
+  /* нажатие на шапку набора — раскрыть/свернуть */
+  box.querySelectorAll('.al-set').forEach(el => {
+    const idx = ordered.findIndex(x => x.k === el.dataset.set);
+    const head = el.querySelector('.al-set-head');
+    if(head) head.addEventListener('click', e => {
+      if(e.target.closest('button')) return;
+      albumToggleSet(el.dataset.set, idx);
+    });
   });
   renderStory();
   albumApplyFrame();
@@ -17352,6 +18358,9 @@ window.__sr = {
   insureFee: boostCost, insureBack: function(){ return 0; },
   /* 4.6.0: снаружи нужны музыка, темы, рулетки и главный квест — для тестов и стендов */
   get musOn(){ return musOn; }, musSet, musToggle, musStop, musStinger,
+  /* 4.7.0: мягкий гид снаружи — тестам нужен способ всё открыть */
+  tutS, tutApply, tutStep, tutEvent, tutBegin, tutUnlockAll, tutMap, tutHint, tutClearHint,
+  get tutStepNow(){ return tutStepNow(); }, get tutActive(){ return tutActive(); }, TUT_LAST, TUT_TAB_AT,
   PREMIUM_THEMES, buyLegend, toggleLegend, premOwned, applyTheme, renderThemeBlock,
   SPIN_STYLES, spinStyleOf, CASE_SPIN,
   albumClaim, albumSkinsOf, albumSetGot, albumTotals, albumSeen, ALBUM_SETS,
@@ -17370,6 +18379,7 @@ window.__sr = {
   openDrumGame, dr2Spin, dr2Draw, dr2Paytable, dr2Grant, DR2_TRIPLE, DR2_EXCH, DR2_PAIR, DR2_ALLDIFF,
   get tokens(){ return state.tokens|0; }, setTokens(n){ state.tokens=n|0; renderTokens(); },
   spinUpgrade, openBoss, bossTick, renderBoss, bossUnlocked, FEED, PRICE_HIST, renderLuck,
+  raidS, raidStages, raidTick, raidNoteSkin, raidComplete, raidHtml, raidPlan, bossPick, bossPool, raidGo, raidFinish,
   openSniper, tirFire, tirShootAt, tirEnd, openBattle, batGo, batLeft, openTower, renderTower, startTowerGame, towerLeft, TOWER_MULTS, TOWER_CHANCES,
   /* 4.5.1: тир снаружи — состояние и шкала наград (нужно тестам и стендам) */
   get tir(){ return tirS; }, tirLeft, tirStop, tirReward, tirNextStep, TIR_STEPS, TIR_PTS_CENTER, TIR_PTS_HIT, TIR_CENTER_N,
@@ -20322,19 +21332,35 @@ window.__sr = {
   function srtEntryHTML(){
     var acc=srtAcc();
     if(acc && (acc.name||acc.nick)) return '';
-    return '<div id="srtEntry" style="position:fixed;inset:0;z-index:95;display:flex;background:linear-gradient(160deg,#0c1120,#080b13)">'
-      + '<div style="width:min(380px,92vw);background:linear-gradient(160deg,#171c2b,#10141f);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px 20px;box-shadow:0 18px 60px rgba(0,0,0,.7);text-align:center">'
-      + '<div style="font-size:20px;font-weight:800;letter-spacing:1px">SKIN&nbsp;RUSH</div>'
-      + '<div style="font-size:12px;opacity:.7;margin:4px 0 16px">вход по нику и паролю</div>'
-      + '<input id="srtNick" maxlength="16" placeholder="Ник (2–16)" style="width:100%;box-sizing:border-box;margin-bottom:6px;padding:9px 10px;border-radius:8px;border:1px solid rgba(120,180,255,.35);background:#0d1119;color:#e5eefc;font-size:13px">'
-      + '<button id="srtNickRoulette" type="button">🎲 Подобрать ник</button>'
-      + '<input id="srtPass" type="password" maxlength="32" placeholder="Пароль (мин 4)" style="width:100%;box-sizing:border-box;margin-bottom:14px;padding:9px 10px;border-radius:8px;border:1px solid rgba(120,180,255,.35);background:#0d1119;color:#e5eefc;font-size:13px">'
-      + '<div style="display:flex;gap:8px">'
-      + '<button id="srtLogin" style="flex:1;cursor:pointer;border:0;background:linear-gradient(180deg,#2f86ff,#1f6fff);color:#fff;border-radius:9px;padding:9px;font-size:13px;font-weight:700">Войти</button>'
-      + '<button id="srtRegister" style="flex:1;cursor:pointer;border:1px solid rgba(120,180,255,.4);background:#1b2233;color:#dbe7fb;border-radius:9px;padding:9px;font-size:13px">Регистрация</button>'
+    /* 4.7.0: форма переписана в тонах игры. Никаких «Ник (2–16)» — вместо
+       инструкции в скобках живой превью профиля: аватар и ник, как они будут
+       выглядеть в игре. Пароль — вторым шагом, кнопка одна главная. */
+    return '<div id="srtEntry">'
+      + '<div class="srL-card">'
+      + '<div class="srL-badge">Позывной</div>'
+      + '<div class="srL-logo">SKIN&nbsp;RUSH</div>'
+      + '<div class="srL-sub">Это твоё имя в рейтинге и в профиле. Придумай такое, '
+      + 'чтобы не стыдно было оказаться на первом месте.</div>'
+      + '<div class="srL-prev">'
+      +   '<div class="srL-av" id="srtAv">?</div>'
+      +   '<div style="min-width:0">'
+      +     '<div class="srL-prev-nm" id="srtPrevNm">пока безымянный</div>'
+      +     '<div class="srL-prev-sub" id="srtPrevSub">Ур. 1 · в игре ещё никто</div>'
+      +   '</div>'
       + '</div>'
-      + '<button id="srtGuest" style="width:100%;margin-top:8px;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.6);border-radius:9px;padding:8px;font-size:12px">Продолжить как гость</button>'
-      + '<div id="srtMsg" style="min-height:16px;margin-top:10px;font-size:12px;text-align:center;opacity:.9"></div>'
+      + '<label class="srL-lbl" for="srtNick">Твой ник</label>'
+      + '<div class="srL-field">'
+      +   '<input id="srtNick" maxlength="16" autocomplete="nickname" placeholder="2–16 символов">'
+      +   '<button class="srL-dice" id="srtNickRoulette" type="button" title="Подобрать ник">🎲</button>'
+      + '</div>'
+      + '<label class="srL-lbl" for="srtPass">Пароль</label>'
+      + '<div class="srL-field">'
+      +   '<input id="srtPass" type="password" maxlength="32" autocomplete="current-password" placeholder="минимум 4 символа">'
+      + '</div>'
+      + '<button class="srL-primary" id="srtLogin" type="button">В игру</button>'
+      + '<button class="srL-second" id="srtRegister" type="button">Создать аккаунт</button>'
+      + '<button class="srL-guest" id="srtGuest" type="button">Играть без аккаунта</button>'
+      + '<div id="srtMsg"></div>'
       + '</div></div>';
   }
   function srtHandleAuth(){
@@ -20355,13 +21381,31 @@ window.__sr = {
       var n=0, total=14;
       var iv=setInterval(function(){
         nick.value=rnd(); n++;
+        try{ nick.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
         if(n>=total){
           clearInterval(iv);
-          nick.style.borderColor='rgba(255,154,31,.7)';
           try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+          srtMsg('Нравится? Тогда жми «В игру»','#8b98b0');
         }
       }, 70);
     });
+    /* 4.7.0: живой превью — ник и аватар меняются, пока человек печатает */
+    function srtPreview(){
+      const n = (nick.value || '').trim();
+      const av = document.getElementById('srtAv');
+      const nm = document.getElementById('srtPrevNm');
+      const sb = document.getElementById('srtPrevSub');
+      const ok = n.length >= 2;
+      if(av) av.textContent = ok ? n.slice(0, 1).toUpperCase() : '?';
+      if(nm) nm.textContent = ok ? n : 'пока безымянный';
+      if(sb) sb.textContent = ok
+        ? ('Ур. 1 · ' + (n.length < 4 ? 'коротко, но можно' : n.length > 12 ? 'длинновато, но сойдёт' : 'звучит как надо'))
+        : 'Ур. 1 · в игре ещё никто';
+      nick.classList.toggle('has-val', ok);
+    }
+    nick.addEventListener('input', srtPreview);
+    srtPreview();
+
     function closeEntry(){
     var e=document.getElementById('srtEntry'); if(e&&e.parentNode) e.parentNode.removeChild(e);
     /* 4.3.4: после закрытия формы возвращаем документ в ноль — иначе на некоторых
@@ -20381,8 +21425,10 @@ window.__sr = {
     }
     function go(mode){
       var n=nick.value.trim(), p=pass.value;
-      srtMsg(n ? 'Проверка...' : 'Введите ник','#7fb4ff');
-      if(!n) return;
+      if(!n){ srtMsg('Придумай ник — или нажми 🎲','#ffd27a'); nick.focus(); return; }
+      if(n.length < 2){ srtMsg('Ник короче двух символов не бывает','#ffd27a'); return; }
+      if((p || '').length < 4 && mode === 'register'){ srtMsg('Пароль минимум 4 символа','#ffd27a'); return; }
+      srtMsg('Проверяю…','#ffb02e');
       var pr = mode==='register' ? SRTS.net.register(n,p) : SRTS.net.login(n,p);
       pr.then(ok).catch(function(err){
         var m=(err&&err.message)||String(err);
@@ -20435,7 +21481,8 @@ window.__sr = {
       if(ab && typeof MutationObserver!=='undefined') new MutationObserver(function(){ srtInjectAbout(); }).observe(ab,{childList:true,subtree:true});
       var acc=srtAcc();
       if(acc && (acc.name||acc.nick)){ srtSetNick(acc.name||acc.nick); srtSyncRank(acc.name||acc.nick); }
-      srtOpenLogin();
+      /* 4.7.0: форма входа больше не выскакивает при загрузке.
+         Её зовёт заставка (introPlay), когда доиграет, — или кнопка профиля. */
       srtInjectAbout();
     }catch(e){}
   }
