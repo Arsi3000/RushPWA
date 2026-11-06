@@ -90,3 +90,5 @@ echo "---"
 echo "HTML в APK: $(unzip -p "$OUT" assets/index.html | md5sum | cut -d' ' -f1)"
 echo "HTML исходный: $(md5sum "$HTML" | cut -d' ' -f1)"
 echo "Готово: $OUT ($(du -h "$OUT" | cut -f1))"
+
+# trigger: 2026-11-05 23:09 UTC
