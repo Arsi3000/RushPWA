@@ -10,7 +10,7 @@
    4) Всё, что не GET, и любые внешние хосты (Firebase, картинки с GitHub Pages) —
       сразу в сеть, кэш не трогаем.
 */
-var VERSION = '4.18.0';
+var VERSION = '4.19.0';
 var CACHE = 'skinrush-' + VERSION;
 
 /* ВАЖНО про картинку: игра просит её по адресу aug.png?v=5
@@ -28,7 +28,8 @@ var CORE = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
-  './aug.png?v=5'
+  './aug.png?v=5',
+  './music/open.mp3'
 ];
 
 self.addEventListener('install', function(e){
