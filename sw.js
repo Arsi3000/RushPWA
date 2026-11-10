@@ -10,7 +10,7 @@
    4) Всё, что не GET, и любые внешние хосты (Firebase, картинки с GitHub Pages) —
       сразу в сеть, кэш не трогаем.
 */
-var VERSION = '4.13.1';
+var VERSION = '4.14.0';
 var CACHE = 'skinrush-' + VERSION;
 
 /* ВАЖНО про картинку: игра просит её по адресу aug.png?v=5
@@ -53,7 +53,7 @@ self.addEventListener('activate', function(e){
      на мобильной сети, а приложение должно открываться сразу. Догружаем
      фоном после активации; если не успеет — трек закэшируется при первом
      проигрывании обычной стратегией «кэш первым, промах — сеть». */
-  var warm = ['./music/Skin-rush.ogg', './music/Skin-rush.m4a'];
+  var warm = ['./music/Skin-rush.ogg', './music/Skin-rush.m4a', './video/glassbreak.webm'];
   caches.open(CACHE).then(function(c){
     warm.forEach(function(u){
       c.match(u).then(function(hit){
