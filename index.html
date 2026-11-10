@@ -7276,7 +7276,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.15.2';
+const VERSION = '4.16.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -26165,6 +26165,8 @@ window.__sr = {
     'video/zastavka.mp4',
     'https://raw.githubusercontent.com/Arsi3000/RushPWA/1409e563bba83ffe61adcc8c22635834a6a8eef9/zastavka.mp4'
   ];
+  /* первый кадр: показываем его сразу, пока ролик ещё качается */
+  var ZAST_POSTER = 'video/zastavka.jpg';
   var zastEl = null, zastBusy = false;
 
   function zastStop(){
@@ -26189,29 +26191,25 @@ window.__sr = {
 
     var box = document.createElement('div');
     box.id = 'zastBox';
-    box.style.cssText = 'position:fixed;inset:0;z-index:99;background:#000;overflow:hidden;' +
-      'display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease-out';
+    box.style.cssText = 'position:fixed;inset:0;z-index:99;background:#05070c;overflow:hidden;' +
+      'display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s ease-out';
 
     var v = document.createElement('video');
     v.muted = true;
+    v.defaultMuted = true;
     v.playsInline = true;
+    v.autoplay = true;
+    v.preload = 'auto';
+    v.setAttribute('muted', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
-    v.preload = 'auto';
-    /* 4.15.0: было object-fit:cover — на телефоне кадр 480×858 шире экрана,
-       и верх с низом срезались. Теперь ролик виден целиком, поля чёрные,
-       как в кинотеатре. */
+    v.setAttribute('preload', 'auto');
+    v.setAttribute('autoplay', '');
+    /* 4.16.0: постер — первый кадр. Он виден сразу, ещё до видео, поэтому
+       человек с первой секунды смотрит заставку, а не меню игры. */
+    try{ v.setAttribute('poster', ZAST_POSTER); }catch(e){}
     v.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center;' +
       'display:block;background:#000';
-    v.autoplay = true;
-    v.loop = false;
-    for(var i = 0; i < ZAST_SRC.length; i++){
-      var so = document.createElement('source');
-      so.src = ZAST_SRC[i];
-      so.type = 'video/mp4';
-      v.appendChild(so);
-    }
-    box.appendChild(v);
 
     var skip = document.createElement('button');
     skip.type = 'button';
@@ -26220,7 +26218,6 @@ window.__sr = {
       'padding:9px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.35);' +
       'background:rgba(0,0,0,.45);color:#fff;font:600 12px/1 system-ui;letter-spacing:.04em;' +
       'cursor:pointer;z-index:2;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)';
-    box.appendChild(skip);
 
     var snd = document.createElement('button');
     snd.type = 'button';
@@ -26228,27 +26225,41 @@ window.__sr = {
     snd.style.cssText = 'position:absolute;left:14px;bottom:calc(20px + env(safe-area-inset-bottom,0px));' +
       'padding:9px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.35);' +
       'background:rgba(0,0,0,.45);color:#fff;font:600 12px/1 system-ui;cursor:pointer;z-index:2;display:none';
+
+    box.appendChild(v);
+    box.appendChild(skip);
     box.appendChild(snd);
 
-    var failed = false;
+    /* 4.16.0: В ДОКУМЕНТ — сразу. Отсоединённый <video> в WebKit не грузится. */
+    document.body.appendChild(box);
+    zastEl = box;
+    zastBusy = true;
+    try{ window.__zastActive = true; }catch(e){}
+    requestAnimationFrame(function(){ if(zastEl === box) box.style.opacity = '1'; });
+
+    var failed = false, settled = false, boxDone = false;
     function giveUp(){
-      if(failed) return;
+      /* 4.16.0: если заставка уже доиграла и закрылась, «не дождался» больше
+         не повод запускать старую сцену поверх игры */
+      if(failed || boxDone) return;
       failed = true;
       try{ zastStop(); }catch(e){}
       try{ fail(); }catch(e){}
     }
 
     skip.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); zastStop(); finish(); });
-    box.addEventListener('click', function(){ zastStop(); finish(); });
+    box.addEventListener('click', function(){ if(box.querySelector('#zastPlay')) return; zastStop(); finish(); });
     box.addEventListener('touchstart', function(){}, {passive:true});
+
     snd.addEventListener('click', function(e){
       e.stopPropagation(); e.preventDefault();
       try{ v.muted = false; v.volume = 0.9; snd.style.display = 'none'; v.play().catch(function(){}); }catch(err){}
     });
 
-    /* 4.15.0: если браузер запретил автозапуск (iPhone в режиме экономии,
-       Safari без жеста), не сдаёмся молча — показываем кнопку «Смотреть». */
+    /* крайний случай: iOS не дал даже беззвучный запуск (режим экономии,
+       «низкое потребление» в настройках) — предлагаем нажать */
     function tapToPlay(){
+      if(failed || !box || !box.parentNode) return;
       if(box.querySelector('#zastPlay')) return;
       var b = document.createElement('button');
       b.type = 'button'; b.id = 'zastPlay'; b.textContent = '▶ Смотреть заставку';
@@ -26269,43 +26280,71 @@ window.__sr = {
         });
       });
       box.appendChild(b);
+      try{ snd.style.display = 'block'; }catch(e){}
     }
 
-    var settled = false;
-    function go(){
+    /* адреса перебираем сами: <source> не даёт узнать, чем кончилась попытка */
+    var si = 0;
+    function tryNext(){
+      if(si >= ZAST_SRC.length){ giveUp(); return; }
+      try{ v.src = ZAST_SRC[si++]; }catch(e){ giveUp(); return; }
+      try{ v.load(); }catch(e){}
+    }
+    v.addEventListener('error', tryNext);
+
+    function trySound(){
+      if(failed || settled) return;
+      /* 4.16.0: ролик уже идёт без звука. Пробуем включить звук — на iOS
+         без касания это обычно не выходит, тогда остаётся кнопка «Звук». */
+      try{ snd.style.display = 'block'; }catch(e){}
+      try{
+        var wasMuted = v.muted;
+        v.muted = false; v.volume = 0.9;
+        var p2 = v.play();
+        if(p2 && p2.then) p2.then(function(){ try{ snd.style.display = 'none'; }catch(e){} })
+                           .catch(function(){ try{ v.muted = wasMuted; v.play().catch(function(){}); }catch(e){} });
+      }catch(e){ try{ v.muted = true; }catch(e2){} }
+    }
+    var closed = false, playWall = 0, playDur = 0;
+    function closeZast(){
+      if(closed || failed) return;
+      closed = true; boxDone = true;
+      try{ clearTimeout(noStartTimer); }catch(e){}
+      zastStop(); finish();
+    }
+    function started(){
       if(settled) return; settled = true;
-      zastBusy = true;
-      try{ window.__zastActive = true; }catch(e){}
-      document.body.appendChild(box);
-      zastEl = box;
-      requestAnimationFrame(function(){ if(box) box.style.opacity = '1'; });
-      /* автозвук в браузере запрещён до касания: пробуем со звуком,
-         не вышло — играем без него и показываем кнопку «Звук» */
-      var p;
-      try{ v.muted = false; v.volume = 0.9; p = v.play(); }catch(err){ p = null; }
-      function afterMute(){
-        v.muted = true;
-        snd.style.display = 'block';
-        var p2;
-        try{ p2 = v.play(); }catch(err2){ p2 = null; }
-        if(p2 && p2.catch) p2.catch(tapToPlay);
-        if(!p2) tapToPlay();
-      }
-      if(p && p.catch) p.catch(afterMute);
-      if(!p) afterMute();
+      setTimeout(trySound, 500);
+      /* 4.16.0: заставку закрываем по СВОИМ часам, ровно через длину ролика.
+         Часы самого <video> на некоторых движках убегают вперёд (в песочнице
+         без экрана ролик «проматывается» за секунду), и заставка обрывалась на
+         середине. Свои часы от этого не зависят. */
+      playDur = 10.2;
+      try{ if(isFinite(v.duration) && v.duration > 0.5) playDur = v.duration; }catch(e){}
+      playWall = Date.now();
+      setTimeout(closeZast, Math.round(playDur * 1000) + 400);
     }
+    v.addEventListener('playing', started);
+    v.addEventListener('canplaythrough', started);
 
-    function ready(){ if(v.videoWidth) go(); }
-    v.addEventListener('loadeddata', ready);
-    v.addEventListener('canplay', ready);
-    v.addEventListener('loadedmetadata', ready);
-    v.addEventListener('error', giveUp);
-    /* 4.15.0: 2,6 с не хватало — на iPhone ролик в мегабайт по мобильной сети
-       не успевал, и заставка молча подменялась прежней сценой. Ждём 9 с;
-       если и тут пусто, заставка просто не покажется — игра не пострадает. */
-    setTimeout(function(){ if(!settled) giveUp(); }, 9000);
-    v.addEventListener('ended', function(){ zastStop(); finish(); });
-    try{ v.load(); }catch(e){ giveUp(); }
+    v.addEventListener('ended', function(){
+      /* «конец» раньше половины ролика — это врут часы видео, не верим */
+      if(!settled) return;
+      if(Date.now() - playWall < playDur * 500) return;
+      closeZast();
+    });
+
+    v.addEventListener('loadedmetadata', function(){ /* постер уже виден — ничего не делаем */ });
+
+    /* 4.16.0: не сдаёмся раньше 12 с: постер висит, человек видит заставку.
+       Если и за это время ролик не пошёл — играем прежнюю сцену. */
+    var noStartTimer = setTimeout(function(){ if(!settled && !boxDone) giveUp(); }, 12000);
+
+    tryNext();
+    var p = null;
+    try{ v.muted = true; p = v.play(); }catch(e){ p = null; }
+    if(p && p.catch) p.catch(tapToPlay);
+    if(!p) tapToPlay();
     return true;
   }
 
