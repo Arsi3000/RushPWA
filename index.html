@@ -3008,6 +3008,13 @@ html.sr-booted #bootCover{opacity:0 !important;visibility:hidden !important}
 }
 #questCard .q-go{ background: linear-gradient(180deg, #ffd06a, #e9a316); color: #2a1c00; }
 #questCard .q-skip{ flex: 0 0 auto !important; padding: 0 12px; background: rgba(255,255,255,.07); color: #cfd8ea; border: 1px solid rgba(255,255,255,.14) !important; }
+/* 4.15.0: карточка цели закрывается крестиком и больше не лезет на экран */
+#questCard .q-x{
+  position:absolute; right:6px; top:6px; width:26px; height:26px; border-radius:8px;
+  border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#9fabc2;
+  font:900 12px/1 system-ui; cursor:pointer; padding:0; display:none;
+}
+#questCard[data-goal] .q-x{ display:block }
 /* подсветка цели */
 .quest-glow{ position: relative; z-index: 61; animation: qGlow 1.3s ease-in-out infinite; }
 
@@ -4350,6 +4357,7 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
   <div class="q-steps"><i id="qS0"></i><i id="qS1"></i><i id="qS2"></i></div>
   <div class="q-t" id="qTitle">Первый кейс</div>
   <div class="q-d" id="qText">Открой свой первый кейс — он бесплатный, лёгкий скин гарантирован.</div>
+  <button class="q-x" id="qClose" type="button" title="Скрыть цель" aria-label="Скрыть цель">✕</button>
   <div class="q-row">
     <button class="q-go" id="qGo">Открыть кейс</button>
     <button class="q-skip" id="qSkip">Пропустить</button>
@@ -7268,7 +7276,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.14.0';
+const VERSION = '4.15.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10804,16 +10812,9 @@ function introPlay(){
      Было: сначала форма ника, заставка ждала её закрытия (и играла под ней).
      Стало: заставка → ник → «Привет!» → мягкий гид. */
   var next = function(){
-    var named = false;
-    try{ named = !!(typeof srtCurrentName === 'function' && srtCurrentName()); }catch(e){}
-    if(!named){
-      try{ if(typeof window.SRT_LOGIN === 'function') window.SRT_LOGIN(); }catch(e){}
-      introWaitEntry(function(){
-        try{ if(typeof welcomeThenQuest === 'function'){ welcomeThenQuest(); return; } }catch(e){}
-        try{ questStart(); }catch(e){}
-      });
-      return;
-    }
+    /* 4.15.0: форма «ник + пароль» на старте убрана. Человек и так хочет играть,
+       а не регистрироваться; аккаунт нужен только для рейтинга — его открывает
+       кнопка профиля, когда сам захочет. */
     try{ if(typeof welcomeThenQuest === 'function'){ welcomeThenQuest(); return; } }catch(e){}
     try{ questStart(); }catch(e){}
   };
@@ -11186,8 +11187,12 @@ function albumGoalPick(){
   });
   return best;
 }
+function goalHidden(){ return !!state.goalOff; }
+
 function renderGoalCard(card){
   const t = $('#qTitle'), d = $('#qText'), go = $('#qGo'), sk = $('#qSkip');
+  /* 4.15.0: закрытую цель не возвращаем */
+  if(goalHidden()){ card.classList.remove('on'); delete card.dataset.goal; questClearGlow(); return; }
   /* ===== 4.6.0: ГЛАВНАЯ ЦЕЛЬ =====
      Пока набор АК-47 не собран, карточка цели говорит именно про него — одна большая
      цель вместо списка мелких. Дальше (или если АК уже собран) работает прежняя логика:
@@ -11412,6 +11417,15 @@ if($('#qGo')) $('#qGo').addEventListener('click', () => {
   if(q.s === 0){ questOpenCase(); }
   else if(q.s === 1){ switchTab('inv'); renderInv(true); toast('Выбери скин и нажми «Продать»'); }
   else if(q.s === 2){ questSetupUpgrade(); }
+});
+if($('#qClose')) $('#qClose').addEventListener('click', () => {
+  /* 4.15.0: «уберите эту карточку» — человек нажал крестик, значит она ему мешает.
+     Держим решение в состоянии: при следующем запуске она не появится. */
+  state.goalOff = 1; save();
+  const card = $('#questCard');
+  if(card){ card.classList.remove('on'); delete card.dataset.goal; }
+  questClearGlow();
+  toast('Цель скрыта — вернуть можно в «О игре»');
 });
 if($('#qSkip')) $('#qSkip').addEventListener('click', () => {
   /* пропуск доступен после первого шага */
@@ -26140,7 +26154,13 @@ window.__sr = {
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
     v.preload = 'auto';
-    v.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#000';
+    /* 4.15.0: было object-fit:cover — на телефоне кадр 480×858 шире экрана,
+       и верх с низом срезались. Теперь ролик виден целиком, поля чёрные,
+       как в кинотеатре. */
+    v.style.cssText = 'width:100%;height:100%;object-fit:contain;object-position:center;' +
+      'display:block;background:#000';
+    v.autoplay = true;
+    v.loop = false;
     for(var i = 0; i < ZAST_SRC.length; i++){
       var so = document.createElement('source');
       so.src = ZAST_SRC[i];
@@ -26182,6 +26202,31 @@ window.__sr = {
       try{ v.muted = false; v.volume = 0.9; snd.style.display = 'none'; v.play().catch(function(){}); }catch(err){}
     });
 
+    /* 4.15.0: если браузер запретил автозапуск (iPhone в режиме экономии,
+       Safari без жеста), не сдаёмся молча — показываем кнопку «Смотреть». */
+    function tapToPlay(){
+      if(box.querySelector('#zastPlay')) return;
+      var b = document.createElement('button');
+      b.type = 'button'; b.id = 'zastPlay'; b.textContent = '▶ Смотреть заставку';
+      b.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
+        'padding:14px 22px;border-radius:26px;border:1px solid rgba(255,180,70,.6);' +
+        'background:rgba(20,14,6,.86);color:#ffd08a;font:900 14px/1 system-ui;letter-spacing:.03em;' +
+        'cursor:pointer;z-index:3;box-shadow:0 10px 30px -10px #000';
+      b.addEventListener('click', function(e){
+        e.stopPropagation(); e.preventDefault();
+        b.remove();
+        try{ v.muted = false; v.volume = 0.9; }catch(err){}
+        var pp = v.play();
+        if(pp && pp.catch) pp.catch(function(){
+          try{ v.muted = true; }catch(err){}
+          snd.style.display = 'block';
+          var p3 = v.play();
+          if(p3 && p3.catch) p3.catch(giveUp);
+        });
+      });
+      box.appendChild(b);
+    }
+
     var settled = false;
     function go(){
       if(settled) return; settled = true;
@@ -26199,17 +26244,22 @@ window.__sr = {
         snd.style.display = 'block';
         var p2;
         try{ p2 = v.play(); }catch(err2){ p2 = null; }
-        if(p2 && p2.catch) p2.catch(giveUp);
-        if(!p2) giveUp();
+        if(p2 && p2.catch) p2.catch(tapToPlay);
+        if(!p2) tapToPlay();
       }
       if(p && p.catch) p.catch(afterMute);
+      if(!p) afterMute();
     }
 
-    v.addEventListener('loadeddata', function(){
-      if(v.videoWidth) go();
-    });
+    function ready(){ if(v.videoWidth) go(); }
+    v.addEventListener('loadeddata', ready);
+    v.addEventListener('canplay', ready);
+    v.addEventListener('loadedmetadata', ready);
     v.addEventListener('error', giveUp);
-    setTimeout(function(){ if(!settled) giveUp(); }, 2600);
+    /* 4.15.0: 2,6 с не хватало — на iPhone ролик в мегабайт по мобильной сети
+       не успевал, и заставка молча подменялась прежней сценой. Ждём 9 с;
+       если и тут пусто, заставка просто не покажется — игра не пострадает. */
+    setTimeout(function(){ if(!settled) giveUp(); }, 9000);
     v.addEventListener('ended', function(){ zastStop(); finish(); });
     try{ v.load(); }catch(e){ giveUp(); }
     return true;
