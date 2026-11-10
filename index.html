@@ -7276,7 +7276,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.15.0';
+const VERSION = '4.15.2';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -11417,6 +11417,14 @@ if($('#qGo')) $('#qGo').addEventListener('click', () => {
   if(q.s === 0){ questOpenCase(); }
   else if(q.s === 1){ switchTab('inv'); renderInv(true); toast('Выбери скин и нажми «Продать»'); }
   else if(q.s === 2){ questSetupUpgrade(); }
+});
+document.addEventListener('click', function(e){
+  const b = e.target && e.target.closest && e.target.closest('#goalBack');
+  if(!b) return;
+  delete state.goalOff; save();
+  try{ renderAbout(); }catch(err){}
+  try{ renderQuestCard(); }catch(err){}
+  toast('Цель снова на экране');
 });
 if($('#qClose')) $('#qClose').addEventListener('click', () => {
   /* 4.15.0: «уберите эту карточку» — человек нажал крестик, значит она ему мешает.
@@ -17382,6 +17390,9 @@ function renderAbout(){
       <div><div class="k">Апгрейды</div><div class="v">${state.upOk||0} из ${total}</div></div>
     </div>
     ${albumMetricsBlock()}
+    ${state.goalOff ? `<button id="goalBack" type="button" style="width:100%;margin:8px 0 4px;padding:10px;border-radius:11px;
+        border:1px solid rgba(255,176,46,.34);background:rgba(255,176,46,.10);color:#ffcf8a;
+        font:900 12px/1 inherit;cursor:pointer">Вернуть карточку цели</button>` : ''}
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
@@ -18129,12 +18140,40 @@ var DROP_SCENE = (function(){
      иначе ствол «висит» рядом с трещиной. */
   var HIT_X = 0.482, HIT_Y = 0.512;
   var GLASS_VS = 0.92;           /* ролик чуть меньше экрана — по краям остаётся чернота кадра */
+  /* 4.15.1: mp4 первым. H.264 играет везде — и в Chrome, и в Safari на iPhone.
+     VP9/webm оставляем вторым: он легче, но iOS его не всегда умеет, а Safari
+     после неудачи первый <source> на второй не переключает. */
   var glassSrc = [
-    'video/glassbreak.webm', 'video/glassbreak.mp4',
-    'https://arsi3000.github.io/RushPWA/video/glassbreak.webm',
-    'https://arsi3000.github.io/RushPWA/video/glassbreak.mp4'
+    'video/glassbreak.mp4', 'video/glassbreak.webm',
+    'https://arsi3000.github.io/RushPWA/video/glassbreak.mp4',
+    'https://arsi3000.github.io/RushPWA/video/glassbreak.webm'
   ];
   var gvid = null, gwrap = null, gframe = null, gcapEl = null, vidOk = false, vidTried = false, glassPulse = 0;
+
+  /* 4.15.2: прогреваем ролик, пока человек смотрит меню и открывает первый кейс.
+     Без этого на телефоне первый разлом не дожидался загрузки и играл старую сцену. */
+  (function warmGlassVideo(){
+    function start(){
+      try{
+        var w = document.createElement('video');
+        w.muted = true; w.preload = 'auto'; w.playsInline = true;
+        w.setAttribute('playsinline', '');
+        w.style.cssText = 'position:fixed;left:-2px;top:-2px;width:1px;height:1px;opacity:.01;pointer-events:none';
+        w.src = glassSrc[0];
+        document.body.appendChild(w);
+        try{ w.load(); }catch(e){}
+        /* прогрели — убираем: на iPhone одновременно живых видео один-два,
+           лишний элемент может занять декодер у самой сцены */
+        function drop(){
+          try{ w.pause(); w.removeAttribute('src'); w.load(); if(w.parentNode) w.parentNode.removeChild(w); }catch(e){}
+        }
+        w.addEventListener('loadeddata', function(){ setTimeout(drop, 1500); }, {once:true});
+        setTimeout(drop, 25000);
+      }catch(e){}
+    }
+    if(document.body) setTimeout(start, 800);
+    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(start, 800); });
+  })();
 
   function later(fn, ms){ var t = setTimeout(fn, Math.max(0, ms)); timers.push(t); return t; }
   function clearTimers(){ for(var i = 0; i < timers.length; i++) clearTimeout(timers[i]); timers = []; }
@@ -18354,12 +18393,17 @@ var DROP_SCENE = (function(){
     gvid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;' +
       'mix-blend-mode:screen;opacity:0;transform-origin:50% 50%;' +
       'filter:brightness(1.25) contrast(1.15);will-change:opacity,transform';
-    for(var si = 0; si < glassSrc.length; si++){
-      var so = document.createElement('source');
-      so.src = glassSrc[si];
-      so.type = /\.webm$/.test(glassSrc[si]) ? 'video/webm' : 'video/mp4';
-      gvid.appendChild(so);
+    /* адреса перебираем сами: <source> не даёт узнать, чем кончилась попытка */
+    var gsi = 0;
+    function tryNextGlass(){
+      if(gsi >= glassSrc.length){ vidOk = false; return; }
+      gvid.src = glassSrc[gsi++];
+      try{ gvid.load(); }catch(e){}
     }
+    gvid.addEventListener('error', tryNextGlass);
+    gvid.addEventListener('loadedmetadata', function(){ if(gvid.videoWidth) vidOk = true; });
+    gvid.addEventListener('canplay', function(){ if(gvid.videoWidth) vidOk = true; });
+    tryNextGlass();
     gwrap.appendChild(gvid);
 
     /* рамка кадра: тонкая линия в цвете редкости с медленной пульсацией */
@@ -18872,7 +18916,7 @@ var DROP_SCENE = (function(){
        уже готов; если нет — ждём до трети шага (максимум 600 мс) и только потом
        играем старую сцену. Так первый же разлом не выглядит «пустым». */
     if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
-    var waited = 0, cap = Math.min(600, Math.round(ms * 0.35));
+    var waited = 0, cap = Math.min(900, Math.round(ms * 0.4));
     (function tick(){
       if(done || !overlay) return;
       if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
