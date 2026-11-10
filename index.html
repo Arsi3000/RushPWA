@@ -532,6 +532,22 @@ nav{gap:8px;padding-top:12px}
     box-shadow:0 0 0 1px var(--c), 0 26px 70px -18px var(--c), 0 0 90px -20px var(--c)}
 #winCard .art svg{filter:drop-shadow(0 14px 18px rgba(0,0,0,.65))}
 #winCard .rar{text-shadow:0 0 16px var(--c)}
+  /* ---------- 4.19.0: РАМКА ВЫЛЕТА ----------
+     Контур ровно по габаритам будущей #winCard, «жидкое стекло»:
+     полупрозрачная плёнка .055, верхний блик .16, каёмка цвета редкости.
+     Живёт в body, а не в оверлее сцены: оверлей гаснет, а рамка остаётся
+     и становится карточкой (см. FLIP в showWin). */
+  #dropFrame{position:fixed;z-index:97;pointer-events:none;border-radius:20px;
+    border:1.5px solid var(--c,#a970ff);background:rgba(255,255,255,.055);
+    box-shadow:0 0 0 1px rgba(0,0,0,.45), 0 0 26px -2px var(--c,#a970ff), 0 26px 70px -18px var(--c,#a970ff),
+      inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 30px -10px var(--c,#a970ff);
+    -webkit-backdrop-filter:blur(14px) saturate(165%);backdrop-filter:blur(14px) saturate(165%);
+    opacity:0;will-change:opacity}
+  #dropFrame::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.02) 42%,transparent 70%)}
+  #dropFrame::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+    border:1px solid var(--c,#a970ff);opacity:.3;animation:dfPulse 1.6s ease-in-out infinite}
+  @keyframes dfPulse{0%,100%{opacity:.1}50%{opacity:.4}}
 .rr-badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;
     font-size:var(--fs-11, 11px);font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:7px;
     background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#cfd8ea}
@@ -7280,7 +7296,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.18.0';
+const VERSION = '4.19.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -8271,6 +8287,52 @@ function musInfo(){
            rate: (MUSIC_SCENE_CFG[musScene || 'menu'] || {}).rate };
 }
 
+/* ---------- 4.19.0: звук открытия — нарезка из заставки ----------
+   Взят кусок дорожки видео-заставки (video/zastavka.mp4, момент 7.14–7.90 с):
+   там звон крышки и низкий удар, то есть ровно «кейс открылся». Файл
+   маленький (13 КБ), качается вместе с музыкой и играет через WebAudio.
+   Синтез остаётся фолбэком: офлайн, файл не залит, декодирование не удалось. */
+var openBuf = null, openLoading = null, openFail = null, openUsed = '';
+var OPEN_SRC = ['music/open.mp3', 'https://arsi3000.github.io/RushPWA/music/open.mp3'];
+function openLoad(){
+  if(openBuf) return Promise.resolve(openBuf);
+  if(openLoading) return openLoading;
+  openLoading = (function(){
+    var a = audio();
+    if(!a) return Promise.resolve(null);
+    var i = 0;
+    return (async function(){
+      while(i < OPEN_SRC.length){
+        var url = OPEN_SRC[i++];
+        try{
+          var r = await fetch(url, { mode: 'cors', cache: 'default' });
+          if(!r.ok) continue;
+          var b = await r.arrayBuffer();
+          if(b.byteLength < 2048) continue;
+          openBuf = await a.decodeAudioData(b);
+          openUsed = url; openFail = null;
+          return openBuf;
+        }catch(e){ openFail = (e && e.message) || String(e); }
+      }
+      return null;
+    })();
+  })();
+  return openLoading;
+}
+function playOpenSample(){
+  if(!openBuf || sfxMuted) return false;
+  var a = audio();
+  if(!a || !sfxMaster) return false;
+  try{
+    var s = a.createBufferSource(); s.buffer = openBuf;
+    var g = a.createGain(); g.gain.value = .95;
+    s.connect(g); g.connect(sfxMaster);
+    s.start(0);
+    return true;
+  }catch(e){ return false; }
+}
+setTimeout(function(){ try{ openLoad(); }catch(e){} }, 1200);
+
 /* тон: частота, длительность, форма, громкость, скольжение */
 function tone(freq, dur, o){
   o = o || {};
@@ -8414,6 +8476,13 @@ const SFX = {
                    delay:.28 + i * .025 });
     }
     tone(55, .55, { type:'sine', gain:.1, slide:35, delay:.3 });
+  },
+  /* 4.19.0: открытие кейса — сэмпл из заставки, синтез как запасной путь */
+  frameOpen(){
+    if(playOpenSample()) return;
+    noise(.3, { freq: 2200, slide: 5200, q: 1.1, gain: .07 });
+    tone(180, .5, { type:'triangle', gain: .07, slide: 90 });
+    [784, 1046].forEach(function(f, i){ tone(f, .3, { type:'sine', gain: .05, delay: .12 + i * .07 }); });
   },
   coin(){
     tone(1180, .07, {type:'sine', gain: .07});
@@ -10392,6 +10461,30 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   const fbd = $('#winFirst');
   if(fbd) fbd.hidden = !item.first;
   $('#winModal').classList.add('on');
+  /* 4.19.0: карточка не «появляется из ниоткуда», а раскрывается из рамки сцены.
+     Рамка нарисована ровно в габаритах #winCard, поэтому масштаб почти 1 —
+     шва между сценой и наградой не видно; содержимое просто проявляется. */
+  try{
+    var fr = window.__srFrame;
+    if(fr && card){
+      var wr = card.getBoundingClientRect();
+      if(wr.width > 8 && wr.height > 8){
+        var sx = Math.max(.55, Math.min(1.2, fr.w / wr.width));
+        var sy = Math.max(.55, Math.min(1.2, fr.h / wr.height));
+        card.style.transition = 'none';
+        card.style.transformOrigin = '50% 50%';
+        card.style.transform = 'translate(' + (fr.cx - (wr.left + wr.width / 2)) + 'px,' +
+                               (fr.cy - (wr.top + wr.height / 2)) + 'px) scale(' + sx + ',' + sy + ')';
+        requestAnimationFrame(function(){
+          card.style.transition = 'transform .42s cubic-bezier(.2,.8,.3,1)';
+          card.style.transform = '';
+          setTimeout(function(){ card.style.transition = ''; }, 470);
+        });
+      }
+      if(window.__srFrameOff){ try{ window.__srFrameOff(true); }catch(e){} }
+      window.__srFrame = null; window.__srFrameOff = null;
+    }
+  }catch(e){}
   try{ tutEvent('win_show'); }catch(e){}
   if(item.first){ questState().firstUid = item.uid; questEvent('opened'); }
   if(window.__feedReady) FEED.mine(skin, val, skin.r === 'myth' && KNIVES.indexOf(skin.w) >= 0 ? 'knife' : 'open');
@@ -18111,16 +18204,19 @@ document.addEventListener('click', (e)=>{
    ========================================================= */
 var DROP_SCENE = (function(){
   'use strict';
+  /* 4.19.0: «frame» — рамка в размер будущей карточки. Она стоит последним
+     шагом КАЖДОЙ сцены, поэтому переход «рамка → карточка» включается сам
+     везде: кейсы, босс, крафт, награды тира, апгрейд. */
   var SEQ_LIST = {
-    rare:   ['bullet'],
-    epic:   ['glass', 'bullet', 'showcase'],
-    legend: ['glass', 'bullet', 'showcase', 'storm'],
-    myth:   ['portal', 'glass', 'bullet', 'showcase', 'storm']
+    rare:   ['bullet', 'frame'],
+    epic:   ['glass', 'bullet', 'showcase', 'frame'],
+    legend: ['glass', 'bullet', 'showcase', 'storm', 'frame'],
+    myth:   ['portal', 'glass', 'bullet', 'showcase', 'storm', 'frame']
   };
   /* веса — доли бюджета; сумма нормализуется */
   /* 4.14.0: разлом — главный шаг сцены (он же видео), поэтому его доля выросла.
      Витрина и буллет-тайм остались, но стали короче: разлом больше не «проходной». */
-  var WEIGHT = { portal: 0.30, glass: 0.55, bullet: 0.20, showcase: 0.25, storm: 0.20 };
+  var WEIGHT = { portal: 0.30, glass: 0.55, bullet: 0.20, showcase: 0.25, storm: 0.20, frame: 0.18 };
   var MIN_RARITY = 'rare';
   var WATCHDOG_MS = 12000;      /* страховка на весь прогон, а не на шаг */
   var DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -18316,6 +18412,8 @@ var DROP_SCENE = (function(){
     stage.textContent = '';
     stage.appendChild(card);
     overlay.__card = card;
+    /* 4.19.0: в короткой сцене рамка та же — переход в карточку общий */
+    try{ var _g = frameGeom(); if(_g && typeof frameShow === 'function') frameShow(_g); }catch(e){}
 
     var behind = overlay.__behind;
     if(behind){ behind.style.opacity = '1'; }
@@ -18400,6 +18498,9 @@ var DROP_SCENE = (function(){
     /* адреса перебираем сами: <source> не даёт узнать, чем кончилась попытка */
     var gsi = 0;
     function tryNextGlass(){
+      /* оверлей могли уже убрать (cleanup обнуляет gvid), а событие error
+         с видео приходит позже — без этой проверки падало «null.src» */
+      if(!gvid) return;
       if(gsi >= glassSrc.length){ vidOk = false; return; }
       gvid.src = glassSrc[gsi++];
       try{ gvid.load(); }catch(e){}
@@ -18930,7 +19031,131 @@ var DROP_SCENE = (function(){
     })();
   };
 
-  /* Bullet-Time: мир замирает, скин поднимается, камера обходит по дуге */
+  /* ---------- 4.19.0: рамка и переезд оружия в слот карточки ----------
+     Зачем измерять карточку заранее: рамка должна появиться СРАЗУ в её
+     габаритах, иначе между сценой и окном награды виден сдвиг. Меряем
+     #winCard, показав модалку невидимой на один кадр (display:none даёт 0). */
+  function frameGeom(){
+    var m = document.getElementById('winModal'), c = document.getElementById('winCard');
+    if(!m || !c) return null;
+    var art = document.getElementById('winArt');
+    var hid = false;
+    if(!m.classList.contains('on')){
+      m.classList.add('on');
+      m.style.visibility = 'hidden'; m.style.pointerEvents = 'none';
+      hid = true;
+    }
+    var r = c.getBoundingClientRect();
+    var a = art ? art.getBoundingClientRect() : r;
+    if(hid){ m.classList.remove('on'); m.style.visibility = ''; m.style.pointerEvents = ''; }
+    /* запасной путь: если карточка почему-то не измерилась (модалка в скрытом
+       контейнере, шрифты ещё не пришли), рамка всё равно должна появиться —
+       берём её собственные размеры из CSS. Без этого сцена оставалась без
+       рамки, и переход «рамка → карточка» пропадал целиком. */
+    if(!r.width || !r.height){
+      var fw = Math.min(Math.round(window.innerWidth * 0.92), 340);
+      var fh = 302;
+      try{
+        if(typeof errLogAdd === 'function') errLogAdd('drop-frame', 'карточка не измерилась, рамка по CSS', 'frameGeom');
+      }catch(e){}
+      return { x: (window.innerWidth - fw) / 2, y: (window.innerHeight - fh) / 2, w: fw, h: fh,
+               ax: window.innerWidth / 2, ay: window.innerHeight / 2 - fh / 2 + 22 + 11 + 52,
+               aw: fw * 0.86, ah: 104, fallback: true };
+    }
+    return { x: r.left, y: r.top, w: r.width, h: r.height,
+             ax: a.left + a.width / 2, ay: a.top + a.height / 2,
+             aw: a.width || r.width, ah: a.height || 104 };
+  }
+
+  function frameShow(g){
+    frameHide();
+    var f = document.createElement('div');
+    f.id = 'dropFrame';
+    f.style.setProperty('--c', color);
+    f.style.left = Math.round(g.x) + 'px';
+    f.style.top = Math.round(g.y) + 'px';
+    f.style.width = Math.round(g.w) + 'px';
+    f.style.height = Math.round(g.h) + 'px';
+    document.body.appendChild(f);
+    /* setTimeout, а не requestAnimationFrame: в фоновой вкладке и в headless
+       rAF приходит раз в секунду-две, и рамка успевала простоять невидимой
+       весь шаг. Таймер срабатывает и там. */
+    setTimeout(function(){
+      if(!f.parentNode) return;
+      f.style.transition = 'opacity .22s ease-out';
+      f.style.opacity = '1';
+    }, 16);
+    window.__srFrame = { x: g.x, y: g.y, w: g.w, h: g.h,
+                         cx: g.x + g.w / 2, cy: g.y + g.h / 2, color: color };
+    window.__srFrameOff = frameHide;
+    /* страховка: если награда по какой-то причине не покажется, рамка не залипнет */
+    setTimeout(function(){ if(!window.__srFrame) frameHide(); }, 2600);
+  }
+
+  function frameHide(fast){
+    var f = document.getElementById('dropFrame');
+    if(!f) return;
+    if(fast){
+      /* карточка (z80) ниже рамки (z97): перед её показом рамка уходит сразу,
+         иначе последние 200 мс она лежит поверх текста награды */
+      f.style.zIndex = '60';
+      f.style.transition = 'none';
+      f.style.opacity = '0';
+      setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); }, 60);
+      return;
+    }
+    f.style.transition = 'opacity .18s ease-out';
+    f.style.opacity = '0';
+    setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); }, 220);
+  }
+
+  /* оружие приезжает в слот арта карточки: то самое «сжатие», но не от
+     поворота в 3D, а от честного масштаба — и оно уже там, где будет в карточке */
+  function moveWeaponToSlot(g){
+    if(!stage || !curSkin) return;
+    var prev = stage.querySelector('.ds-holder') || stage.querySelector('img') || stage.querySelector('svg');
+    var pr = prev ? prev.getBoundingClientRect() : null;
+    var h = Math.max(56, Math.min(132, Math.round(g.ah * 0.9)));
+    stage.innerHTML = '';
+    stage.style.opacity = '1';
+    stage.style.perspective = '';
+    stage.style.boxShadow = '';
+    var art = skinVisual(curSkin, h + 'px');
+    art.style.cssText = 'position:absolute;left:' + Math.round(g.ax) + 'px;top:' + Math.round(g.ay) + 'px;' +
+      'transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;' +
+      'width:min(78vw,' + Math.round(g.aw * 0.86) + 'px);height:' + h + 'px;pointer-events:none';
+    stage.appendChild(art);
+    if(pr && pr.width > 8 && pr.height > 8){
+      var nr = art.getBoundingClientRect();
+      if(nr.width > 8 && nr.height > 8){
+        var sx = pr.width / nr.width, sy = pr.height / nr.height;
+        var dx = (pr.left + pr.width / 2) - (nr.left + nr.width / 2);
+        var dy = (pr.top + pr.height / 2) - (nr.top + nr.height / 2);
+        try{
+          art.animate([
+            { transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' },
+            { transform: 'translate(-50%,-50%) translate(0,0) scale(1,1)' }
+          ], { duration: 520, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
+        }catch(e){}
+      }
+    }
+  }
+
+  STEPS.frame = function(ms, next){
+    var g = null;
+    try{ g = frameGeom(); }catch(e){}
+    if(g){
+      try{ SFX.frameOpen(); }catch(e){}
+      moveWeaponToSlot(g);
+      frameShow(g);
+    }
+    later(next, Math.max(280, ms));
+  };
+
+  /* Bullet-Time: мир замирает, скин поднимается — БЕЗ поворота вокруг оси Y.
+     4.19.0: rotateY(-25° → 25°) давал «сжатие» ствола по дороге: ширина
+     менялась на 8 %, и оружие выглядело сплюснутым. Остались подъём и
+     лёгкий наклон по X — движение есть, геометрия не гуляет. */
   STEPS.bullet = function(ms, next){
     try{ SFX.heart(ms); }catch(e){}
     appEl = appEl || document.getElementById('app');
@@ -18951,11 +19176,11 @@ var DROP_SCENE = (function(){
       stage.style.perspective = '900px';
       var wrap = document.createElement('div');
       wrap.style.cssText = 'transform-style:preserve-3d;transition:transform ' + Math.round(ms) + 'ms cubic-bezier(.3,.7,.3,1);' +
-        'transform:translateY(38px) rotateY(-25deg) rotateX(6deg)';
+        'transform:translateY(38px) rotateX(6deg) scale(.94)';
       wrap.appendChild(skinVisual(curSkin, '34vh'));
       stage.appendChild(wrap);
       requestAnimationFrame(function(){
-        wrap.style.transform = 'translateY(-30px) rotateY(25deg) rotateX(-4deg)';
+        wrap.style.transform = 'translateY(-30px) rotateX(0deg) scale(1)';
       });
     }
     if(overlay){
@@ -19084,7 +19309,12 @@ var DROP_SCENE = (function(){
       var name = list[idx++];
       var ms = Math.max(220, Math.round(totalMs * (WEIGHT[name] || 0.2) / sum));
       try{ STEPS[name](ms, step); }
-      catch(e){ step(); }
+      catch(e){
+        /* 4.19.0: шаг, который упал, раньше просто пропускался молча —
+           сцена выглядела короче, и причину нельзя было узнать */
+        try{ if(typeof errLogAdd === 'function') errLogAdd('drop-scene', name + ': ' + ((e && e.message) || e), 'runSequence'); }catch(e2){}
+        step();
+      }
     }
     step();
   }
@@ -19217,7 +19447,9 @@ var DROP_SCENE = (function(){
                fullLimit: dropFullLimit(), fullToday: (dropDay().n | 0),
                fullLeft: fullScenesLeft(),
                shortK: (SR_CONFIG && SR_CONFIG.dropShortK != null) ? SR_CONFIG.dropShortK : 0.4,
-               video: !!(vidOk || (gvid && gvid.readyState >= 2)), videoSrc: glassSrc[0], weights: WEIGHT };
+               video: !!(vidOk || (gvid && gvid.readyState >= 2)), videoSrc: glassSrc[0], weights: WEIGHT,
+               openSample: !!openBuf, openSrc: openUsed, openFail: openFail,
+               openState: openBuf ? 'ok' : (openLoading ? 'загружается' : 'не начата') };
     },
     resetSeen: function(){
       seenRar = {};
@@ -21087,6 +21319,7 @@ window.__sr = {
     var i = {};
     try{ i = DROP_SCENE.info(); }catch(e){}
     return { minRarity: i.minRarity, active: DROP_SCENE.isActive(), busy: !!showWin._glassBusy,
+             openSample: i.openSample, openState: i.openState, openSrc: i.openSrc,
              reducedMotion: red, budget: i.budget, scenes: i.scenes, seen: i.seen,
              fullLimit: i.fullLimit, fullToday: i.fullToday, fullLeft: i.fullLeft,
              shortK: i.shortK, motion: i.motion, motionSource: i.motionSource, reduced: i.reduced,
