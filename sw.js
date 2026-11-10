@@ -10,7 +10,7 @@
    4) Всё, что не GET, и любые внешние хосты (Firebase, картинки с GitHub Pages) —
       сразу в сеть, кэш не трогаем.
 */
-var VERSION = '4.15.0';
+var VERSION = '4.15.2';
 var CACHE = 'skinrush-' + VERSION;
 
 /* ВАЖНО про картинку: игра просит её по адресу aug.png?v=5
