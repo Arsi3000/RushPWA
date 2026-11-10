@@ -3972,6 +3972,11 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
    ========================================================= */
 /* 4.9.2: кошелёк-пилюля упразднён вместе со второй строкой шапки. */
 
+/* 4.14.0: пульсация рамки кадра в сцене выпадения */
+@keyframes srFramePulse{
+  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
+  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
+}
 </style>
 <style id="albumCSS">
 /* ===== 4.3.6 · альбом «Коллекции» (вёрстка по прототипу человека) ===== */
@@ -4197,6 +4202,11 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
 .sr-band .st-chip{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
   padding:2px 6px;border-radius:5px;color:#1a0f04;background:linear-gradient(150deg,#ffd76a,#ff9a1f);
   white-space:nowrap}
+/* 4.14.0: пульсация рамки кадра в сцене выпадения */
+@keyframes srFramePulse{
+  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
+  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
+}
 </style>
 </head>
 <body>
@@ -6859,6 +6869,10 @@ const SR_CONFIG = {
   dropTime: { rare: 2.2, epic: 3.5, legend: 4.5, myth: 5.5 },
   dropFull: 15,
   dropShortK: 0.4,
+  /* 4.13.2: 'auto' — уважать системное «уменьшить движение» (тогда короткая
+     статичная карточка вместо пустоты), 'full' — играть всегда целиком,
+     'short' — всегда короткая. Ручка: __sr.dropMotion('full'). */
+  dropMotion: 'auto',
 };
 
 const AVG_FLOAT = 0.82 + 0.36 * (1 - 1 / 1.78);   /* ≈ 0.9778 */
@@ -7254,8 +7268,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.13.1';
-const BUILD   = '2026-11-08';
+const VERSION = '4.14.0';
+const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -9934,6 +9948,8 @@ let batchResults = [];
 
 function openCase(free, opts){
   if(spinning || isBatchOpening) return;
+  /* 4.13.3: сцена идёт поверх ленты, spinning уже false — держим за _glassBusy */
+  try{ if(showWin._glassBusy) return; }catch(e){}
   free = !!free;
   /* freebie — кейс за наш счёт (награда снайпера): ни жетона, ни кредитов */
   const freebie = !!(opts && opts.freebie);
@@ -10136,13 +10152,6 @@ function processCaseQueue(){
   const track = $('#rlTrack');
   for(const el of track.children) el.classList.remove('hit');
   const frameW = track.parentElement.clientWidth;
-  const itemW = 112;
-  const jitter = (Math.random()*0.62 - 0.31) * itemW;
-  const target = frameW/2 - (winIdx * itemW + itemW/2) + jitter;
-
-  track.style.transition = 'none';
-  track.style.transform = 'translateX(0px)';
-  void track.offsetWidth;
 
   /* --- АДАПТИВНАЯ ДЛИТЕЛЬНОСТЬ --- */
   /* 4.3.2: первый дроп крутится дольше — это его единственный шанс запомниться */
@@ -10159,13 +10168,80 @@ function processCaseQueue(){
   const cap = $('#rlSpinCap');
   if(cap) cap.textContent = 'прокрутка: ' + style.name;
 
-  track.style.transition = `transform ${dur}ms ${style.ease}`;
+  /* 4.13.3: шаг ленты меряем в DOM. Раньше стояло жёстко 112 px, а
+     [data-spin="heavy"] делает ячейку 120 — у blood/emerald/elite/obsidian
+     лента промахивалась на 8 px за ячейку, к 46-й это три позиции мимо. */
+  const itemW = (() => {
+    const a = track.children[0], bEl = track.children[1];
+    if(a && bEl){
+      const d = bEl.getBoundingClientRect().x - a.getBoundingClientRect().x;
+      if(d > 24) return d;
+    }
+    return 112;
+  })();
+  const jitter = (Math.random()*0.62 - 0.31) * itemW;
+  const target = frameW/2 - (winIdx * itemW + itemW/2) + jitter;
+
+  track.style.transition = 'none';
+  track.style.transform = 'translateX(0px)';
+  void track.offsetWidth;
+
+  /* 4.13.3: одно движение на всю дистанцию. Было две фазы с мёртвой паузой
+     120–220 мс и обратным подскоком — лента тормозила, стояла и прыгала. */
+  track.style.transition = `transform ${dur}ms cubic-bezier(.12,.72,.06,1)`;
   track.style.transform = `translateX(${target.toFixed(1)}px)`;
 
   showSkipButton(dur);
 
-  let lastPos = 0, raf = 0;
+  /* ---- сцена стартует ДО финиша ---- */
+  const glassNext = isBatchOpening ? false
+    : (() => { try{ return GLASS_BREAK.shouldPlay(winSkin); }catch(e){ return false; } })();
+  const lead = glassNext ? Math.max(600, Math.min(900, Math.round(dur * 0.3))) : 0;
+  const cheap = itemVal(winItem) < selCase.price * 0.30;
+  let sceneStarted = false, sceneDone = !glassNext, ribbonDone = false, finalDone = false;
+
+  const finalize = () => {
+    if(finalDone || !ribbonDone || !sceneDone) return;
+    finalDone = true;
+    if(isFirst && SFX.firstDrop) SFX.firstDrop();
+    else if(!glassNext) sfxWin(winSkin.r);
+    /* 4.13.3: аккорд вернулся — он жил в колбэке showWin, а путь через кейс
+       шёл в обход, и дроп заканчивался без финального звука */
+    if(glassNext){ try{ SFX.reveal(winSkin.r); }catch(e){} }
+    if(cheap) setTimeout(() => SFX.bust(), 420);
+    showWin(winSkin, winItem, false, true);
+    musSet('menu');
+    renderMissions();
+    updateOpenBtn();
+  };
+
+  const onSceneEnd = () => {
+    sceneDone = true;
+    try{ showWin._glassBusy = false; }catch(e){}
+    /* ленту догнали не своей волной (тап по сцене) — встаём сразу */
+    if(!ribbonDone) finishSpin();
+    finalize();
+  };
+
+  const startScene = () => {
+    if(sceneStarted || !glassNext) return;
+    sceneStarted = true;
+    try{ showWin._glassBusy = true; }catch(e){}   /* второе открытие под сценой не пройдёт */
+    try{ if(window.musDuck) window.musDuck(0.35); }catch(e){}
+    try{ GLASS_BREAK.play(winSkin, onSceneEnd, { syncWith: 'roulette', lead: lead }); }
+    catch(e){ onSceneEnd(); }
+  };
+
+  /* 4.13.3: и старт сцены, и остановку ленты считаем в одном кадровом цикле.
+     На двух setTimeout они разъезжались: под нагрузкой сцена появлялась
+     за 70 мс до финиша вместо 800, и «нарастания» не получалось. */
+  const tSpin = performance.now();
+  let lastPos = 0, raf = 0, finished = false;
   const tick = () => {
+    if(finished) return;
+    const el = performance.now() - tSpin;
+    if(glassNext && !sceneStarted && el >= dur - lead) startScene();
+    if(el >= dur + 150){ finishSpin(); return; }
     const m = new WebKitCSSMatrix(getComputedStyle(track).transform);
     const pos = Math.abs(m.m41);
     if(Math.floor(pos/itemW) !== Math.floor(lastPos/itemW)){
@@ -10175,13 +10251,15 @@ function processCaseQueue(){
     if(spinning) raf = requestAnimationFrame(tick);
   };
   raf = requestAnimationFrame(tick);
+  /* страховка: если кадры не идут совсем (фон, свёрнутая вкладка) */
+  const hardStop = setTimeout(() => { if(!finished) finishSpin(); }, dur + 1500);
 
-  let finished = false;
   const finishSpin = () => {
     if(finished) return;
     finished = true;
     spinning = false;
     cancelAnimationFrame(raf);
+    clearTimeout(hardStop);
     hideSkipButton();
     track.style.transition = 'none';
     track.style.transform = `translateX(${target.toFixed(1)}px)`;
@@ -10190,7 +10268,6 @@ function processCaseQueue(){
     for(const el of items) el.classList.remove('hit');
     if(items[winIdx]) items[winIdx].classList.add('hit');
 
-    const cheap = itemVal(winItem) < selCase.price * 0.30;
     if(cheap){ batchBustSeen = true; }
     /* 4.6.0: «характер» бьёт по экрану в момент остановки: дорогие кейсы заметно сильнее */
     if(!isBatchOpening && style.kick > 0){
@@ -10212,21 +10289,16 @@ function processCaseQueue(){
         showBatch();
       }
     } else {
-      /* 4.10.0: для эпика+ аккорд выигрыша отдаём после стеклобоя (иначе каша) */
-      var glassNext = false;
-      try{ glassNext = GLASS_BREAK.shouldPlay(winSkin); }catch(e){}
-      if(isFirst && SFX.firstDrop) SFX.firstDrop();
-      else if(!glassNext) sfxWin(winSkin.r);
-      if(cheap) setTimeout(()=>SFX.bust(), 420);
-      showWin(winSkin, winItem);
-      musSet('menu');
-      renderMissions();
-      updateOpenBtn();
+      /* 4.13.3: лента встала. Фон сцены закрываем ЗДЕСЬ (до этого её было видно
+         сквозь затемнение), а окно награды откроет сцена своим колбэком. */
+      try{ if(GLASS_BREAK.ribbonDone) GLASS_BREAK.ribbonDone(); }catch(e){}
+      ribbonDone = true;
+      if(glassNext && !sceneStarted) startScene();   /* «Пропустить» до 70 % пути */
+      finalize();
     }
   };
 
-  const timeoutId = setTimeout(finishSpin, dur + 150);
-  currentSpinState = { raf, timeout: timeoutId, finishSpin, track, target, dur };
+  currentSpinState = { raf, timeout: hardStop, finishSpin, track, target, dur };
 }
 
 /* итоги серии: компактная сводка вместо десяти всплывашек */
@@ -17279,6 +17351,15 @@ function renderAbout(){
     <div style="text-align:center;margin-bottom:14px">
       <div style="font-weight:900;letter-spacing:.14em;font-size:16px">SKIN <span style="color:var(--accent)">RUSH</span></div>
       <div style="color:#7f8ca5;font-size:12px;margin-top:3px">версия ${VERSION} · сборка ${BUILD}</div>
+      <div style="color:#7f8ca5;font-size:11px;margin-top:5px">сцены выпадения: ${(()=>{
+        try{
+          const DS = window.GLASS_BREAK;
+          const m = DS.motion(), src = DS.motionSource();
+          if(src === 'system') return 'короткие — в системе включено «Уменьшить движение»';
+          if(m === 'short') return 'короткие (выбрано в игре)';
+          return 'полные';
+        }catch(e){ return '—'; }
+      })()}</div>
     </div>
     <div class="stats" style="margin-top:0">
       <div><div class="k">Открыто кейсов</div><div class="v">${state.opened||0}</div></div>
@@ -17944,6 +18025,8 @@ document.addEventListener('click', (e)=>{
   const wake = ()=>{
     audio();
     window.removeEventListener('pointerdown', wake);
+    /* 4.14.0: пока идёт заставка-видео, своя музыка не нужна — у ролика своя дорожка */
+    try{ if(window.__zastActive) return; }catch(e){}
     /* 4.6.0: музыка стартует здесь же — раньше браузер звук не отдаст */
     if(musOn) musSet(musWant || 'menu');
   };
@@ -17976,7 +18059,7 @@ document.addEventListener('click', (e)=>{
 
 
 /* =========================================================
-   4.13.1 · СЦЕНЫ ВЫПАДЕНИЯ
+   4.13.4 · СЦЕНЫ ВЫПАДЕНИЯ
    Один каркас, пять эффектов, общий бюджет времени.
 
    Зачем каркас, а не пять независимых модулей: сцену надо уметь
@@ -18006,7 +18089,9 @@ var DROP_SCENE = (function(){
     myth:   ['portal', 'glass', 'bullet', 'showcase', 'storm']
   };
   /* веса — доли бюджета; сумма нормализуется */
-  var WEIGHT = { portal: 0.30, glass: 0.20, bullet: 0.26, showcase: 0.24, storm: 0.20 };
+  /* 4.14.0: разлом — главный шаг сцены (он же видео), поэтому его доля выросла.
+     Витрина и буллет-тайм остались, но стали короче: разлом больше не «проходной». */
+  var WEIGHT = { portal: 0.30, glass: 0.55, bullet: 0.20, showcase: 0.25, storm: 0.20 };
   var MIN_RARITY = 'rare';
   var WATCHDOG_MS = 12000;      /* страховка на весь прогон, а не на шаг */
   var DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -18016,7 +18101,26 @@ var DROP_SCENE = (function(){
   var raf = 0, done = false, onComplete = null, curSkin = null, color = '#ffb02e';
   var timers = [], dog = 0, sizeH = null;
   var shards = [], dust = [], bolts = [], tunnelT = 0, shakeT = 0, running = null;
+  /* 4.13.4: паутина трещин — это рёбра той же сетки, из которой нарезаны
+     осколки. Иначе трещины и осколки живут отдельно и не стыкуются. */
+  var webV = null, webCols = 0, webRows = 0, glassGlow = 0;
   var appEl = null, prevFilter = '';
+  /* 4.13.3: режим «сцена поверх крутящейся ленты». syncRibbon — лента ещё
+     не встала, значит фон сцены прозрачный, чтобы её было видно. */
+  var syncMode = false, syncRibbon = false, dim = null;
+  var shortHinted = false;       /* 4.13.2: подсказку про «уменьшение движения» — один раз */
+
+  /* 4.14.0: разлом рисует видео, а не канвас. Точка удара внутри ролика измерена
+     по кадрам: 48.2 % по ширине и 51.2 % по высоте. Оружие встаёт ровно туда,
+     иначе ствол «висит» рядом с трещиной. */
+  var HIT_X = 0.482, HIT_Y = 0.512;
+  var GLASS_VS = 0.92;           /* ролик чуть меньше экрана — по краям остаётся чернота кадра */
+  var glassSrc = [
+    'video/glassbreak.webm', 'video/glassbreak.mp4',
+    'https://arsi3000.github.io/RushPWA/video/glassbreak.webm',
+    'https://arsi3000.github.io/RushPWA/video/glassbreak.mp4'
+  ];
+  var gvid = null, gwrap = null, gframe = null, gcapEl = null, vidOk = false, vidTried = false, glassPulse = 0;
 
   function later(fn, ms){ var t = setTimeout(fn, Math.max(0, ms)); timers.push(t); return t; }
   function clearTimers(){ for(var i = 0; i < timers.length; i++) clearTimeout(timers[i]); timers = []; }
@@ -18034,13 +18138,39 @@ var DROP_SCENE = (function(){
     if(i < 0) return -1;
     return i - RAR_ORDER.indexOf(MIN_RARITY);      /* 0 у rare */
   }
+  /* режим сцены: full — полная секвенция, short — статичная карточка без
+     движения. Раньше при системном «уменьшении движения» сцена не показывалась
+     ВООБЩЕ, и это выглядело как поломка: человек не понимал, что эффект есть,
+     но выключен его же настройкой телефона. */
+  /* откуда взялся короткий режим: из настроек игры или из системы */
+  function motionSource(){
+    var c = (typeof SR_CONFIG !== 'undefined' && SR_CONFIG) ? SR_CONFIG.dropMotion : 'auto';
+    try{ if(state.dropMotion) c = state.dropMotion; }catch(e){}
+    if(c === 'short' || c === 'full') return 'game';
+    return isReduced() ? 'system' : 'none';
+  }
+  function motionMode(){
+    var c = (typeof SR_CONFIG !== 'undefined' && SR_CONFIG) ? SR_CONFIG.dropMotion : 'auto';
+    try{ if(state.dropMotion) c = state.dropMotion; }catch(e){}
+    if(c === 'full' || c === 'short') return c;
+    return isReduced() ? 'short' : 'full';
+  }
   function shouldPlay(skin){
     if(!skin || !skin.r) return false;
-    if(isReduced()) return false;
     /* 4.13.0: при открытии пачки сцен нет — там и так долго */
     try{ if(typeof isBatchOpening !== 'undefined' && isBatchOpening) return false; }catch(e){}
     return depthOf(skin) >= 0;
   }
+  /* почему сцена не играет — человеческим языком, для диагностики */
+  function whyNot(skin){
+    var r = (skin && skin.r) || 'rare';
+    if(!skin || !skin.r) return 'у скина нет редкости';
+    if(depthOf(skin) < 0) return 'редкость ниже ' + MIN_RARITY + ' (' + r + ') — сцена с редкого';
+    try{ if(typeof isBatchOpening !== 'undefined' && isBatchOpening) return 'открывается пачка — сцен нет'; }catch(e){}
+    if(isRunning()) return 'уже играет другая сцена';
+    return '';
+  }
+  function isRunning(){ return !!overlay; }
   /* ---------- сколько полных сцен в сутки ----------
      4.13.1: раньше полная сцена была одна на редкость за сеанс, и живая игра
      выглядела так, будто эффект не работает. Теперь — до SR_CONFIG.dropFull
@@ -18084,6 +18214,67 @@ var DROP_SCENE = (function(){
     return Math.max(1200, Math.round(((t[r] || 2.2) * 1000)));
   }
 
+  /* ---------- короткая сцена: без движения ----------
+     Одна карточка: рамка редкости, ствол, название. Ни частиц, ни тряски,
+     ни канваса — только мягкое появление. Это и есть «уменьшить движение»,
+     но игрок видит, что дроп случился, а не пустоту. */
+  function playShort(skin, cb, ms){
+    done = false;
+    onComplete = cb || null;
+    curSkin = skin || null;
+    color = hexOf(skin);
+    try{ createOverlay(); }catch(e){
+      onComplete = null; if(typeof cb === 'function') cb(); return;
+    }
+    if(!overlay){ onComplete = null; if(typeof cb === 'function') cb(); return; }
+
+    overlay.style.transition = 'none';
+    overlay.style.opacity = '1';
+    if(cv) cv.style.display = 'none';            /* ничего не рисуем */
+    if(svg) svg.style.display = 'none';
+    if(slit) slit.style.display = 'none';
+
+    var r = skin.r;
+    var rr = (typeof RAR !== 'undefined' && RAR[r]) || { name:r, color:color };
+
+    var card = document.createElement('div');
+    card.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
+      'width:min(84vw,360px);border-radius:18px;padding:20px 18px 18px;text-align:center;' +
+      'background:linear-gradient(180deg,rgba(20,26,36,.96),rgba(10,14,20,.97));' +
+      'border:2px solid ' + color + 'cc;box-shadow:0 0 34px ' + color + '77';
+    card.innerHTML =
+      '<div style="font:800 11px/1 system-ui;letter-spacing:1.6px;text-transform:uppercase;color:' + color + '">' +
+        escHtml(rr.name) + '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:center;height:38vh;min-height:120px;margin:8px 0 4px">' +
+        (function(){ try{ return svgWeapon(skin) || ''; }catch(e){ return ''; } })() +
+      '</div>' +
+      '<div style="font:800 17px/1.25 system-ui;color:#eef3fb">' + escHtml(skin.n || '') + '</div>';
+    var art = card.querySelector('img');
+    if(art){ art.style.maxWidth = '100%'; art.style.maxHeight = '100%'; art.style.objectFit = 'contain'; }
+    var asv = card.querySelector('svg');
+    if(asv){ asv.setAttribute('width','100%'); asv.setAttribute('height','100%'); }
+
+    stage.style.transition = 'opacity .2s ease-out';
+    stage.style.opacity = '1';
+    stage.textContent = '';
+    stage.appendChild(card);
+    overlay.__card = card;
+
+    var behind = overlay.__behind;
+    if(behind){ behind.style.opacity = '1'; }
+
+    /* если карточка короткая из-за системной настройки — говорим прямо,
+       иначе игрок считает, что эффект сломан */
+    if(!shortHinted && motionSource() === 'system'){
+      shortHinted = true;
+      try{ toast('Сцена короткая: в системе включено «Уменьшить движение»'); }catch(e){}
+    }
+
+    overlay.addEventListener('pointerdown', finish, { once: true });
+    dog = setTimeout(finish, Math.min(WATCHDOG_MS, ms + 2000));
+    later(finish, ms);
+  }
+
   /* ---------- разметка оверлея ---------- */
   function createOverlay(){
     if(overlay) return;
@@ -18101,6 +18292,13 @@ var DROP_SCENE = (function(){
       ' radial-gradient(circle at 50% 50%, transparent 35%, rgba(0,0,0,.72) 100%), #050709';
     overlay.appendChild(behind);
     overlay.__behind = behind;
+
+    /* 4.13.3: затемнение страницы, пока лента ещё крутится. 40 % — довольно,
+       чтобы сцена читалась, и мало, чтобы лента пропала: она встаёт «внутри» сцены. */
+    dim = document.createElement('div');
+    dim.style.cssText = 'position:absolute;inset:0;background:rgba(4,6,10,.4);' +
+      'opacity:0;transition:opacity .3s ease-out;pointer-events:none';
+    overlay.appendChild(dim);
 
     cv = document.createElement('canvas');
     cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
@@ -18126,14 +18324,66 @@ var DROP_SCENE = (function(){
       'align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .3s';
     overlay.appendChild(stage);
 
+    /* 4.14.0: слой сцены разлома — оружие под стеклом, видео поверх него.
+       Порядок в DOM здесь и есть порядок слоёв: видео рисуется ПОСЛЕ оружия и
+       благодаря mix-blend-mode:screen только добавляет свет, не закрывая его. */
+    gwrap = document.createElement('div');
+    gwrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;display:none';
+    overlay.appendChild(gwrap);
+
+    gvid = document.createElement('video');
+    gvid.muted = true;
+    gvid.playsInline = true;
+    gvid.setAttribute('playsinline', '');
+    gvid.setAttribute('webkit-playsinline', '');
+    gvid.preload = 'auto';
+    gvid.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;' +
+      'mix-blend-mode:screen;opacity:0;transform-origin:50% 50%;' +
+      'filter:brightness(1.25) contrast(1.15);will-change:opacity,transform';
+    for(var si = 0; si < glassSrc.length; si++){
+      var so = document.createElement('source');
+      so.src = glassSrc[si];
+      so.type = /\.webm$/.test(glassSrc[si]) ? 'video/webm' : 'video/mp4';
+      gvid.appendChild(so);
+    }
+    gwrap.appendChild(gvid);
+
+    /* рамка кадра: тонкая линия в цвете редкости с медленной пульсацией */
+    gframe = document.createElement('div');
+    gframe.style.cssText = 'position:absolute;inset:5px;border-radius:8px;pointer-events:none;' +
+      'border:1px solid ' + color + '57;opacity:0;transition:opacity .4s ease-out;' +
+      'box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 64px ' + color + '1a';
+    overlay.appendChild(gframe);
+
+    gcapEl = document.createElement('div');
+    gcapEl.style.cssText = 'position:absolute;left:0;right:0;text-align:center;padding:0 22px;' +
+      'pointer-events:none;opacity:0;transform:translateY(6px);' +
+      'transition:opacity .45s ease-out, transform .45s ease-out';
+    overlay.appendChild(gcapEl);
+    glassPulse = 0;
+
     flash = document.createElement('div');
     flash.style.cssText = 'position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none';
     overlay.appendChild(flash);
 
     document.body.appendChild(overlay);
     sizeCanvas();
+    prepGlassVideo();
     sizeH = function(){ sizeCanvas(); };
     window.addEventListener('resize', sizeH);
+  }
+
+  /* Один раз на оверлей: ждём метаданные, решаем, играем ли видео.
+     Молчаливая подмена на нарисованную сцену — это норма, а не ошибка:
+     офлайн в APK или файл ещё не залит на хостинг. */
+  function prepGlassVideo(){
+    if(vidTried) return;
+    vidTried = true;
+    if(!gvid) return;
+    gvid.addEventListener('loadedmetadata', function(){ vidOk = true; });
+    gvid.addEventListener('canplay', function(){ vidOk = true; });
+    gvid.addEventListener('error', function(){ vidOk = false; });
+    try{ gvid.load(); }catch(e){ vidOk = false; }
   }
 
   function sizeCanvas(){
@@ -18144,6 +18394,98 @@ var DROP_SCENE = (function(){
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
   }
 
+  /* ---------- рисование осколка как стекла ----------
+     Референс: тёмный фон, полупрозрачная плоскость, ОДНА яркая грань с бликом,
+     по краям тонкая цветная кайма (хроматическая аберрация). Просто заливка
+     и серая обводка давали чёрные квадраты — с этого и началось. */
+  function shardPath(ctx, sh){
+    var L = sh.local;
+    ctx.beginPath();
+    ctx.moveTo(L[0].x, L[0].y);
+    for(var k = 1; k < L.length; k++) ctx.lineTo(L[k].x, L[k].y);
+    ctx.closePath();
+  }
+  function hexA(hex, a){
+    var c = (hex || '#9fb6cc').replace('#', '');
+    if(c.length === 3) c = c.charAt(0)+c.charAt(0)+c.charAt(1)+c.charAt(1)+c.charAt(2)+c.charAt(2);
+    var r = parseInt(c.substr(0,2),16) || 160, g = parseInt(c.substr(2,2),16) || 180, b = parseInt(c.substr(4,2),16) || 200;
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a.toFixed(3) + ')';
+  }
+  function drawShard(sh){
+    if(!cx) return;
+    var L = sh.local;
+    var minX = 0, maxX = 0, minY = 0, maxY = 0;
+    for(var k = 0; k < L.length; k++){
+      if(L[k].x < minX) minX = L[k].x; if(L[k].x > maxX) maxX = L[k].x;
+      if(L[k].y < minY) minY = L[k].y; if(L[k].y > maxY) maxY = L[k].y;
+    }
+    var baseA = Math.max(0, sh.alpha);
+    cx.save();
+    cx.translate(sh.px, sh.py); cx.rotate(sh.rot);
+
+    /* 1. тело: прозрачное стекло, свет с верхнего левого угла */
+    shardPath(cx, sh);
+    var gr = cx.createLinearGradient(minX, minY, maxX || 1, maxY || 1);
+    if(sh.tinted){
+      gr.addColorStop(0, hexA(sh.tint, 0.42 * baseA));
+      gr.addColorStop(0.55, hexA(sh.tint, 0.16 * baseA));
+      gr.addColorStop(1, 'rgba(6,9,14,' + (0.5 * baseA) + ')');
+    } else {
+      gr.addColorStop(0, 'rgba(214,232,255,' + (0.34 * baseA) + ')');
+      gr.addColorStop(0.42, 'rgba(120,150,190,' + (0.13 * baseA) + ')');
+      gr.addColorStop(1, 'rgba(4,7,12,' + (0.55 * baseA) + ')');
+    }
+    cx.fillStyle = gr; cx.fill();
+
+    /* 2. хроматическая кайма: красная с одной стороны, циановая с другой */
+    cx.save();
+    cx.lineWidth = 1.5; cx.lineJoin = 'round';
+    cx.strokeStyle = 'rgba(255,70,105,' + (0.30 * baseA) + ')';
+    cx.translate(1.1, 0.5); shardPath(cx, sh); cx.stroke();
+    cx.strokeStyle = 'rgba(70,235,255,' + (0.26 * baseA) + ')';
+    cx.translate(-2.2, -1.0); shardPath(cx, sh); cx.stroke();
+    cx.restore();
+
+    /* 3. яркая грань: у настоящего осколка блестит одна сторона */
+    var bi = (sh.bright | 0) % L.length;
+    var b2 = (bi + 1) % L.length;
+    cx.beginPath();
+    cx.moveTo(L[bi].x, L[bi].y);
+    cx.lineTo(L[b2].x, L[b2].y);
+    cx.lineWidth = sh.crumb ? 0.7 : 1.35;
+    cx.strokeStyle = 'rgba(255,255,255,' + (0.92 * baseA) + ')';
+    cx.stroke();
+    cx.lineWidth = sh.crumb ? 2 : 4;
+    cx.strokeStyle = 'rgba(190,225,255,' + (0.16 * baseA) + ')';
+    cx.stroke();
+
+    /* 4. блик внутри плоскости */
+    if(!sh.crumb && baseA > 0.25){
+      var m = L[bi], n2 = L[b2];
+      var dx = n2.x - m.x, dy = n2.y - m.y;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var nx = -dy / len, ny = dx / len;
+      var mx = (m.x + n2.x) / 2 + nx * (minX + maxX) * 0.32 + sh.hue * 4;
+      var my = (m.y + n2.y) / 2 + ny * (minY + maxY) * 0.32 + sh.hue * 4;
+      var g2 = cx.createLinearGradient(mx - dx * 0.25, my - dy * 0.25, mx + dx * 0.25, my + dy * 0.25);
+      g2.addColorStop(0, 'rgba(255,255,255,0)');
+      g2.addColorStop(0.5, 'rgba(255,255,255,' + (0.20 * baseA) + ')');
+      g2.addColorStop(1, 'rgba(255,255,255,0)');
+      cx.beginPath();
+      cx.moveTo(m.x, m.y); cx.lineTo(n2.x, n2.y);
+      cx.lineWidth = Math.min(6, Math.max(2, len * 0.28));
+      cx.strokeStyle = g2;
+      cx.stroke();
+    }
+
+    /* 5. тонкий тёмный контур: без него светлые осколки слипаются */
+    cx.lineWidth = 0.6;
+    cx.strokeStyle = 'rgba(3,6,10,' + (0.45 * baseA) + ')';
+    shardPath(cx, sh); cx.stroke();
+
+    cx.restore();
+  }
+
   /* ---------- общая отрисовка: осколки, пыль, молнии ---------- */
   function frame(){
     if(!cv) return;
@@ -18152,39 +18494,29 @@ var DROP_SCENE = (function(){
     cx.clearRect(0, 0, w, h);
     var alive = false;
 
+    /* 4.13.4: подсветка точки удара — стекло вокруг вспышки светится */
+    if(glassGlow > 0){
+      var gw = Math.min(w * 0.7, 520);
+      var gg = cx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, gw * 0.55);
+      gg.addColorStop(0, 'rgba(236,246,255,' + (0.20 * glassGlow).toFixed(3) + ')');
+      gg.addColorStop(0.35, 'rgba(160,200,255,' + (0.06 * glassGlow).toFixed(3) + ')');
+      gg.addColorStop(1, 'rgba(0,0,0,0)');
+      cx.fillStyle = gg;
+      cx.fillRect(0, 0, w, h);
+      glassGlow = Math.max(0, glassGlow - 0.045);
+      alive = true;
+    }
+
     /* осколки стекла */
     for(var i = 0; i < shards.length; i++){
       var sh = shards[i];
-      if(!sh.ready){
-        cx.beginPath();
-        cx.moveTo(sh.verts[0].x, sh.verts[0].y);
-        cx.lineTo(sh.verts[1].x, sh.verts[1].y);
-        cx.lineTo(sh.verts[2].x, sh.verts[2].y);
-        cx.lineTo(sh.verts[3].x, sh.verts[3].y);
-        cx.closePath();
-        cx.fillStyle = 'rgba(14,18,26,.97)';
-        cx.fill();
-        alive = true; continue;
+      if(sh.alpha <= 0) continue;
+      if(sh.ready){
+        sh.vy += 0.55; sh.px += sh.vx; sh.py += sh.vy; sh.rot += sh.vr; sh.alpha -= 0.012;
+        if(sh.alpha <= 0) continue;
       }
-      if(sh.alpha <= 0) continue;
-      sh.vy += 0.55; sh.px += sh.vx; sh.py += sh.vy; sh.rot += sh.vr; sh.alpha -= 0.014;
-      if(sh.alpha <= 0) continue;
       alive = true;
-      cx.save();
-      cx.translate(sh.px, sh.py); cx.rotate(sh.rot);
-      cx.globalAlpha = Math.max(0, sh.alpha);
-      cx.beginPath();
-      cx.moveTo(sh.local[0].x, sh.local[0].y);
-      cx.lineTo(sh.local[1].x, sh.local[1].y);
-      cx.lineTo(sh.local[2].x, sh.local[2].y);
-      cx.lineTo(sh.local[3].x, sh.local[3].y);
-      cx.closePath();
-      cx.fillStyle = sh.tinted ? (sh.tint + 'aa') : 'rgba(20,26,36,.9)';
-      cx.fill();
-      cx.strokeStyle = 'rgba(180,200,230,.4)';
-      cx.lineWidth = 0.8;
-      cx.stroke();
-      cx.restore();
+      drawShard(sh);
     }
 
     /* пыль Bullet-Time: почти не движется, живая */
@@ -18242,102 +18574,93 @@ var DROP_SCENE = (function(){
   function ensureFrames(){ if(!raf) raf = requestAnimationFrame(frame); }
 
   /* ---------- Стеклобой: сетка осколков + трещины ---------- */
+  /* ---------- сетка осколков (только «Портал») ----------
+     4.14.0: разлом больше не режется на ячейки — его показывает видео.
+     Сетка осталась для мифического провала внутрь: там осколки разлетаются
+     в тоннель, и это другой приём, чем трещина по стеклу. */
   function spawnShards(cxp, cyp){
     var w = window.innerWidth, h = window.innerHeight;
-    var target = w < 768 ? 70 : 110;
-    var cols = Math.max(4, Math.round(Math.sqrt(target * (w / h))));
-    var rows = Math.max(4, Math.round(target / cols));
-    var cw = w / cols, ch = h / rows;
+    var rings = w < 768 ? 8 : 10;
+    var sectors = w < 768 ? 14 : 18;
+    var Rmax = Math.sqrt(w * w + h * h) * 0.62;
     var V = [];
-    for(var r = 0; r <= rows; r++){
-      V[r] = [];
-      for(var c = 0; c <= cols; c++){
-        var x = c * cw, y = r * ch;
-        if(c > 0 && c < cols) x += (Math.random() - 0.5) * cw * 0.55;
-        if(r > 0 && r < rows) y += (Math.random() - 0.5) * ch * 0.55;
-        if(c === 0) x = -2; if(c === cols) x = w + 2;
-        if(r === 0) y = -2; if(r === rows) y = h + 2;
-        V[r][c] = { x: x, y: y };
+    for(var i = 1; i <= rings; i++){
+      V[i] = [];
+      var rr = Rmax * Math.pow(i / rings, 1.22) * (0.88 + Math.random() * 0.24);
+      for(var sec = 0; sec <= sectors; sec++){
+        var si = sec % sectors;
+        var ang = (Math.PI * 2 / sectors) * si
+                + (i > 1 ? (Math.random() - 0.5) * (Math.PI * 2 / sectors) * 0.45 : 0)
+                + (i % 2 ? (Math.PI / sectors) * 0.5 : 0);
+        var rr2 = rr * (0.92 + Math.random() * 0.16);
+        V[i][sec] = {
+          x: cxp + Math.cos(ang) * rr2 + (Math.random() - 0.5) * 6,
+          y: cyp + Math.sin(ang) * rr2 + (Math.random() - 0.5) * 6
+        };
       }
     }
     shards = [];
-    for(var rr = 0; rr < rows; rr++){
-      for(var cc = 0; cc < cols; cc++){
-        var v0 = V[rr][cc], v1 = V[rr][cc+1], v2 = V[rr+1][cc+1], v3 = V[rr+1][cc];
-        var ax = (v0.x + v1.x + v2.x + v3.x) / 4, ay = (v0.y + v1.y + v2.y + v3.y) / 4;
-        var dx = ax - cxp, dy = ay - cyp;
-        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        var prox = Math.max(0, 1 - dist / (Math.max(w, h) * 0.6));
-        var sp = (3 + prox * 14) * (0.7 + Math.random() * 0.6);
-        shards.push({
-          verts: [v0, v1, v2, v3],
-          local: [{x:v0.x-ax,y:v0.y-ay},{x:v1.x-ax,y:v1.y-ay},{x:v2.x-ax,y:v2.y-ay},{x:v3.x-ax,y:v3.y-ay}],
-          px: ax, py: ay,
-          vx: (dx/dist) * sp + (Math.random() - 0.5) * 3,
-          vy: (dy/dist) * sp - 3 - Math.random() * 4,
-          rot: 0, vr: (Math.random() - 0.5) * 0.22, alpha: 1, ready: false,
-          tinted: Math.random() < 0.15, tint: color
-        });
+    webV = V; webCols = sectors; webRows = rings;
+
+    function pushCell(pts){
+      var ax = 0, ay = 0, k;
+      for(k = 0; k < pts.length; k++){ ax += pts[k].x; ay += pts[k].y; }
+      ax /= pts.length; ay /= pts.length;
+      var dx = ax - cxp, dy = ay - cyp;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      var prox = Math.max(0, 1 - dist / (Math.max(w, h) * 0.6));
+      var sp = (2 + prox * 13) * (0.7 + Math.random() * 0.6);
+      var local = [], verts = [];
+      for(k = 0; k < pts.length; k++){
+        verts.push(pts[k]);
+        local.push({ x: pts[k].x - ax, y: pts[k].y - ay });
+      }
+      shards.push({
+        verts: verts, local: local, px: ax, py: ay,
+        vx: (dx/dist) * sp + (Math.random() - 0.5) * 3,
+        vy: (dy/dist) * sp - 3 - Math.random() * 4,
+        rot: 0, vr: (Math.random() - 0.5) * 0.3, alpha: 1, ready: false,
+        tinted: Math.random() < 0.18, tint: color,
+        bright: Math.random() < 0.5 ? 0 : 1,
+        hue: (Math.random() - 0.5) * 0.5
+      });
+    }
+
+    /* внутренние ячейки — треугольники от самой точки удара */
+    for(var s0 = 0; s0 < sectors; s0++){
+      pushCell([{ x: cxp, y: cyp }, V[1][s0], V[1][s0 + 1]]);
+    }
+    /* дальше — кольца четырёхугольников */
+    for(var i2 = 1; i2 < rings; i2++){
+      for(var s1 = 0; s1 < sectors; s1++){
+        pushCell([V[i2][s1], V[i2 + 1][s1], V[i2 + 1][s1 + 1], V[i2][s1 + 1]]);
       }
     }
-  }
-  function buildCracks(cxp, cyp){
-    if(!svg) return;
-    svg.innerHTML = '';
-    var w = window.innerWidth, h = window.innerHeight;
-    var maxLen = Math.sqrt(w * w + h * h) * 0.55;
-    var rays = 7 + Math.floor(Math.random() * 4);
-    var all = [];
-    for(var i = 0; i < rays; i++){
-      var angle = (Math.PI * 2 / rays) * i + (Math.random() - 0.5) * 0.4;
-      var x = cxp, y = cyp;
-      var d = 'M' + x.toFixed(1) + ',' + y.toFixed(1);
-      var segs = 4 + Math.floor(Math.random() * 3);
-      var len = maxLen * (0.55 + Math.random() * 0.45);
-      var segLen = len / segs;
-      for(var sgm = 0; sgm < segs; sgm++){
-        angle += (Math.random() - 0.5) * 0.45;
-        x += Math.cos(angle) * segLen; y += Math.sin(angle) * segLen;
-        d += ' L' + x.toFixed(1) + ',' + y.toFixed(1);
-        if(sgm > 0 && sgm < segs - 1 && Math.random() < 0.55){
-          var ba = angle + (Math.random() < 0.5 ? -0.7 : 0.7);
-          var bl = segLen * (0.6 + Math.random() * 0.6);
-          var bp = document.createElementNS('http://www.w3.org/2000/svg','path');
-          bp.setAttribute('d','M'+x.toFixed(1)+','+y.toFixed(1)+' L'+(x+Math.cos(ba)*bl).toFixed(1)+','+(y+Math.sin(ba)*bl).toFixed(1));
-          bp.setAttribute('stroke', color); bp.setAttribute('stroke-width','0.9');
-          bp.setAttribute('fill','none'); bp.setAttribute('stroke-linecap','round');
-          bp.setAttribute('stroke-dasharray','900'); bp.setAttribute('stroke-dashoffset','900');
-          bp.setAttribute('opacity','0.72');
-          svg.appendChild(bp); all.push({ el: bp, delay: 20 + sgm * 15 });
-        }
+    /* 4.13.4: мелкая крошка вокруг точки удара — в референсе центр забит ею */
+    var crumbs = w < 768 ? 70 : 130;
+    for(var ci = 0; ci < crumbs; ci++){
+      var ang2 = Math.random() * Math.PI * 2;
+      var rad = Math.pow(Math.random(), 0.6) * Math.min(w, h) * 0.42;
+      var cx2 = cxp + Math.cos(ang2) * rad, cy2 = cyp + Math.sin(ang2) * rad;
+      var sz = 2 + Math.random() * 7;
+      var pts2 = [], pn = 3 + (Math.random() < 0.5 ? 0 : 1);
+      for(var pi = 0; pi < pn; pi++){
+        var pa = (Math.PI * 2 / pn) * pi + Math.random() * 0.9;
+        var pr = sz * (0.55 + Math.random() * 0.7);
+        pts2.push({ x: Math.cos(pa) * pr, y: Math.sin(pa) * pr });
       }
-      var glow = document.createElementNS('http://www.w3.org/2000/svg','path');
-      glow.setAttribute('d', d); glow.setAttribute('stroke', color);
-      glow.setAttribute('stroke-width','5'); glow.setAttribute('fill','none');
-      glow.setAttribute('stroke-linecap','round'); glow.setAttribute('stroke-linejoin','round');
-      glow.setAttribute('stroke-dasharray','4000'); glow.setAttribute('stroke-dashoffset','4000');
-      glow.setAttribute('opacity','0.2');
-      svg.appendChild(glow); all.push({ el: glow, delay: 0 });
-
-      var p = document.createElementNS('http://www.w3.org/2000/svg','path');
-      p.setAttribute('d', d); p.setAttribute('stroke', color);
-      p.setAttribute('stroke-width','1.5'); p.setAttribute('fill','none');
-      p.setAttribute('stroke-linecap','round'); p.setAttribute('stroke-linejoin','round');
-      p.setAttribute('stroke-dasharray','4000'); p.setAttribute('stroke-dashoffset','4000');
-      svg.appendChild(p); all.push({ el: p, delay: 0 });
+      var d2 = Math.sqrt((cx2-cxp)*(cx2-cxp) + (cy2-cyp)*(cy2-cyp)) || 1;
+      var sp2 = (4 + (1 - d2 / (Math.min(w, h) * 0.5)) * 16) * (0.6 + Math.random() * 0.8);
+      shards.push({
+        verts: pts2, local: pts2, px: cx2, py: cy2,
+        vx: ((cx2 - cxp) / d2) * sp2 + (Math.random() - 0.5) * 4,
+        vy: ((cy2 - cyp) / d2) * sp2 - 4 - Math.random() * 6,
+        rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.5, alpha: 1, ready: false,
+        tinted: Math.random() < 0.1, tint: color,
+        bright: 0, hue: (Math.random() - 0.5) * 0.5, crumb: true
+      });
     }
-    requestAnimationFrame(function(){
-      setTimeout(function(){
-        all.forEach(function(item){
-          setTimeout(function(){
-            item.el.style.transition = 'stroke-dashoffset .28s cubic-bezier(.4,0,.2,1)';
-            item.el.setAttribute('stroke-dashoffset','0');
-          }, item.delay);
-        });
-      }, 20);
-    });
   }
-
   /* ---------- картинка скина для сцены ----------
      Берём штатный svgWeapon: если PNG расцветки уже загружен — вернёт <img>,
      если нет (первый запуск, офлайн, файл не залит на хостинг) — вернёт
@@ -18398,11 +18721,120 @@ var DROP_SCENE = (function(){
     }, ms);
   };
 
-  /* Стеклобой: трещины + осколки экрана */
-  STEPS.glass = function(ms, next){
-    try{ SFX.glassBreak(); }catch(e){}
+  /* ---------- Стеклобой 4.14.0: видео-разлом ----------
+     Почему так: нарисованная «паутина» из линий читалась как мандала, а не как
+     трещина, и поверх неё ложился второй, цветной разлом — отсюда «розовое поверх
+     белого». Теперь трещины приходят из ролика, а код отвечает за то, что он
+     умеет лучше: точное положение оружия, проявление, подпись, рамку и тайминг. */
+  function hitPoint(){
+    var W = window.innerWidth, H = window.innerHeight;
+    var vw = (gvid && gvid.videoWidth) || 540, vh = (gvid && gvid.videoHeight) || 960;
+    var k = Math.max(W / vw, H / vh);
+    return { x: (W - vw * k) / 2 + HIT_X * vw * k, y: (H - vh * k) / 2 + HIT_Y * vh * k, k: k };
+  }
+
+  /* оружие «проявляется из-под стекла»: из размытого и чуть меньшего в резкое,
+     а ролик в это время идёт поверх него (screen), поэтому трещины скользят по стволу */
+  function showWeaponReveal(ms){
+    if(!stage || !curSkin) return;
+    var p = hitPoint();
+    stage.innerHTML = '';
+    stage.style.opacity = '1';
+    var art = skinVisual(curSkin, '22vh');
+    art.style.cssText = 'position:absolute;display:flex;align-items:center;justify-content:center;' +
+      'width:min(60vw,320px);height:26vh;left:' + Math.round(p.x) + 'px;top:' + Math.round(p.y) + 'px;' +
+      'transform:translate(-50%,-50%);pointer-events:none';
+    stage.style.opacity = '1';
+    stage.appendChild(art);
+    var delay = Math.max(0, Math.round(ms * 0.09));      /* +5 % к прежнему старту */
+    try{
+      art.animate([
+        { opacity: 0, filter: 'blur(7px) brightness(1.7)', transform: 'translate(-50%,-50%) scale(.965)' },
+        { opacity: .55, filter: 'blur(3.4px) brightness(1.35)', offset: .35 },
+        { opacity: .92, filter: 'blur(.9px) brightness(1.1)', offset: .7 },
+        { opacity: 1, filter: 'blur(0) brightness(1)', transform: 'translate(-50%,-50%) scale(1)' }
+      ], { duration: 780, delay: delay, easing: 'cubic-bezier(.22,.8,.25,1)', fill: 'both' });
+    }catch(e){
+      art.style.transition = 'opacity .7s ease-out ' + delay + 'ms, filter .7s ease-out ' + delay + 'ms';
+      art.style.opacity = '0';
+      requestAnimationFrame(function(){ art.style.opacity = '1'; art.style.filter = 'none'; });
+    }
+  }
+
+  function showCaption(ms){
+    if(!gcapEl || !curSkin) return;
+    var p = hitPoint();
+    var rn = (RAR[curSkin.r] && RAR[curSkin.r].name) || '';
+    gcapEl.innerHTML = '<div style="font:700 10.5px/1 system-ui;letter-spacing:.24em;' +
+      'text-transform:uppercase;color:' + color + '">' + escHtml(rn) + '</div>' +
+      '<div style="font:800 20px/1.15 system-ui;margin-top:8px;color:#eef3fb;' +
+      'text-shadow:0 2px 16px rgba(0,0,0,.9)">' + escHtml(curSkin.n || '') + '</div>';
+    gcapEl.style.top = Math.round(p.y + Math.min(window.innerWidth * 0.19, 104)) + 'px';
+    later(function(){
+      if(!gcapEl) return;
+      gcapEl.style.opacity = '1';
+      gcapEl.style.transform = 'translateY(0)';
+    }, Math.max(40, Math.round(ms * 0.86)));
+  }
+
+  /* пробуем видео; false — значит играем старую нарисованную сцену */
+  function playGlassVideo(ms, next){
+    if(!gvid || !vidOk) return false;
+    var p = hitPoint();
+    var rate = 1;
+    try{
+      var nat = gvid.duration || 2.6;
+      /* ролик должен успеть пройти до затухания: он занимает ~80 % шага */
+      rate = Math.max(0.7, Math.min(2.4, nat / Math.max(0.55, ms * 0.8 / 1000) / 1));
+    }catch(e){ rate = 1; }
+    gwrap.style.display = 'block';
+    gvid.style.transformOrigin = Math.round(p.x) + 'px ' + Math.round(p.y) + 'px';
+    gvid.style.transform = 'scale(' + GLASS_VS + ')';
+    gvid.style.opacity = '0';
+    try{
+      gvid.currentTime = 0;
+      gvid.playbackRate = isFinite(rate) && rate > 0 ? rate : 1;
+      var pr = gvid.play();
+      if(pr && pr.catch) pr.catch(function(){});
+    }catch(e){}
+    requestAnimationFrame(function(){ if(gvid) gvid.style.opacity = '1'; });
+
+    if(gframe){
+      gframe.style.borderColor = color + '57';
+      gframe.style.boxShadow = '0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 64px ' + color + '1a';
+      gframe.style.opacity = syncMode && syncRibbon ? '0' : '1';
+      gframe.style.animation = 'srFramePulse 2.6s ease-in-out infinite alternate';
+    }
+    if(flash){
+      flash.style.transition = 'none'; flash.style.opacity = '0.85';
+      requestAnimationFrame(function(){
+        if(!flash) return;
+        flash.style.transition = 'opacity .18s ease-out'; flash.style.opacity = '0';
+      });
+    }
+    showWeaponReveal(ms);
+    showCaption(ms);
+    later(function(){
+      if(!overlay || !overlay.__behind) return;
+      if(syncMode && syncRibbon) return;
+      overlay.__behind.style.opacity = '1';
+    }, Math.min(180, ms * 0.3));
+    /* разлом уходит полностью — остаётся ствол, как в макете */
+    later(function(){
+      if(!gvid) return;
+      gvid.style.transition = 'opacity ' + Math.round(ms * 0.22) + 'ms ease-in';
+      gvid.style.opacity = '0';
+      if(gframe) gframe.style.boxShadow = '0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px ' + color + '12';
+    }, Math.round(ms * 0.70));
+    later(function(){ try{ if(gvid) gvid.pause(); }catch(e){} next(); }, ms);
+    return true;
+  }
+
+  /* старая сцена: если видео нет (офлайн, файл не залит, браузер не умеет) */
+  function playGlassLegacy(ms, next){
     var w = window.innerWidth, h = window.innerHeight;
     spawnShards(w / 2, h / 2);
+    glassGlow = 1;
     ensureFrames();
     if(flash){
       flash.style.transition = 'none'; flash.style.opacity = '0.9';
@@ -18411,12 +18843,29 @@ var DROP_SCENE = (function(){
         flash.style.transition = 'opacity .15s ease-out'; flash.style.opacity = '0';
       });
     }
-    later(function(){ buildCracks(w / 2, h / 2); }, 30);
     later(function(){
-      if(overlay && overlay.__behind) overlay.__behind.style.opacity = '1';
+      if(!overlay || !overlay.__behind) return;
+      if(syncMode && syncRibbon) return;
+      overlay.__behind.style.opacity = '1';
     }, Math.min(180, ms * 0.4));
     later(function(){ for(var i = 0; i < shards.length; i++) shards[i].ready = true; ensureFrames(); }, Math.min(340, ms * 0.55));
     later(next, ms);
+  }
+
+  STEPS.glass = function(ms, next){
+    try{ SFX.glassBreak(); }catch(e){}
+    /* Ролик качается в фоне с момента сборки оверлея. К первому разлому он обычно
+       уже готов; если нет — ждём до трети шага (максимум 600 мс) и только потом
+       играем старую сцену. Так первый же разлом не выглядит «пустым». */
+    if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
+    var waited = 0, cap = Math.min(600, Math.round(ms * 0.35));
+    (function tick(){
+      if(done || !overlay) return;
+      if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
+      waited += 120;
+      if(waited >= cap || !gvid){ playGlassLegacy(ms, next); return; }
+      setTimeout(tick, 120);
+    })();
   };
 
   /* Bullet-Time: мир замирает, скин поднимается, камера обходит по дуге */
@@ -18589,6 +19038,10 @@ var DROP_SCENE = (function(){
     if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     overlay = null; cv = null; cx = null; svg = null; stage = null; flash = null; slit = null;
     shards = []; dust = []; bolts = []; tunnelT = 0; shakeT = 0; running = null; curSkin = null;
+    dim = null; syncMode = false; syncRibbon = false;
+    webV = null; webCols = 0; webRows = 0; glassGlow = 0;
+    try{ if(gvid){ gvid.pause(); gvid.removeAttribute('src'); } }catch(e){}
+    gvid = null; gwrap = null; gframe = null; gcapEl = null; vidOk = false; vidTried = false; glassPulse = 0;
   }
 
   function release(){
@@ -18608,25 +19061,51 @@ var DROP_SCENE = (function(){
     } else release();
   }
 
-  function play(skin, cb){
+  /* opts.syncWith === 'roulette' — сцена запущена ДО остановки ленты:
+     страница затемняется на 40 %, музыка уходит в подложку, эффекты идут поверх
+     ещё крутящейся рулетки. opts.lead — за сколько мс до финиша её позвали. */
+  function play(skin, cb, opts){
+    opts = opts || {};
     if(overlay){                       /* уже играет — не блокируем награду */
       if(typeof cb === 'function'){ try{ cb(); }catch(e){} }
       return;
     }
+    syncMode = (opts.syncWith === 'roulette');
+    syncRibbon = syncMode;
     done = false;
     onComplete = cb || null;
     curSkin = skin || null;
     color = hexOf(skin);
     var depth = depthOf(skin);
-    try{ createOverlay(); }catch(e){ onComplete = null; if(typeof cb === 'function') cb(); return; }
+    try{ createOverlay(); }catch(e){
+      /* 4.13.2: раньше ошибка построения глоталась молча — сцена просто не
+         появлялась, и причину нельзя было узнать. Пишем в журнал ошибок. */
+      try{ if(typeof errLogAdd === 'function') errLogAdd('drop-scene', 'overlay: ' + ((e && e.message) || e), 'DROP_SCENE.play'); }catch(e2){}
+      onComplete = null; if(typeof cb === 'function') cb(); return;
+    }
     if(!overlay){ onComplete = null; if(typeof cb === 'function') cb(); return; }
 
     overlay.style.transition = 'none';
     overlay.style.opacity = '1';
+    if(dim) dim.style.opacity = syncMode ? '0.4' : '0';
 
     var r = skin && skin.r;
     var list = SEQ_LIST[r] || SEQ_LIST.rare;
     var total = budget(skin);
+    /* 4.13.3: сцена началась раньше финиша ленты — на это же время она длиннее,
+       иначе после остановки рулетки эффект обрывался бы на середине */
+    if(syncMode) total += Math.max(0, (opts.lead | 0));
+    /* 4.13.2: статичную карточку считаем до секвенции — своего таймера у неё нет */
+    var shortMs = Math.max(900, Math.min(1700, total * 0.42));
+    if(motionMode() === 'short'){
+      try{ if(window.musDuck) window.musDuck(0.5); }catch(e){}
+      playShort(skin, function(){
+        try{ if(window.musUnduck) window.musUnduck(); }catch(e){}
+        if(typeof cb === 'function'){ try{ cb(); }catch(e){} }
+      }, shortMs);
+      /* playShort ставит свой onComplete — вернуть управление ему */
+      return;
+    }
     /* 4.13.1: пока дневной запас полных сцен не вышел — играем целиком */
     seenRar[r] = (seenRar[r] | 0) + 1;
     var full = takeFullScene();
@@ -18647,16 +19126,36 @@ var DROP_SCENE = (function(){
     });
   }
 
+  /* лента встала — теперь можно закрыть ею фон и снять затемнение страницы */
+  function ribbonDone(){
+    syncRibbon = false;
+    if(!overlay) return;
+    if(overlay.__behind){
+      overlay.__behind.style.transition = 'opacity .35s ease-out';
+      overlay.__behind.style.opacity = '1';
+    }
+    if(dim){
+      dim.style.transition = 'opacity .45s ease-out';
+      dim.style.opacity = '0';
+    }
+  }
+
   return {
     play: play,
+    ribbonDone: ribbonDone,
     shouldPlay: shouldPlay,
     isActive: function(){ return !!overlay; },
+    motion: motionMode,
+    motionSource: motionSource,
+    whyNot: whyNot,
     info: function(){
       return { scenes: SEQ_LIST, minRarity: MIN_RARITY, seen: seenRar,
+               motion: motionMode(), motionSource: motionSource(), reduced: isReduced(),
                budget: (SR_CONFIG && SR_CONFIG.dropTime) || {},
                fullLimit: dropFullLimit(), fullToday: (dropDay().n | 0),
                fullLeft: fullScenesLeft(),
-               shortK: (SR_CONFIG && SR_CONFIG.dropShortK != null) ? SR_CONFIG.dropShortK : 0.4 };
+               shortK: (SR_CONFIG && SR_CONFIG.dropShortK != null) ? SR_CONFIG.dropShortK : 0.4,
+               video: !!(vidOk || (gvid && gvid.readyState >= 2)), videoSrc: glassSrc[0], weights: WEIGHT };
     },
     resetSeen: function(){
       seenRar = {};
@@ -20528,11 +21027,25 @@ window.__sr = {
     return { minRarity: i.minRarity, active: DROP_SCENE.isActive(), busy: !!showWin._glassBusy,
              reducedMotion: red, budget: i.budget, scenes: i.scenes, seen: i.seen,
              fullLimit: i.fullLimit, fullToday: i.fullToday, fullLeft: i.fullLeft,
-             shortK: i.shortK,
+             shortK: i.shortK, motion: i.motion, motionSource: i.motionSource, reduced: i.reduced,
              batch: (typeof isBatchOpening !== 'undefined') ? !!isBatchOpening : false };
   },
   /* __sr.dropLimit(0) — полные сцены всегда; __sr.dropLimit(40) — сорок в сутки */
   dropLimit(n){ try{ return DROP_SCENE.setFullLimit(n); }catch(e){ return null; } },
+  /* __sr.dropMotion('full') — играть полные сцены даже при «уменьшении движения»,
+     'short' — всегда короткая карточка, 'auto' — как настроено в системе */
+  dropMotion(m){
+    try{
+      var v = (m === 'full' || m === 'short' || m === 'auto') ? m : 'auto';
+      state.dropMotion = v; SR_CONFIG.dropMotion = v; save();
+      return DROP_SCENE.motion();
+    }catch(e){ return null; }
+  },
+  /* почему сцена не показалась на такой-то редкости — текстом */
+  dropWhy(r){
+    try{ return DROP_SCENE.whyNot({ r: r || 'epic', n: 'x', id: 'x', w: 'ak47' }) || 'сцена должна играть'; }
+    catch(e){ return 'ошибка: ' + ((e && e.message) || e); }
+  },
   dropReset(){ try{ DROP_SCENE.resetSeen(); }catch(e){} },
   get stake(){ return upStake; }, setStake(list){ upStake = list.slice(0,3); renderSlots(); },
   setDst(id){ upDst = id; renderSlots(); },
@@ -24503,6 +25016,11 @@ window.__sr = {
 .pool-row .pool-ok{
   margin-left:4px;color:#4fd18b;font-style:normal;font-weight:800;font-size:11px;
 }
+/* 4.14.0: пульсация рамки кадра в сцене выпадения */
+@keyframes srFramePulse{
+  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
+  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
+}
 </style>
 <style>
 /* 4.8.1: строки состава в крупной карточке кейса */
@@ -24511,7 +25029,17 @@ window.__sr = {
   max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 }
 .hero-guns b{color:#cfdaea;font-weight:700}
+/* 4.14.0: пульсация рамки кадра в сцене выпадения */
+@keyframes srFramePulse{
+  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
+  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
+}
 </style>
+/* 4.14.0: пульсация рамки кадра в сцене выпадения */
+@keyframes srFramePulse{
+  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
+  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
+}
 </style>
 
 <script>
@@ -25566,7 +26094,125 @@ window.__sr = {
       window.addEventListener('resize', function(){ if(running && !finished) computeOffsets(); });
     }
     try{ audio(); }catch(e){}
+    /* 4.14.0: сначала пробуем заставку-видео; не вышло — прежняя сцена */
+    if(zastStart(play)) return;
     play();
+  }
+
+  /* ---------- 4.14.0: заставка-видео ----------
+     Ролик лежит рядом с игрой (video/zastavka.mp4) — так он работает и в APK,
+     и на хостинге; второй адрес — закреплённый коммит в GitHub, на случай если
+     на Pages файл ещё не залит. Не вышло ни одного — играем прежнюю сцену. */
+  var ZAST_SRC = [
+    'video/zastavka.mp4',
+    'https://raw.githubusercontent.com/Arsi3000/RushPWA/1409e563bba83ffe61adcc8c22635834a6a8eef9/zastavka.mp4'
+  ];
+  var zastEl = null, zastBusy = false;
+
+  function zastStop(){
+    zastBusy = false;
+    try{ window.__zastActive = false; }catch(e){}
+    var n = zastEl; zastEl = null;
+    if(!n) return;
+    n.style.transition = 'opacity .35s ease-out';
+    n.style.opacity = '0';
+    try{ var v = n.querySelector('video'); if(v){ v.pause(); } }catch(e){}
+    setTimeout(function(){
+      try{ if(n.parentNode) n.parentNode.removeChild(n); }catch(e){}
+      try{ var v2 = n.querySelector('video'); if(v2){ v2.removeAttribute('src'); v2.load(); } }catch(e){}
+    }, 400);
+  }
+
+  /* запускает ролик; если что-то не так — зовёт fail() и не мешает прежней сцене */
+  function zastStart(fail){
+    var net = true;
+    try{ net = (navigator.onLine !== false); }catch(e){}
+    if(!net) return false;
+
+    var box = document.createElement('div');
+    box.id = 'zastBox';
+    box.style.cssText = 'position:fixed;inset:0;z-index:99;background:#000;overflow:hidden;' +
+      'display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s ease-out';
+
+    var v = document.createElement('video');
+    v.muted = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.preload = 'auto';
+    v.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#000';
+    for(var i = 0; i < ZAST_SRC.length; i++){
+      var so = document.createElement('source');
+      so.src = ZAST_SRC[i];
+      so.type = 'video/mp4';
+      v.appendChild(so);
+    }
+    box.appendChild(v);
+
+    var skip = document.createElement('button');
+    skip.type = 'button';
+    skip.textContent = 'Пропустить ✕';
+    skip.style.cssText = 'position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top,0px));' +
+      'padding:9px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.35);' +
+      'background:rgba(0,0,0,.45);color:#fff;font:600 12px/1 system-ui;letter-spacing:.04em;' +
+      'cursor:pointer;z-index:2;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)';
+    box.appendChild(skip);
+
+    var snd = document.createElement('button');
+    snd.type = 'button';
+    snd.textContent = '🔊 Звук';
+    snd.style.cssText = 'position:absolute;left:14px;bottom:calc(20px + env(safe-area-inset-bottom,0px));' +
+      'padding:9px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.35);' +
+      'background:rgba(0,0,0,.45);color:#fff;font:600 12px/1 system-ui;cursor:pointer;z-index:2;display:none';
+    box.appendChild(snd);
+
+    var failed = false;
+    function giveUp(){
+      if(failed) return;
+      failed = true;
+      try{ zastStop(); }catch(e){}
+      try{ fail(); }catch(e){}
+    }
+
+    skip.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); zastStop(); finish(); });
+    box.addEventListener('click', function(){ zastStop(); finish(); });
+    box.addEventListener('touchstart', function(){}, {passive:true});
+    snd.addEventListener('click', function(e){
+      e.stopPropagation(); e.preventDefault();
+      try{ v.muted = false; v.volume = 0.9; snd.style.display = 'none'; v.play().catch(function(){}); }catch(err){}
+    });
+
+    var settled = false;
+    function go(){
+      if(settled) return; settled = true;
+      zastBusy = true;
+      try{ window.__zastActive = true; }catch(e){}
+      document.body.appendChild(box);
+      zastEl = box;
+      requestAnimationFrame(function(){ if(box) box.style.opacity = '1'; });
+      /* автозвук в браузере запрещён до касания: пробуем со звуком,
+         не вышло — играем без него и показываем кнопку «Звук» */
+      var p;
+      try{ v.muted = false; v.volume = 0.9; p = v.play(); }catch(err){ p = null; }
+      function afterMute(){
+        v.muted = true;
+        snd.style.display = 'block';
+        var p2;
+        try{ p2 = v.play(); }catch(err2){ p2 = null; }
+        if(p2 && p2.catch) p2.catch(giveUp);
+        if(!p2) giveUp();
+      }
+      if(p && p.catch) p.catch(afterMute);
+    }
+
+    v.addEventListener('loadeddata', function(){
+      if(v.videoWidth) go();
+    });
+    v.addEventListener('error', giveUp);
+    setTimeout(function(){ if(!settled) giveUp(); }, 2600);
+    v.addEventListener('ended', function(){ zastStop(); finish(); });
+    try{ v.load(); }catch(e){ giveUp(); }
+    return true;
   }
 
   window.__srIntroPlay = srIntroPlay;
