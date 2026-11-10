@@ -7280,7 +7280,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.17.2';
+const VERSION = '4.18.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -26266,41 +26266,57 @@ window.__sr = {
       'object-position:center;display:block;background:transparent;opacity:0;' +
       'transition:opacity .3s ease-out';
 
-    /* 4.17.2: кнопки — одна полоса внизу, в оформлении игры (как .q-go) */
-    var FONT = '900 13px/1 "Segoe UI",Roboto,system-ui,-apple-system,sans-serif';
+    /* ---------- 4.18.0: «жидкое стекло», как в iOS ----------
+       Полупрозрачная капсула с сильным размытием, светлой гранью и бликом.
+       Кнопки внутри — тоже стекло, только помельче (40 px, шрифт 12). */
+    var FONT = '800 12px/1 "Segoe UI",Roboto,system-ui,-apple-system,sans-serif';
+    var GLASS_BTN = 'display:flex;align-items:center;justify-content:center;gap:6px;' +
+      'border:1px solid rgba(255,255,255,.24);border-radius:999px;cursor:pointer;color:#fff;' +
+      'background:rgba(255,255,255,.075);' +
+      'box-shadow:inset 0 1px 0 rgba(255,255,255,.3), inset 0 -1px 0 rgba(255,255,255,.09),' +
+      '0 6px 16px -8px rgba(0,0,0,.65);' +
+      '-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%)';
 
     var bar = document.createElement('div');
     bar.id = 'zastBar';
-    bar.style.cssText = 'position:absolute;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));' +
-      'display:flex;align-items:stretch;gap:10px;z-index:5;' +
-      'opacity:0;transition:opacity .35s ease-out';
+    bar.style.cssText = 'position:absolute;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));' +
+      'display:flex;align-items:center;gap:8px;padding:7px;z-index:5;border-radius:999px;' +
+      'background:rgba(255,255,255,.055);' +
+      'border:1px solid rgba(255,255,255,.22);' +
+      'box-shadow:inset 0 1px 0 rgba(255,255,255,.32), inset 0 -1px 0 rgba(255,255,255,.10),' +
+      '0 14px 34px -16px rgba(0,0,0,.8);' +
+      '-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);' +
+      'opacity:0;transition:opacity .35s ease-out, transform .3s ease-out';
+
+    /* блик-«зайчик» сверху капсулы — главный признак жидкого стекла */
+    var gloss = document.createElement('div');
+    gloss.style.cssText = 'position:absolute;left:6px;right:6px;top:1px;height:46%;border-radius:999px;' +
+      'background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0));' +
+      'pointer-events:none;z-index:0';
 
     var snd = document.createElement('button');
     snd.type = 'button';
     snd.id = 'zastSnd';
-    snd.style.cssText = 'flex:1 1 auto;min-width:0;height:48px;display:flex;align-items:center;' +
-      'justify-content:center;gap:8px;padding:0 14px;border-radius:14px;cursor:pointer;' +
-      'border:1px solid rgba(255,176,46,.42);color:#ffd08a;font:' + FONT + ';letter-spacing:.03em;' +
-      'background:linear-gradient(180deg,rgba(40,29,12,.94),rgba(15,13,10,.94));' +
-      'box-shadow:0 12px 28px -14px #000, inset 0 1px 0 rgba(255,255,255,.08);' +
-      '-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)';
+    snd.textContent = '▶ Смотреть';
+    snd.style.cssText = GLASS_BTN + ';flex:1 1 auto;min-width:0;height:40px;padding:0 16px;' +
+      'font:' + FONT + ';letter-spacing:.04em;position:relative;z-index:1';
 
     var skip = document.createElement('button');
     skip.type = 'button';
     skip.id = 'zastSkip';
     skip.textContent = 'Пропустить ✕';
-    skip.style.cssText = 'flex:0 0 auto;height:48px;padding:0 20px;border-radius:14px;border:0;' +
-      'cursor:pointer;color:#2a1c00;font:' + FONT + ';letter-spacing:.03em;' +
-      'background:linear-gradient(180deg,#ffd06a,#e9a316);' +
-      'box-shadow:0 12px 28px -14px rgba(233,163,22,.8), inset 0 1px 0 rgba(255,255,255,.55)';
+    skip.style.cssText = GLASS_BTN + ';flex:0 0 auto;height:40px;padding:0 14px;' +
+      'font:' + FONT + ';letter-spacing:.03em;color:rgba(255,255,255,.86);' +
+      'background:rgba(255,255,255,.045);position:relative;z-index:1';
 
     /* тонкая полоса прогресса по нижней кромке */
     var prog = document.createElement('div');
     prog.id = 'zastProg';
-    prog.style.cssText = 'position:absolute;left:0;bottom:0;height:3px;width:0%;z-index:5;' +
-      'background:linear-gradient(90deg,#ffd06a,#ff9a1f);' +
-      'box-shadow:0 0 12px rgba(255,176,46,.7);transition:width .18s linear';
+    prog.style.cssText = 'position:absolute;left:0;bottom:0;height:2px;width:0%;z-index:5;' +
+      'background:linear-gradient(90deg,rgba(255,208,138,.95),rgba(255,154,31,.85));' +
+      'box-shadow:0 0 10px rgba(255,176,46,.6);transition:width .18s linear';
 
+    bar.appendChild(gloss);
     bar.appendChild(snd);
     bar.appendChild(skip);
     box.appendChild(still);
@@ -26347,16 +26363,18 @@ window.__sr = {
     });
     box.addEventListener('touchstart', function(){}, {passive:true});
 
+    /* 4.18.0: «▶ Смотреть» — включает звук, начинает ролик с начала и убирает
+       с экрана всю полосу, вместе с «Пропустить» (так просил человек). */
     snd.addEventListener('click', function(e){
       e.stopPropagation(); e.preventDefault();
-      killTap();                       /* кнопка «Смотреть» больше не нужна */
+      killTap();
       /* нажатие — это жест человека, значит звук браузер разрешит */
-      var want = v.muted;
-      try{ v.muted = !want; v.volume = 0.9; }catch(err){}
+      try{ v.muted = false; v.volume = 0.9; }catch(err){}
+      try{ v.currentTime = 0; }catch(err){}
       var pp = null;
       try{ pp = v.play(); }catch(err){ pp = null; }
-      if(pp && pp.catch) pp.catch(function(){ try{ v.muted = true; }catch(e2){} sndLabel(); });
-      sndLabel();
+      if(pp && pp.catch) pp.catch(function(){ try{ v.muted = true; }catch(e2){} v.play().catch(function(){}); });
+      barHide();
     });
 
     /* крайний случай: iOS не дал запуск даже беззвучно — предлагаем нажать */
@@ -26365,12 +26383,13 @@ window.__sr = {
       if(failed || boxDone) return;
       if(box.querySelector('#zastPlay')) return;
       var b = document.createElement('button');
-      b.type = 'button'; b.id = 'zastPlay'; b.textContent = '▶ Смотреть заставку';
+      b.type = 'button'; b.id = 'zastPlay'; b.textContent = '▶ Запустить';
       b.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);' +
-        'padding:15px 26px;border-radius:16px;border:0;cursor:pointer;z-index:6;' +
-        'color:#2a1c00;font:900 14px/1 "Segoe UI",Roboto,system-ui,-apple-system,sans-serif;' +
-        'letter-spacing:.03em;background:linear-gradient(180deg,#ffd06a,#e9a316);' +
-        'box-shadow:0 16px 40px -14px rgba(233,163,22,.85), inset 0 1px 0 rgba(255,255,255,.55)';
+        'padding:13px 24px;border-radius:999px;cursor:pointer;z-index:6;color:#fff;' +
+        'border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.14);' +
+        'font:800 13px/1 "Segoe UI",Roboto,system-ui,-apple-system,sans-serif;letter-spacing:.04em;' +
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 14px 32px -14px rgba(0,0,0,.85);' +
+        '-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%)';
       b.addEventListener('click', function(e){
         e.stopPropagation(); e.preventDefault();
         b.remove();
@@ -26396,17 +26415,19 @@ window.__sr = {
     }
     v.addEventListener('error', tryNext);
 
-    /* 4.17.2: переключатель звука всегда виден и честно говорит, что выключено */
-    function sndLabel(){
-      try{
-        snd.textContent = v.muted ? '🔇 Включить звук' : '🔊 Звук включён';
-        snd.style.borderColor = v.muted ? 'rgba(255,176,46,.42)' : 'rgba(125,255,155,.45)';
-        snd.style.color = v.muted ? '#ffd08a' : '#b6f5c8';
-      }catch(e){}
-    }
+    /* 4.18.0: полоса живёт своей жизнью — показать, спрятать. */
+    var barHidden = false;
+    function sndLabel(){ /* подпись постоянная: «▶ Смотреть» */ }
     function sndShow(){
+      if(barHidden) return;
       try{ bar.style.opacity = '1'; }catch(e){}
-      sndLabel();
+    }
+    function barHide(){
+      /* спрятать ВСЮ полосу: и «Смотреть», и «Пропустить» */
+      barHidden = true;
+      try{ bar.style.opacity = '0'; bar.style.transform = 'translateY(10px)'; }catch(e){}
+      setTimeout(function(){ try{ if(bar.parentNode) bar.remove(); }catch(e){} }, 400);
+      try{ if(prog.parentNode) prog.remove(); }catch(e){}
     }
 
     function killTap(){
