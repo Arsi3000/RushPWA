@@ -10,7 +10,7 @@
    4) Всё, что не GET, и любые внешние хосты (Firebase, картинки с GitHub Pages) —
       сразу в сеть, кэш не трогаем.
 */
-var VERSION = '4.14.0';
+var VERSION = '4.15.0';
 var CACHE = 'skinrush-' + VERSION;
 
 /* ВАЖНО про картинку: игра просит её по адресу aug.png?v=5
@@ -78,6 +78,15 @@ self.addEventListener('fetch', function(e){
   var url;
   try { url = new URL(req.url); } catch(err){ return; }
   if (isExternal(url)) return;
+
+  /* 4.15.0: видео и звук не перехватываем.
+     Safari (и любой WebKit на iPhone) запрашивает медиа кусками — заголовком
+     Range. Service worker отдаёт из кэша целый ответ 200, Safari такой ответ
+     на Range не принимает и ролик молча не играет. Именно поэтому на iPhone
+     не появлялась заставка, хотя в Chrome и Яндекс.Браузере она работала.
+     Пусть медиа идёт напрямую в сеть — там GitHub Pages сам отдаст куски. */
+  if (req.headers.has('range')) return;
+  if (req.destination === 'video' || req.destination === 'audio') return;
 
   /* навигация: сеть против таймаута, при неудаче — кэш */
   if (req.mode === 'navigate' || req.destination === 'document'){
