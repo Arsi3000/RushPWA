@@ -4440,11 +4440,239 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
   body[data-sec="rew"]   #mainNav .tab-item[data-tab="rewards"],
   body[data-sec="rew"]   #mainNav .tab-item[data-tab="trials"]{ display: flex; }
   /* в разделе один подраздел — капсула не нужна вовсе */
-  body[data-sec="me"] #mainNav{ display: none; }
+  body[data-sec="me"] #mainNav, body[data-sec="rank"] #mainNav{ display: none; }
   #mainNav .tab-icon{ width: 18px; height: 18px; }
 }
 @media (max-width: 340px){
   #bottomNav .bn-item{ font-size:var(--fs-10, 10px); }
+}
+
+/* =========================================================
+   4.21.1 · ЭКРАН «РЕЙТИНГ» (раздел нижней капсулы вместо «Профиля»)
+   Сделан по согласованному макету v3, но с решениями из разбора:
+   награды за лиги — только косметика; лиги по перцентилям базы, а не по
+   выдуманным числам; «до понижения» — честный запас по порогу; near-miss
+   считается от цены выбранного кейса; бейджи мест других метрик — лениво.
+   Все классы с префиксом rk2-, чтобы не спорить со старыми .rank-*/.rk-*.
+   ========================================================= */
+#panel-rank{padding:0 0 6px}
+.rk2-hd{display:flex;align-items:center;gap:8px;margin:0 12px 10px}
+.rk2-hd .t{flex:1;min-width:0}
+.rk2-hd .t b{display:block;font-size:var(--fs-17, 17px);font-weight:900;letter-spacing:-.01em}
+.rk2-hd .t span{display:block;font-size:var(--fs-11, 11px);color:var(--dim,#8b98ae);margin-top:2px}
+.rk2-league{border:1px solid rgba(255,176,46,.45);background:rgba(255,176,46,.12);color:#ffd08a;
+  font:800 var(--fs-11, 11px)/1 inherit;padding:7px 10px;border-radius:999px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;white-space:nowrap}
+.rk2-icobtn{flex:0 0 auto;width:34px;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);color:#cfd8ea;cursor:pointer;display:grid;place-items:center}
+.rk2-icobtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.rk2-icobtn:active{transform:scale(.94)}
+
+/* вкладки метрик */
+.rk2-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 2px;scrollbar-width:none}
+.rk2-tabs::-webkit-scrollbar{display:none}
+.rk2-tab{position:relative;flex:0 0 auto;border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.045);color:#c3cde0;font:800 var(--fs-11, 11px)/1 inherit;
+  padding:9px 10px;border-radius:999px;cursor:pointer;display:flex;gap:5px;align-items:center;
+  white-space:nowrap;transition:.15s}
+.rk2-tab.on{background:linear-gradient(180deg,rgba(255,176,46,.26),rgba(255,138,40,.14));
+  border-color:rgba(255,176,46,.6);color:#ffe4b0}
+.rk2-tab.soon{opacity:.55}
+.rk2-tab .b{margin-left:2px;padding:2px 6px;border-radius:999px;font-size:var(--fs-10, 10px);
+  font-weight:900;background:rgba(0,0,0,.35);color:#9aa8c0;font-variant-numeric:tabular-nums}
+.rk2-tab.on .b{color:#ffe4b0}
+.rk2-chips{display:flex;gap:6px;margin:9px 12px 0}
+.rk2-chip{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#93a0b8;
+  font:800 var(--fs-10, 10px)/1 inherit;padding:6px 11px;border-radius:999px;cursor:pointer}
+.rk2-chip.on{background:rgba(255,176,46,.15);border-color:rgba(255,176,46,.5);color:#ffd08a}
+
+/* карточка «я» */
+.rk2-me{margin:12px 12px 10px;padding:13px 14px;border-radius:18px;position:relative;overflow:hidden;
+  border:1px solid rgba(255,176,46,.36);
+  background:linear-gradient(160deg,rgba(255,176,46,.16),rgba(255,138,40,.05) 60%,rgba(255,255,255,.02))}
+.rk2-me .glow{position:absolute;inset:-40%;pointer-events:none;opacity:.45;
+  background:radial-gradient(closest-side,rgba(255,176,46,.45),transparent 70%)}
+.rk2-me .in{position:relative;z-index:2}
+.rk2-mh{display:flex;align-items:center;gap:11px}
+.rk2-av{width:44px;height:44px;flex:0 0 44px;border-radius:14px;display:grid;place-items:center;
+  font:900 var(--fs-18, 18px)/1 inherit;color:#2a1804;
+  background:radial-gradient(circle at 34% 28%,#ffe6b4,#ffb02e 55%,#d0760a);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.rk2-mid{flex:1;min-width:0}
+.rk2-rank{display:flex;align-items:baseline;gap:6px}
+.rk2-rank b{font-size:var(--fs-24, 24px);font-weight:900;line-height:1;letter-spacing:-.02em;
+  color:#fff;font-variant-numeric:tabular-nums}
+.rk2-rank b.gain{color:#7df0b6}
+.rk2-rank span{font-size:var(--fs-12, 12px);color:var(--dim,#8b98ae);font-weight:800}
+.rk2-name{font-size:var(--fs-12, 12px);font-weight:800;color:#ffd08a;margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk2-delta{flex:0 0 auto;text-align:right}
+.rk2-pill{font-size:var(--fs-11, 11px);font-weight:900;padding:3px 8px;border-radius:999px;
+  font-variant-numeric:tabular-nums;display:inline-block}
+.rk2-pill.up{background:rgba(79,209,139,.16);color:#7df0b6}
+.rk2-pill.down{background:rgba(255,90,109,.16);color:#ff8f9f}
+.rk2-pill.flat{background:rgba(255,255,255,.08);color:#93a0b8}
+.rk2-dsub{font-size:var(--fs-10, 10px);color:var(--dim,#8b98ae);margin-top:2px}
+.rk2-goal{margin-top:11px;font-size:var(--fs-12, 12px);color:#dbe3f2;line-height:1.5}
+.rk2-goal b{color:#ffd08a}
+.rk2-goal .pct{color:#7df0b6;font-weight:900;font-variant-numeric:tabular-nums}
+.rk2-near{margin-top:9px;padding:8px 11px;border-radius:10px;display:flex;gap:7px;align-items:center;
+  background:rgba(255,215,106,.1);border:1px solid rgba(255,215,106,.32);
+  font-size:var(--fs-11, 11px);color:#ffe9ae;line-height:1.4}
+.rk2-near b{color:#fff}
+.rk2-acts{display:flex;gap:8px;margin-top:11px}
+.rk2-btn{flex:1;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);color:#eaf0fb;cursor:pointer;
+  font:800 var(--fs-11, 11px)/1 inherit;display:flex;align-items:center;justify-content:center;gap:5px}
+.rk2-btn:active{transform:scale(.97)}
+.rk2-btn.primary{background:linear-gradient(180deg,rgba(255,176,46,.3),rgba(255,138,40,.16));
+  border-color:rgba(255,190,80,.6);color:#28190a;font-weight:900}
+
+/* секции */
+.rk2-sec{margin:0 12px 12px}
+.rk2-sech{display:flex;align-items:center;gap:8px;margin:0 2px 7px}
+.rk2-sech .t{flex:1;font-size:var(--fs-10, 10px);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim,#8b98ae);font-weight:900}
+.rk2-sech .x{font-size:var(--fs-10, 10px);color:#6f7d93;font-weight:700}
+.rk2-list{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.03)}
+.rk2-row{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:var(--fs-12, 12px);
+  border-bottom:1px solid rgba(255,255,255,.045);line-height:1.25}
+.rk2-row:last-child{border-bottom:none}
+.rk2-row .p{width:40px;flex:0 0 40px;font-weight:900;font-variant-numeric:tabular-nums;
+  color:#ffd08a;font-size:var(--fs-11, 11px)}
+.rk2-row .av{width:24px;height:24px;flex:0 0 24px;border-radius:7px;display:grid;place-items:center;
+  font:900 var(--fs-10, 10px)/1 inherit;background:rgba(255,255,255,.09);color:#cfd8ea}
+.rk2-row .n{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk2-row .v{font-weight:800;color:#cfd8ea;font-variant-numeric:tabular-nums;font-size:var(--fs-11, 11px)}
+.rk2-row .g{flex:0 0 auto;min-width:44px;text-align:right;font-size:var(--fs-10, 10px);color:var(--dim,#8b98ae)}
+.rk2-row.me{background:rgba(255,176,46,.13);box-shadow:inset 0 0 0 1px rgba(255,176,46,.32)}
+.rk2-row.me .n{color:#ffd08a}
+.rk2-row.me .av{background:rgba(255,176,46,.3);color:#ffd08a}
+.rk2-row.up .p{color:#7df0b6}
+.rk2-sep{height:1px;margin:2px 0;position:relative;
+  background:linear-gradient(90deg,transparent,rgba(255,176,46,.4),transparent)}
+.rk2-sep::after{content:"твоя позиция";position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);background:#0d121b;color:#ffd08a;
+  font-size:8.5px;font-weight:900;letter-spacing:.08em;padding:1px 8px;border-radius:999px;
+  border:1px solid rgba(255,176,46,.35)}
+.rk2-pod{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;align-items:end}
+.rk2-card{border-radius:14px;padding:10px 6px 8px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;
+  align-items:center;gap:4px;min-width:0}
+.rk2-card .medal{font-size:20px;line-height:1}
+.rk2-card .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  font:900 var(--fs-12, 12px)/1 inherit;color:#2a1804;
+  background:radial-gradient(circle at 34% 28%,#ffe6b4,#ffb02e 55%,#d0760a)}
+.rk2-card .nm{font-size:var(--fs-10, 10px);font-weight:800;color:#e8eefc;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk2-card .vl{font-size:var(--fs-10, 10px);font-weight:900;color:#ffd08a;
+  font-variant-numeric:tabular-nums}
+.rk2-card.c1{min-height:118px;padding-top:14px;border-color:rgba(255,215,106,.5);
+  background:linear-gradient(180deg,rgba(255,215,106,.16),rgba(255,215,106,.03))}
+.rk2-card.c1 .av{width:36px;height:36px;font-size:var(--fs-14, 14px);
+  background:radial-gradient(circle at 34% 28%,#fff4c8,#ffd76a 55%,#c9920f)}
+.rk2-card.c2{min-height:100px;border-color:rgba(220,228,240,.35)}
+.rk2-card.c2 .av{background:radial-gradient(circle at 34% 28%,#f5f8ff,#c8d2e0 55%,#7a8698);color:#1b2130}
+.rk2-card.c3{min-height:88px;border-color:rgba(240,168,106,.35)}
+.rk2-card.c3 .av{background:radial-gradient(circle at 34% 28%,#fff0dd,#e8a562 55%,#a35a1c);color:#2a1600}
+.rk2-more{display:block;margin:9px auto 0;padding:9px 16px;border-radius:999px;
+  border:1px dashed rgba(255,255,255,.22);background:rgba(255,255,255,.03);color:#c3cde0;
+  font:800 var(--fs-11, 11px)/1 inherit;cursor:pointer}
+.rk2-empty{padding:18px 14px;text-align:center;border-radius:12px;
+  border:1px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.02);
+  font-size:var(--fs-12, 12px);color:#93a0b8;line-height:1.55}
+.rk2-empty b{color:#ffd08a}
+.rk2-note{margin-top:9px;font-size:var(--fs-11, 11px);line-height:1.5;color:#9aa8c0;
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+  border-radius:11px;padding:9px 11px}
+.rk2-note b{color:#ffd08a}
+.rk2-hidden{margin:0 12px 10px;font-size:var(--fs-10, 10px);color:#6f7d93;line-height:1.45}
+.rk2-hidden button{background:none;border:none;color:#9fd8ff;font:inherit;cursor:pointer;
+  text-decoration:underline;padding:0}
+
+/* оверлей «Лиги» */
+.rk2-sheet{position:fixed;inset:0;z-index:120;display:none;flex-direction:column;
+  background:rgba(6,8,13,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+  max-width:520px;margin:0 auto}
+.rk2-sheet.on{display:flex}
+.rk2-sheet .sh{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.rk2-sheet h3{margin:0;font-size:var(--fs-16, 16px);font-weight:900;flex:1}
+.rk2-sbody{flex:1;overflow-y:auto;padding-bottom:8px}
+.rk2-leag{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;
+  margin-bottom:6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+  font-size:var(--fs-12, 12px)}
+.rk2-leag.on{border-color:rgba(255,176,46,.55);background:rgba(255,176,46,.12)}
+.rk2-leag .ic{font-size:16px}
+.rk2-leag .nm{flex:1;font-weight:800;min-width:0}
+.rk2-leag .thr{font-size:var(--fs-10, 10px);color:#8b98ae;font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.rk2-leag .rw{font-size:var(--fs-10, 10px);color:#ffd08a;font-weight:800;text-align:right;
+  min-width:92px;line-height:1.25}
+.rk2-lhead{margin-bottom:12px;padding:11px 13px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(255,176,46,.16),rgba(255,176,46,.03));
+  border:1px solid rgba(255,176,46,.4)}
+.rk2-lhead .row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.rk2-lhead .ic{font-size:20px}
+.rk2-lhead .nm{font-size:var(--fs-13, 13px);font-weight:900;color:#ffd08a}
+.rk2-lhead .pos{margin-left:auto;font-size:var(--fs-10, 10px);color:#8b98ae;font-weight:800}
+.rk2-lhead .bar{height:6px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}
+.rk2-lhead .bar i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#ffb02e,#ff8a28)}
+.rk2-lhead .txt{margin-top:6px;font-size:var(--fs-11, 11px);color:#c8d3e4;line-height:1.4}
+.rk2-lhead .txt b{color:#ffd08a}
+@media(max-width:340px){
+  .rk2-rank b{font-size:var(--fs-20, 20px)}
+  .rk2-leag .rw{min-width:74px}
+  .rk2-tab{padding:8px 8px}
+}
+
+/* 4.21.1: строки-полосы (референс человека): ромб с местом, полоса с ником,
+   значение справа. Ширина полосы — доля от лучшего значения в таблице. */
+.rk2-brow{display:flex;align-items:center;gap:7px;padding:5px 10px;
+  border-bottom:1px solid rgba(255,255,255,.04)}
+.rk2-brow:last-child{border-bottom:none}
+.rk2-pos{width:22px;height:22px;flex:0 0 22px;border-radius:6px;transform:rotate(45deg);
+  display:grid;place-items:center;background:rgba(255,255,255,.075);
+  border:1px solid rgba(255,255,255,.10);transition:.2s}
+.rk2-pos i{transform:rotate(-45deg);font-style:normal;font-weight:900;
+  font-size:var(--fs-10, 10px);color:#b9c6da;font-variant-numeric:tabular-nums}
+.rk2-brow.top1 .rk2-pos{background:linear-gradient(160deg,#ffd76a,#d99a12);
+  border-color:rgba(255,215,106,.85);box-shadow:0 0 12px -4px rgba(255,215,106,.9)}
+.rk2-brow.top2 .rk2-pos{background:linear-gradient(160deg,#e9eef8,#a8b4c6);
+  border-color:rgba(230,238,250,.8)}
+.rk2-brow.top3 .rk2-pos{background:linear-gradient(160deg,#f3c094,#b8763a);
+  border-color:rgba(243,192,148,.8)}
+.rk2-brow.top1 .rk2-pos i, .rk2-brow.top2 .rk2-pos i, .rk2-brow.top3 .rk2-pos i{color:#1b1206}
+.rk2-bar{position:relative;flex:1 1 auto;min-width:0;height:26px;border-radius:8px;overflow:hidden;
+  background:rgba(255,255,255,.045)}
+.rk2-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:8px;
+  background:linear-gradient(90deg,rgba(120,136,160,.34),rgba(150,168,196,.18));
+  transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.rk2-brow.top1 .rk2-bar i{background:linear-gradient(90deg,#b8890f,#ffd76a)}
+.rk2-brow.top2 .rk2-bar i{background:linear-gradient(90deg,#7d8797,#d8e1ee)}
+.rk2-brow.top3 .rk2-bar i{background:linear-gradient(90deg,#8a5a28,#e2a06a)}
+.rk2-bar u{position:absolute;left:9px;right:8px;top:0;bottom:0;display:flex;align-items:center;
+  gap:5px;text-decoration:none;font-weight:700;font-size:var(--fs-11, 11px);color:#e2eaf7;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.rk2-bar u b{font-weight:900;color:#ffd08a;font-size:var(--fs-10, 10px)}
+.rk2-val{flex:0 0 auto;min-width:52px;text-align:right;font-weight:900;
+  font-size:var(--fs-12, 12px);color:#e8eefc;font-variant-numeric:tabular-nums}
+.rk2-brow.me{background:rgba(255,176,46,.12);box-shadow:inset 0 0 0 1px rgba(255,176,46,.34);
+  border-radius:10px}
+.rk2-brow.me .rk2-bar u{color:#ffe9b8}
+.rk2-brow.me .rk2-pos{background:linear-gradient(160deg,#ffca66,#ef8b1c);
+  border-color:rgba(255,176,46,.9)}
+.rk2-brow.me .rk2-pos i{color:#2a1804}
+.rk2-brow .delta{font-size:var(--fs-9, 9px);font-weight:900;margin-left:3px}
+.rk2-brow .delta.up{color:#7df0b6}
+.rk2-brow .delta.down{color:#ff8f9f}
+@media(max-width:340px){
+  .rk2-val{min-width:44px;font-size:var(--fs-11, 11px)}
+  .rk2-bar{height:24px}
 }
 
 /* =========================================================
@@ -5464,6 +5692,72 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
     </div>
   </div>
 </section>
+
+<!-- =========================================================
+     4.21.1 · РЕЙТИНГ (раздел нижней капсулы)
+     Строки — заполненные полосы по значению метрики, как в присланном
+     референсе: ромб с местом, полоса с ником внутри, значение справа.
+     Топ-3 — золотые полосы, остальные — приглушённые.
+     ========================================================= -->
+<section class="panel" id="panel-rank">
+  <div class="rk2-hd">
+    <div class="t"><b>Рейтинг</b><span id="rk2Sub">Загружаем таблицу…</span></div>
+    <button class="rk2-league" id="rk2LeagueBtn" type="button">🥉 Бронза</button>
+    <button class="rk2-icobtn" id="rk2Refresh" type="button" title="Обновить">
+      <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+    </button>
+  </div>
+
+  <div class="rk2-tabs" id="rk2Tabs"></div>
+  <div class="rk2-chips" id="rk2Chips">
+    <button class="rk2-chip on" data-chip="all" type="button">Все</button>
+    <button class="rk2-chip" data-chip="active" type="button">Активные</button>
+  </div>
+
+  <div class="rk2-me" id="rk2Me"><div class="glow"></div><div class="in" id="rk2MeIn"></div></div>
+
+  <div class="rk2-sec">
+    <div class="rk2-sech"><div class="t">Ближайший сосед</div><div class="x" id="rk2NeighNote"></div></div>
+    <div class="rk2-list" id="rk2Neigh"></div>
+  </div>
+
+  <div class="rk2-sec">
+    <div class="rk2-sech"><div class="t">Подиум</div><div class="x">топ-3</div></div>
+    <div class="rk2-pod" id="rk2Pod"></div>
+  </div>
+
+  <div class="rk2-sec">
+    <div class="rk2-sech"><div class="t" id="rk2ListTitle">Топ-20</div><div class="x" id="rk2ListCount"></div></div>
+    <div class="rk2-list" id="rk2List"></div>
+    <button class="rk2-more" id="rk2More" type="button" hidden>Показать ещё 20</button>
+    <div class="rk2-hidden" id="rk2Hidden"></div>
+  </div>
+
+  <div class="rk2-sec" id="rk2MeBottomWrap" hidden>
+    <div class="rk2-list" id="rk2MeBottom"></div>
+  </div>
+
+  <div class="rk2-sec">
+    <div class="rk2-note" id="rk2Note">Заголовок таблицы — выбранная метрика.
+      Показываем только тех, кто открывал кейсы: пустые аккаунты не занимают места.</div>
+  </div>
+</section>
+
+<!-- оверлей «Лиги» -->
+<div class="rk2-sheet" id="rk2LeagueSheet">
+  <div class="sh"><h3>Лиги</h3>
+    <button class="rk2-icobtn" id="rk2LeagueClose" type="button">✕</button></div>
+  <div class="rk2-sbody">
+    <div id="rk2LeagueHead"></div>
+    <div id="rk2LeagueList"></div>
+    <div class="rk2-note">Лига считается по месту в таблице: <b>топ-3 % — Легенда</b>,
+      <b>топ-5 % — Алмаз</b>, <b>топ-15 % — Платина</b>, <b>топ-40 % — Золото</b>,
+      <b>топ-70 % — Серебро</b>, остальные — Бронза. Пороги в процентах, поэтому лиги
+      не пустуют и при 50 игроках, и при 50 000.
+      Награда за лигу — <b>только косметика</b> (рамка, титул, тема профиля): кредиты и
+      жетоны за соревнование не выдаём, иначе таблицу выгодно накручивать.</div>
+  </div>
+</div>
 
   </main>
 </div>
@@ -7752,7 +8046,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.21.0';
+const VERSION = '4.21.1';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10962,7 +11256,8 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
        поэтому «переход» это один кадр: гасим копию, карточка уже под ней. */
     if(window.__srFrameOff){ try{ window.__srFrameOff(true); }catch(e){} }
     window.__srFrame = null; window.__srFrameOff = null;
-    if(fromScene) setTimeout(function(){ wm.style.animation = ''; }, 240);
+    /* 4.21.1: анимацию появления модалки больше не возвращаем — её возврат
+     перезапускал fin (translateY 6px) и карточка дёргалась второй раз */
   }catch(e){}
   try{ tutEvent('win_show'); }catch(e){}
   if(item.first){ questState().firstUid = item.uid; questEvent('opened'); }
@@ -10973,6 +11268,12 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   /* 4.6.0: триумф синтезом — короткий подъём, поверх сцены «меню» */
   if(tier >= RAR_ORDER.indexOf('legend')) try{ musStinger(); }catch(e){}
   FX.flash(R.color);
+  /* 4.21.1: приход из сцены — трясти нечего: карточка уже стоит на месте копии,
+     а FX.shake двигает #app, то есть меню ПОД ней. Это и давало рывок кадра. */
+  if(fromScene){
+    if(skin.r === 'legend' || skin.r === 'myth') FX.vibrate([18, 30, 18]);
+    return;
+  }
   if(skin.r === 'myth'){
     FX.burst({count: 90, colors:[R.color, shade(R.color,.45), '#ffffff']});
     FX.cannons([R.color, shade(R.color,.45), '#ffffff']);
@@ -13773,8 +14074,11 @@ function unlockAllTabs(){
    которую показывает капсула под шапкой. Так старые вызовы switchTab('inv')
    из 90 мест кода работают ровно как раньше. */
 const SEC_OF = {cases:'play', upgrade:'play', inv:'coll', album:'coll',
-                rewards:'rew', trials:'rew', diary:'me'};
-const SEC_MAIN = {play:'cases', coll:'inv', rew:'rewards', me:null};
+                rewards:'rew', trials:'rew', diary:'me', rank:'rank'};
+/* 4.21.1: «Рейтинг» — свой раздел нижней капсулы вместо профиля.
+   Профиль остался модалкой (вход в аккаунт, дневник, коллекции) и открывается
+   тапом по аватару в карточке «я». */
+const SEC_MAIN = {play:'cases', coll:'inv', rew:'rewards', rank:'rank', me:null};
 let curSec = 'play';
 let secBeforeMe = 'play';   /* куда вернуть навигацию после закрытия профиля */
 
@@ -13823,15 +14127,13 @@ function switchTab(name){
   // Показываем панель действий только на вкладке кейсов
   const actionBar = document.getElementById('caseActionBar');
   if (actionBar) actionBar.classList.toggle('active', name === 'cases');
-  /* рейтинг живёт внутри «Наград»: в нижнем меню его нет, вход — кнопкой */
-  if(name === 'rank'){
-    $$('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab === 'rewards'));
-  } else {
+  /* 4.21.1: рейтинг — отдельный раздел, подсветку в #mainNav не переносим */
+  if(name !== 'rank'){
     $$('.tab').forEach(t=>t.classList.toggle('on', t.dataset.tab === name));
   }
   /* 3.12.2: новая капсула навигации живёт на .tab-item/.active */
   $$('.tab-item').forEach(t=>{
-    const on = t.dataset.tab === name || (name === 'rank' && t.dataset.tab === 'rewards');
+    const on = t.dataset.tab === name;
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
@@ -13848,7 +14150,7 @@ function switchTab(name){
   if(name === 'upgrade'){ renderSlots(); }
   if(name === 'rewards'){ renderRewards(); renderAchInline(); renderBadgesInline(); }
   if(name === 'trials'){ renderMiniModes(); renderDrumSlot(); }
-  if(name === 'rank'){ rkOnOpen(); }
+  if(name === 'rank'){ if(typeof window.RK2.onOpen === 'function') window.RK2.onOpen(); else rkOnOpen(); }
   if(name === 'album'){ renderAlbum(); }
 }
 // рейтинг перенесён в профиль (3.3.1)
@@ -19663,7 +19965,12 @@ var DROP_SCENE = (function(){
     var src = document.getElementById('winCard');
     if(!src || !info || !info.skin) return null;
     /* мерим карточку, наполненную этим же дропом: иначе высота от прошлой награды */
-    try{ if(info.item) fillWinCard(info.skin, info.item); }catch(e){}
+    /* 4.21.1: если предмет не передали (ручной вызов сцены, стенды), создаём его
+       здесь же — иначе карточку нечем наполнить и рамка мерится по прошлой награде */
+    try{
+      if(!info.item && typeof makeItem === 'function') info.item = makeItem(info.skin);
+      if(info.item) fillWinCard(info.skin, info.item);
+    }catch(e){}
     var g = frameGeomAt(src);
     if(!g) return null;
 
@@ -20094,9 +20401,20 @@ var DROP_SCENE = (function(){
     done = true;
     clearTimers();
     if(overlay){
-      overlay.style.transition = 'opacity 280ms ease-out';
-      overlay.style.opacity = '0';
-      setTimeout(release, 320);
+      /* 4.21.1: если в сцене уже стоит рамка-копия карточки, плавно гасить
+         нельзя: 280 мс растворялась рамка, и сквозь неё было видно меню
+         (320 мс до показа настоящей карточки — «кадр дёргается»). При копии
+         снимаем сцену одним кадром: showWin вызывается в этом же тике и
+         ставит карточку ровно на место копии. */
+      if(window.__srFrameOff){
+        overlay.style.transition = 'none';
+        overlay.style.opacity = '0';
+        release();
+      } else {
+        overlay.style.transition = 'opacity 280ms ease-out';
+        overlay.style.opacity = '0';
+        setTimeout(release, 320);
+      }
     } else release();
   }
 
@@ -27559,9 +27877,10 @@ window.__sr = {
 
 <!-- 4.9.1: нижняя навигация, 4 раздела. На широком экране скрыта. -->
 <nav id="bottomNav" aria-label="Разделы игры">
-  <button class="bn-item active" data-sec-go="me" type="button">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-    <span>Профиль</span>
+  <button class="bn-item active" data-sec-go="rank" type="button">
+    <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span>Рейтинг</span>
+    <i class="bn-dot" id="bnRankDot" hidden>0</i>
   </button>
   <button class="bn-item" data-sec-go="coll" type="button">
     <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -27578,5 +27897,554 @@ window.__sr = {
     <span>Играть</span>
   </button>
 </nav>
+<script>
+/* =========================================================
+   4.21.1 · ЭКРАН «РЕЙТИНГ» — модуль
+   Читает Firestore REST без SDK (правила открывают чтение всем).
+   Бюджет на одно открытие: топ-24 (24 чтения) + count игроков (1) +
+   count «кто выше меня» (1) + сосед сверху при нужде (1) ≈ 27.
+   Топ метрики кэшируется в localStorage на 5 минут: повторные заходы — 0.
+   ========================================================= */
+(function(){
+  'use strict';
+  var PROJ = 'skin-rush-rank';
+  var ROOT = 'https://firestore.googleapis.com/v1/projects/' + PROJ + '/databases/(default)/documents';
+  var CACHE_KEY = 'sr_rk2_cache', DAY_KEY = 'sr_rk2_day', TTL = 5 * 60 * 1000;
+  var TOP_N = 24, PAGE = 20;
+
+  var METRICS = [
+    {k:'worth',    ic:'💰', n:'Состояние',   on:true},
+    {k:'bestDrop', ic:'💎', n:'Лучший дроп', on:true},
+    {k:'opened',   ic:'📦', n:'Кейсы',       on:true},
+    {k:'upOk',     ic:'🔄', n:'Апгрейды',    on:true},
+    {k:'upWinrate',ic:'🎯', n:'Винрейт',     on:false},
+    {k:'bestStreak',ic:'🔥',n:'Серия',       on:false},
+    {k:'runBest',  ic:'🏃', n:'Забег',       on:false},
+    {k:'lvl',      ic:'🎓', n:'Уровень',     on:false}
+  ];
+  /* лиги — по проценту от базы, а не по выдуманным числам: так они не пустуют
+     ни при 46 игроках, ни при 50 000. Награда — только косметика. */
+  var LEAGUES = [
+    {ic:'⭐', n:'Легенда', pct:3,  rw:'титул «Легенда» · значок'},
+    {ic:'🏆', n:'Алмаз',   pct:5,  rw:'рамка «Алмаз» · тема'},
+    {ic:'💎', n:'Платина', pct:15, rw:'тема профиля'},
+    {ic:'🥇', n:'Золото',  pct:40, rw:'рамка «Золото»'},
+    {ic:'🥈', n:'Серебро', pct:70, rw:'титул «Серебро»'},
+    {ic:'🥉', n:'Бронза',  pct:100,rw:'значок участника'}
+  ];
+
+  var S = {
+    metric:'worth', chip:'all', list:[], total:0, myPlace:0, my:null,
+    next:null, err:'', busy:false, show:PAGE, loadedAt:0, fromCache:false,
+    badges:{}, prev:0
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function esc(x){ return String(x == null ? '' : x).replace(/[&<>"]/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+  function fmt(n){ return Math.round(n || 0).toLocaleString('ru-RU'); }
+  function num(x){ return Number((x && (x.integerValue != null ? x.integerValue : x.doubleValue)) || 0); }
+  function parseDoc(d){
+    var f = (d && d.fields) || {}, g = function(x){ return (x && x.stringValue) || ''; };
+    return { nick:g(f.nick), worth:num(f.worth), bestDrop:num(f.bestDrop),
+             opened:num(f.opened), upOk:num(f.upOk), upd:num(f.updatedAt) };
+  }
+  function metricOf(k){ for(var i=0;i<METRICS.length;i++) if(METRICS[i].k===k) return METRICS[i]; return METRICS[0]; }
+  function myStats(){
+    try{ if(window.__sr && window.__sr.rkStats) return window.__sr.rkStats(); }catch(e){}
+    return { worth:0, bestDrop:0, opened:0, upOk:0 };
+  }
+  function casePrice(){
+    try{ var c = window.__sr && window.__sr.selCase; return (c && c.price) || 170; }catch(e){ return 170; }
+  }
+  function dayKey(){
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+  }
+
+  /* ---------- сеть ---------- */
+  function post(url, body){
+    var ctl = new AbortController();
+    var to = setTimeout(function(){ ctl.abort(); }, 12000);
+    return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify(body), signal: ctl.signal })
+      .then(function(r){ return r.json(); })
+      .finally(function(){ clearTimeout(to); });
+  }
+  function topBy(field, limit){
+    return post(ROOT + ':runQuery', { structuredQuery: {
+      from: [{ collectionId:'players' }],
+      orderBy: [{ field:{ fieldPath: field }, direction:'DESCENDING' }],
+      limit: limit } }).then(function(d){
+        if(!Array.isArray(d)) throw new Error((d && d.error && d.error.message) || 'bad query');
+        return d.filter(function(x){ return x && x.document; })
+                .map(function(x, i){ var p = parseDoc(x.document); p.rank = i + 1; return p; });
+      });
+  }
+  function countWhere(field, op, value){
+    var w = field ? { fieldFilter: { field:{ fieldPath: field }, op: op,
+                    value: { integerValue: String(Math.round(value) || 0) } } } : null;
+    var sq = { from: [{ collectionId:'players' }] };
+    if(w) sq.where = w;
+    return post(ROOT + ':runAggregationQuery', { structuredAggregationQuery: {
+      structuredQuery: sq, aggregations: [{ alias:'c', count: {} }] } })
+      .then(function(d){
+        if(!Array.isArray(d)) return 0;
+        var row = d.filter(function(x){ return x && x.result; })[0];
+        if(!row) return 0;
+        var f = (row.result.aggregateFields || {}).c || {};
+        return Number(f.integerValue || 0);
+      });
+  }
+  function nextAbove(field, myVal){
+    return post(ROOT + ':runQuery', { structuredQuery: {
+      from: [{ collectionId:'players' }],
+      where: { fieldFilter: { field:{ fieldPath: field }, op:'GREATER_THAN',
+               value:{ integerValue: String(Math.round(myVal) || 0) } } },
+      orderBy: [{ field:{ fieldPath: field }, direction:'ASCENDING' }],
+      limit: 1 } }).then(function(d){
+        if(!Array.isArray(d)) return null;
+        var hit = d.filter(function(x){ return x && x.document; })[0];
+        return hit ? parseDoc(hit.document) : null;
+      });
+  }
+
+  /* ---------- кэш ---------- */
+  function cacheGet(k){
+    try{
+      var all = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+      var c = all[k];
+      if(c && c.at && Date.now() - c.at < TTL) return c;
+    }catch(e){}
+    return null;
+  }
+  function cachePut(k, list){
+    try{
+      var all = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+      all[k] = { at: Date.now(), list: list };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(all));
+    }catch(e){}
+  }
+
+  /* ---------- загрузка ---------- */
+  function load(force){
+    var m = metricOf(S.metric);
+    if(!m.on){ S.list = []; S.err = ''; render(); return Promise.resolve(); }
+    var c = force ? null : cacheGet(S.metric);
+    if(c){ S.list = c.list; S.fromCache = true; }
+    S.busy = true; if(force) S.err = '';
+    render();
+
+    var tasks = [ topBy(S.metric, TOP_N), countWhere(null) ];
+    return Promise.all(tasks).then(function(res){
+      S.list = res[0]; S.total = res[1]; S.loadedAt = Date.now(); S.fromCache = false;
+      cachePut(S.metric, S.list);
+      var my = myStats(); S.my = my;
+      var mv = my[S.metric] || 0;
+      if(mv > 0) return countWhere(S.metric, 'GREATER_THAN', mv).then(function(n){
+        S.myPlace = n + 1; return null; });
+      S.myPlace = 0; return null;
+    }).then(function(){
+      return placeNext();
+    }).then(function(){
+      S.busy = false; render(); stampDay();
+    }).catch(function(e){
+      S.busy = false;
+      if(!S.list.length) S.err = 'Таблица не загрузилась: ' + (e && e.message || 'нет связи');
+      render();
+    });
+  }
+  function placeNext(){
+    var my = S.my || myStats(), mv = my[S.metric] || 0;
+    S.next = null;
+    if(!S.myPlace) return Promise.resolve();
+    if(S.myPlace > 1 && S.myPlace - 1 <= S.list.length){
+      var cand = S.list[S.myPlace - 2];
+      if(cand && (cand[S.metric] || 0) > mv){ S.next = cand; return Promise.resolve(); }
+    }
+    return nextAbove(S.metric, mv).then(function(p){ S.next = p; }).catch(function(){});
+  }
+  /* «вчера #N» — из localStorage, перезаписываем раз в день */
+  function stampDay(){
+    try{
+      var st = JSON.parse(localStorage.getItem(DAY_KEY) || 'null');
+      var today = dayKey();
+      if(!st || st.d !== today){
+        localStorage.setItem(DAY_KEY, JSON.stringify({ d: today, rank: S.myPlace || 0,
+          m: S.metric, prev: st }));
+        S.prev = st ? st.rank : 0;
+      } else { S.prev = st.prev ? st.prev.rank : 0; }
+    }catch(e){ S.prev = 0; }
+  }
+
+  /* ---------- лиги и место ---------- */
+  function league(){
+    if(!S.myPlace || !S.total) return LEAGUES[LEAGUES.length - 1];
+    var pct = S.myPlace / S.total * 100;
+    for(var i = 0; i < LEAGUES.length; i++) if(pct <= LEAGUES[i].pct) return LEAGUES[i];
+    return LEAGUES[LEAGUES.length - 1];
+  }
+
+  /* ---------- отрисовка ---------- */
+  function rowsFiltered(list){
+    /* 4.21.1: не показываем тех, кто ни разу не открывал кейс. Иначе в топ-20
+       по состоянию стоят люди с деньгами «из ниоткуда» (в базе такие есть:
+       100 048 и 50 000 кредитов при opened = 0) и весь рейтинг выглядит накрученным. */
+    var out = list.filter(function(r){ return (r.opened || 0) > 0; });
+    if(S.chip === 'active'){
+      var lim = Date.now() - 14 * 86400000;
+      out = out.filter(function(r){ return (r.upd || 0) >= lim; });
+    }
+    return out;
+  }
+  function barRow(r, pos, max, opts){
+    opts = opts || {};
+    var v = r[S.metric] || 0;
+    var w = max > 0 ? Math.max(6, Math.min(100, v / max * 100)) : 6;
+    var me = !!opts.me;
+    var cls = 'rk2-brow' + (pos <= 3 && !opts.plainPos ? ' top' + pos : '') + (me ? ' me' : '');
+    var tr = '';
+    if(r.upd && pos > 3 && !opts.noTrend){
+      /* тренд не выдумываем: показываем только «новичок» по дате */
+      var lim = Date.now() - 3 * 86400000;
+      if(r.upd >= lim) tr = '<span class="delta up">new</span>';
+    }
+    var sky = v >= 1e6 ? (v/1e6).toFixed(1).replace('.', ',') + 'М' : fmt(v);
+    return '<div class="' + cls + '">' +
+      '<div class="rk2-pos"><i>' + (opts.posTxt || pos) + '</i></div>' +
+      '<div class="rk2-bar"><i style="width:' + w.toFixed(1) + '%"></i>' +
+        '<u>' + (me ? 'ТЫ · ' : '') + esc(r.nick || '—') + tr + '</u></div>' +
+      '<div class="rk2-val">' + sky + '</div></div>';
+  }
+
+  function drawTabs(){
+    var box = $('rk2Tabs'); if(!box) return;
+    box.innerHTML = METRICS.map(function(m){
+      var on = m.k === S.metric;
+      var b = '';
+      if(!m.on) b = '<span class="b">⏳</span>';
+      else if(m.k === S.metric && S.myPlace) b = '<span class="b">#' + S.myPlace + '</span>';
+      else if(S.badges[m.k]) b = '<span class="b">#' + S.badges[m.k] + '</span>';
+      return '<button class="rk2-tab' + (on ? ' on' : '') + (m.on ? '' : ' soon') +
+        '" data-k="' + m.k + '" type="button">' + m.ic + ' ' + m.n + b + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.rk2-tab'), function(btn){
+      btn.addEventListener('click', function(){
+        S.metric = btn.dataset.k; S.show = PAGE;
+        load(false);
+        lazyBadge();
+      });
+    });
+  }
+  /* бейджи других метрик — лениво, по одному count-запросу, а не пачкой при входе */
+  function lazyBadge(){
+    var my = myStats();
+    METRICS.forEach(function(m){
+      if(!m.on || m.k === S.metric || S.badges[m.k] != null) return;
+      var v = my[m.k] || 0;
+      if(!(v > 0)){ S.badges[m.k] = 0; return; }
+      S.badges[m.k] = '…';
+      countWhere(m.k, 'GREATER_THAN', v).then(function(n){
+        S.badges[m.k] = n + 1; drawTabs();
+      }).catch(function(){ S.badges[m.k] = 0; });
+    });
+  }
+
+  function drawMe(){
+    var box = $('rk2MeIn'); if(!box) return;
+    var my = myStats();
+    var letter = '?';
+    try{
+      var a = JSON.parse(localStorage.getItem('srt_account') || 'null');
+      var nm = a && (a.name || a.nick);
+      if(nm) letter = String(nm).trim().charAt(0).toUpperCase();
+      else if(window.__sr && window.__sr.rank && window.__sr.rank.player) letter = '*';
+    }catch(e){}
+    var nick = '';
+    try{
+      var a2 = JSON.parse(localStorage.getItem('srt_account') || 'null');
+      nick = (a2 && (a2.name || a2.nick)) || 'Гость';
+    }catch(e){ nick = 'Гость'; }
+    var cur = my[S.metric] || 0;
+    var place = S.myPlace;
+    var prev = S.prev || 0;
+    var delta = (place && prev) ? (prev - place) : 0;
+    var pill = delta > 0 ? '<span class="rk2-pill up">▲ +' + delta + '</span>'
+             : delta < 0 ? '<span class="rk2-pill down">▼ −' + Math.abs(delta) + '</span>'
+             : '<span class="rk2-pill flat">—</span>';
+    var dsub = (place && prev) ? 'вчера #' + prev : 'первый замер';
+    var m = metricOf(S.metric);
+
+    var goal = '';
+    if(!place){
+      goal = 'Результат появится в таблице после первой отправки — зайдите в профиль и укажите ник.';
+    } else if(place === 1){
+      goal = 'Ты <b>первый</b> по метрике «' + m.n + '». Держись — до тебя дотягиваются.';
+    } else if(S.next){
+      var gap = Math.max(0, (S.next[S.metric] || 0) - cur + 1);
+      var maxv = Math.max(cur, S.next[S.metric] || 1);
+      var pct = Math.max(4, Math.min(100, Math.round(cur / maxv * 100)));
+      goal = 'До <b>#' + (place - 1) + ' ' + esc(S.next.nick || '—') + '</b> осталось <b>' +
+        fmt(gap) + '</b> · <span class="pct">' + pct + '%</span> пройдено';
+    } else {
+      goal = 'До <b>#' + (place - 1) + '</b> считаем…';
+    }
+
+    var near = '';
+    if(place > 1 && S.next){
+      var gap2 = Math.max(0, (S.next[S.metric] || 0) - cur + 1);
+      var price = casePrice();
+      if(S.metric === 'worth' && gap2 > 0 && price > 0){
+        var opens = Math.max(1, Math.ceil(gap2 / (price * 0.9)));
+        if(opens <= 5){
+          near = '<div class="rk2-near">⚡ До #' + (place - 1) + ' — <b>' + fmt(gap2) +
+            '</b>. Это примерно <b>' + opens + ' ' + (opens === 1 ? 'открытие' :
+            (opens < 5 ? 'открытия' : 'открытий')) + '</b> кейса за ' + fmt(price) + '.</div>';
+        }
+      }
+    }
+
+    box.innerHTML =
+      '<div class="rk2-mh">' +
+        '<div class="rk2-av" id="rk2Av" title="Профиль">' + esc(letter) + '</div>' +
+        '<div class="rk2-mid">' +
+          '<div class="rk2-rank"><b class="' + (delta > 0 ? 'gain' : '') + '">' +
+            (place ? '#' + place : '—') + '</b><span>' + (S.total ? '/ ' + S.total : '') + '</span></div>' +
+          '<div class="rk2-name">' + esc(nick) + '</div>' +
+        '</div>' +
+        '<div class="rk2-delta">' + pill + '<div class="rk2-dsub">' + dsub + '</div></div>' +
+      '</div>' +
+      '<div class="rk2-goal">' + goal + '</div>' + near +
+      '<div class="rk2-acts">' +
+        '<button class="rk2-btn primary" id="rk2Share" type="button">📤 Поделиться</button>' +
+        '<button class="rk2-btn" id="rk2Mine" type="button">🏆 Мои места</button>' +
+      '</div>';
+
+    var av = $('rk2Av');
+    if(av) av.addEventListener('click', function(){
+      if(window.SRT_PROFILE) window.SRT_PROFILE();
+      else if(window.__sr && window.__sr.switchTab) window.__sr.switchTab('cases');
+    });
+    var sh = $('rk2Share');
+    if(sh) sh.addEventListener('click', function(){
+      var txt = place ? ('Я #' + place + ' в SKIN RUSH по метрике «' + m.n + '» · ' +
+        fmt(cur) + ' 🎯') : 'SKIN RUSH — рейтинг игроков';
+      if(navigator.share){ navigator.share({ title:'SKIN RUSH', text:txt }).catch(function(){}); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast2('Скопировано'); }); }
+      else toast2(txt);
+    });
+    var mine = $('rk2Mine');
+    if(mine) mine.addEventListener('click', function(){
+      var parts = [];
+      var my2 = myStats();
+      mine.disabled = true;
+      Promise.all(METRICS.filter(function(x){ return x.on; }).map(function(x){
+        var v = my2[x.k] || 0;
+        if(!(v > 0)) return Promise.resolve(null);
+        return countWhere(x.k, 'GREATER_THAN', v).then(function(n){ return x.ic + ' #' + (n + 1); })
+          .catch(function(){ return null; });
+      })).then(function(arr){
+        mine.disabled = false;
+        arr.forEach(function(x){ if(x) parts.push(x); });
+        toast2(parts.length ? 'Твои места: ' + parts.join(' · ') : 'Пока нет отправленных результатов');
+      });
+    });
+  }
+  function toast2(txt){
+    try{ if(window.__sr && window.__sr.toast) return window.__sr.toast(txt); }catch(e){}
+    try{ var t = document.getElementById('toast'); if(t){ t.textContent = txt; } }catch(e){}
+  }
+
+  function drawNeigh(){
+    var box = $('rk2Neigh'); if(!box) return;
+    var note = $('rk2NeighNote');
+    if(!S.myPlace || !S.list.length){
+      box.innerHTML = '<div class="rk2-empty">Соседей покажу, когда твой результат попадёт в таблицу.</div>';
+      if(note) note.textContent = '';
+      return;
+    }
+    var my = myStats(), mv = my[S.metric] || 0;
+    var max = Math.max.apply(null, S.list.map(function(r){ return r[S.metric] || 0; }).concat([mv, 1]));
+    var html = '';
+    var above = S.next;
+    var fromIdx = S.myPlace - 2;              /* индекс в списке (0-based) для #(myPlace-1) */
+    var below = (S.myPlace < S.list.length) ? S.list[S.myPlace] : null;
+    if(above) html += barRow(above, S.myPlace - 1, max, { noTrend:true });
+    html += barRow({ nick:'ТЫ', upd:0, worth:0, bestDrop:0, opened:0, upOk:0,
+                     measure: 0 }, S.myPlace, max, { me:true, posTxt:'●' });
+    if(below) html += barRow(below, S.myPlace + 1, max, { noTrend:true });
+    /* значения в своей строке подставляем руками: объект-заглушка нужна только
+       для того, чтобы не дублировать верстку */
+    html = html.replace('<div class="rk2-val">1</div>', '<div class="rk2-val">' + fmt(mv) + '</div>');
+    box.innerHTML = html;
+    if(note) note.textContent = (above ? '1' : '0') + '+' + (below ? '1' : '0') + ' сосед';
+  }
+
+  function drawPod(){
+    var box = $('rk2Pod'); if(!box) return;
+    var list = rowsFiltered(S.list);
+    if(list.length < 3){ box.innerHTML = '<div class="rk2-empty" style="grid-column:1/-1">Мало игроков для подиума.</div>'; return; }
+    var max = Math.max(1, list[0][S.metric] || 0);
+    function card(r, pos, cls){
+      return '<div class="rk2-card ' + cls + '">' +
+        '<div class="medal">' + (pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉') + '</div>' +
+        '<div class="av">' + esc(String(r.nick || '?').trim().charAt(0).toUpperCase()) + '</div>' +
+        '<div class="nm">' + esc(r.nick) + '</div>' +
+        '<div class="vl">' + fmt(r[S.metric] || 0) + '</div></div>';
+    }
+    box.innerHTML = card(list[1], 2, 'c2') + card(list[0], 1, 'c1') + card(list[2], 3, 'c3');
+  }
+
+  function drawList(){
+    var box = $('rk2List'); if(!box) return;
+    var m = metricOf(S.metric);
+    var title = $('rk2ListTitle'), cnt = $('rk2ListCount'), more = $('rk2More'), hid = $('rk2Hidden');
+    if(title) title.textContent = 'Топ — ' + m.n;
+
+    if(!m.on){
+      box.innerHTML = '<div class="rk2-empty"><b>' + m.n + '</b> — этого поля ещё нет ни в одном ' +
+        'документе Firebase. Метрика появится, когда игроки обновятся, но задним числом её не ' +
+        'заполнить.<br><br>Пока смотри <b>Состояние · Лучший дроп · Кейсы · Апгрейды</b> — они работают.</div>';
+      if(cnt) cnt.textContent = '0';
+      if(more) more.hidden = true;
+      if(hid) hid.textContent = '';
+      return;
+    }
+    if(S.err && !S.list.length){
+      box.innerHTML = '<div class="rk2-empty">' + esc(S.err) + '</div>';
+      if(more) more.hidden = true;
+      if(cnt) cnt.textContent = '';
+      return;
+    }
+
+    var all = rowsFiltered(S.list);
+    var hiddenEmpty = S.list.filter(function(r){ return !(r.opened > 0); }).length;
+    var shown = all.slice(0, S.show);
+    var my = myStats(), mv = my[S.metric] || 0;
+    var max = Math.max.apply(null, all.map(function(r){ return r[S.metric] || 0; }).concat([mv, 1]));
+    var myNick = '';
+    try{ var a = JSON.parse(localStorage.getItem('srt_account') || 'null'); myNick = (a && (a.name || a.nick)) || ''; }catch(e){}
+
+    box.innerHTML = shown.map(function(r, i){
+      var me = myNick && r.nick && r.nick.toLowerCase() === myNick.toLowerCase();
+      return barRow(r, i + 1, max, { me: !!me });
+    }).join('') || '<div class="rk2-empty">Пусто</div>';
+
+    if(cnt) cnt.textContent = shown.length + ' из ' + all.length;
+    if(more){
+      more.hidden = !(all.length > S.show);
+      more.textContent = 'Показать ещё ' + Math.min(PAGE, all.length - S.show);
+    }
+    if(hid){
+      var parts = [];
+      if(hiddenEmpty) parts.push('скрыто ' + hiddenEmpty + ' аккаунт(ов) без открытых кейсов');
+      if(S.fromCache) parts.push('данные из кэша, обновятся через пару минут');
+      hid.innerHTML = parts.length ? parts.join(' · ') : '';
+    }
+  }
+
+  function drawMeBottom(){
+    var wrap = $('rk2MeBottomWrap'), box = $('rk2MeBottom');
+    if(!wrap || !box) return;
+    if(!S.myPlace || S.myPlace <= S.show || S.myPlace <= S.list.length){
+      /* своя строка уже видна в списке или её нет — отдельный блок не нужен */
+      if(!S.myPlace || S.myPlace <= S.list.length){ wrap.hidden = true; return; }
+    }
+    var my = myStats();
+    var max = Math.max(1, (S.list[0] && S.list[0][S.metric]) || 0, my[S.metric] || 0);
+    wrap.hidden = false;
+    box.innerHTML = barRow({ nick:'ТЫ', worth:my.worth, bestDrop:my.bestDrop,
+      opened:my.opened, upOk:my.upOk, upd:0 }, S.myPlace, max, { me:true, posTxt:'●' });
+  }
+
+  function drawLeaguePill(){
+    var b = $('rk2LeagueBtn');
+    var lg = league();
+    if(b) b.textContent = lg.ic + ' ' + lg.nm;
+    var sub = $('rk2Sub');
+    if(sub){
+      var m = metricOf(S.metric);
+      sub.textContent = S.total ? (m.n + ' · игроков в базе: ' + S.total) : 'Загружаем таблицу…';
+    }
+  }
+
+  function drawLeagueSheet(){
+    var lg = league();
+    var head = $('rk2LeagueHead'), list = $('rk2LeagueList');
+    if(!head || !list) return;
+    var idx = LEAGUES.indexOf(lg);
+    var next = idx > 0 ? LEAGUES[idx - 1] : null;
+    var needRank = next ? Math.max(1, Math.ceil(next.pct / 100 * S.total)) : 0;
+    var pct = S.myPlace && S.total ? Math.round(S.myPlace / S.total * 100) : 0;
+    head.innerHTML = '<div class="rk2-lhead" style="margin:0;padding:11px 13px;border-radius:12px">' +
+      '<div class="row"><span class="ic">' + lg.ic + '</span>' +
+      '<span class="nm">' + lg.nm + ' · ты здесь</span>' +
+      '<span class="pos">' + (S.myPlace ? '#' + S.myPlace + ' из ' + S.total : 'место неизвестно') + '</span></div>' +
+      '<div class="bar"><i style="width:' + (next ? Math.max(3, 100 - Math.max(0, (S.myPlace - needRank) * 100 / Math.max(1, S.total))) : 100).toFixed(0) + '%"></i></div>' +
+      '<div class="txt">' + (next
+        ? 'До <b>' + next.ic + ' ' + next.nm + '</b> — попасть в <b>топ-' + next.pct + '%</b>' +
+          (needRank ? ' (место не ниже <b>#' + needRank + '</b>)' : '') +
+          (S.myPlace > needRank ? ', сейчас ты <b>' + (S.myPlace - needRank) + ' мест</b> ниже' : '')
+        : 'Высшая лига — держись в топ-3 %.') +
+      '<br>Ты в верхних <b>' + (pct || '—') + '%</b> таблицы по метрике «' + metricOf(S.metric).n + '».</div></div>';
+    list.innerHTML = LEAGUES.map(function(L){
+      var on = L === lg;
+      return '<div class="rk2-leag' + (on ? ' on' : '') + '">' +
+        '<div class="ic">' + L.ic + '</div>' +
+        '<div class="nm">' + L.n + (on ? ' · ты здесь' : '') + '</div>' +
+        '<div class="thr">топ-' + L.pct + '%</div>' +
+        '<div class="rw">' + L.rw + '</div></div>';
+    }).join('');
+  }
+
+  function render(){
+    drawTabs(); drawMe(); drawNeigh(); drawPod(); drawList(); drawMeBottom();
+    drawLeaguePill(); drawLeagueSheet();
+  }
+
+  /* ---------- события ---------- */
+  function bind(){
+    var chips = $('rk2Chips');
+    if(chips) Array.prototype.forEach.call(chips.querySelectorAll('.rk2-chip'), function(c){
+      c.addEventListener('click', function(){
+        Array.prototype.forEach.call(chips.querySelectorAll('.rk2-chip'), function(x){ x.classList.remove('on'); });
+        c.classList.add('on');
+        S.chip = c.dataset.chip; S.show = PAGE;
+        render();
+      });
+    });
+    var more = $('rk2More');
+    if(more) more.addEventListener('click', function(){ S.show += PAGE; drawList(); drawMeBottom(); });
+    var rf = $('rk2Refresh');
+    if(rf) rf.addEventListener('click', function(){ load(true); });
+    var lb = $('rk2LeagueBtn');
+    if(lb) lb.addEventListener('click', function(){ var sh = $('rk2LeagueSheet'); if(sh) sh.classList.add('on'); });
+    var lc = $('rk2LeagueClose');
+    if(lc) lc.addEventListener('click', function(){ var sh = $('rk2LeagueSheet'); if(sh) sh.classList.remove('on'); });
+    var sh = $('rk2LeagueSheet');
+    if(sh) sh.addEventListener('click', function(e){ if(e.target === sh) sh.classList.remove('on'); });
+  }
+
+  var inited = false;
+  window.RK2 = {
+    onOpen: function(){
+      if(!inited){ bind(); inited = true; }
+      render();
+      load(false);
+    },
+    reload: function(){ load(true); },
+    state: function(){ return { metric:S.metric, list:S.list, myPlace:S.myPlace,
+      total:S.total, next:S.next, league:league().n, err:S.err, fromCache:S.fromCache }; }
+  };
+
+  /* если экран уже открыт к моменту загрузки модуля — поднять сразу */
+  try{
+    if(document.getElementById('panel-rank') && document.getElementById('panel-rank').classList.contains('on')){
+      window.RK2.onOpen();
+    }
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>
