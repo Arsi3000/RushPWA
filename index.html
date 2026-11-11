@@ -7752,7 +7752,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.20.1';
+const VERSION = '4.21.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10580,6 +10580,18 @@ function openCase(free, opts){
       try{ renderDropStats(); }catch(e){}   /* статистика на экране — сразу, а не после смены кейса */
     }catch(e){}
   }
+  /* 4.21.1: тир дропа известен ДО прокрутки — просим прогреть ролик сразу.
+     Лента крутится 2–7 с, этого хватает на 2–3 МБ даже на мобильном интернете,
+     и спец-эффект начинается с готового кадра, без просадки. */
+  try{
+    const seen = {};
+    caseQueue.forEach(q => {
+      const r = q.skin && q.skin.r;
+      if(!r || seen[r]) return;
+      seen[r] = 1;
+      if(window.GLASS_BREAK && window.GLASS_BREAK.warm) window.GLASS_BREAK.warm(r);
+    });
+  }catch(e){}
   try{ tutEvent('case_open'); }catch(e){}
   achCheck();
   batchResults = [];
@@ -18676,14 +18688,39 @@ var DROP_SCENE = (function(){
      везде: кейсы, босс, крафт, награды тира, апгрейд. */
   var SEQ_LIST = {
     rare:   ['bullet', 'frame'],
-    epic:   ['glass', 'bullet', 'showcase', 'frame'],
-    legend: ['glass', 'bullet', 'showcase', 'storm', 'frame'],
+    /* 4.21.0: у золотого (legend) и красного (epic) дропа своя сцена — ролик кейса
+       во весь экран, поверх него вылет оружия и рамка-карточка. Разлом стекла
+       остался только у мифика. */
+    epic:   ['cinema', 'bullet', 'frame'],
+    legend: ['cinema', 'bullet', 'frame'],
     myth:   ['portal', 'glass', 'bullet', 'showcase', 'storm', 'frame']
   };
+  /* 4.21.0: КИНО-СЦЕНА. Ролики лежат в репозитории и на сайте; для офлайна в APK —
+     рядом с HTML в assets/video. Порядок: свой файл, потом сайт (как у разлома).
+     lead — сколько ролик играет ДО вылета оружия. Числа сняты с самих роликов:
+       Gold case: вспышка открытия 0.2–0.4 с, свет нарастает до пика 2.9 с,
+                  к 5.0 гаснет;
+       Red case:  то же самое, но удар-вспышка на 3.4 с — вылет начинаем за 150 мс
+                  до него, чтобы оружие вылетало ИЗ вспышки.
+     Скорость ролика 1:1 — ритм задаёт он сам. */
+  var CINEMA = {
+    legend: { lead: 3294, src: [
+      'video/Gold%20case.mp4',
+      'https://arsi3000.github.io/RushPWA/video/Gold%20case.mp4' ] },
+    epic:   { lead: 3444, src: [
+      'video/Red%20case.mp4',
+      'https://arsi3000.github.io/RushPWA/video/Red%20case.mp4' ] }
+  };
+  /* длина ступеней кино-сцены в мс: ролик → вылет → рамка. Заданы явно, потому
+     что они привязаны к кадрам ролика, а не к доле бюджета. */
+  var CINEMA_STEPS = { bullet: 900, frame: 1300 };
+  var fixedMs = null;       /* переопределение длительности шагов на один прогон */
+  var cinemaCfg = null, cinemaK = 1;
   /* веса — доли бюджета; сумма нормализуется */
   /* 4.14.0: разлом — главный шаг сцены (он же видео), поэтому его доля выросла.
      Витрина и буллет-тайм остались, но стали короче: разлом больше не «проходной». */
-  var WEIGHT = { portal: 0.30, glass: 0.55, bullet: 0.20, showcase: 0.25, storm: 0.20, frame: 0.18 };
+  var WEIGHT = { portal: 0.30, glass: 0.55, bullet: 0.20, showcase: 0.25, storm: 0.20, frame: 0.18,
+                 cinema: 0.60 };
   var MIN_RARITY = 'rare';
   var WATCHDOG_MS = 12000;      /* страховка на весь прогон, а не на шаг */
   var DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -18725,6 +18762,10 @@ var DROP_SCENE = (function(){
     'https://arsi3000.github.io/RushPWA/video/glassbreak.webm'
   ];
   var gvid = null, gwrap = null, gframe = null, gcapEl = null, vidOk = false, vidTried = false, glassPulse = 0;
+  /* 4.21.0: полноэкранный ролик кейса для золотого и красного дропа */
+  var cinemVid = null, cinemWrap = null, cinemReady = false, cinemFail = false;
+  /* 4.21.1: пул готовых роликов кейса (см. cineWarm ниже) */
+  var cinePool = {}, cinemSt = null;
 
   /* 4.15.2: прогреваем ролик, пока человек смотрит меню и открывает первый кейс.
      Без этого на телефоне первый разлом не дожидался загрузки и играл старую сцену. */
@@ -18749,6 +18790,89 @@ var DROP_SCENE = (function(){
     }
     if(document.body) setTimeout(start, 800);
     else document.addEventListener('DOMContentLoaded', function(){ setTimeout(start, 800); });
+  })();
+
+  /* =========================================================
+     4.21.1: РОЛИКИ КЕЙСА ГРУЗИМ ЗАРАНЕЕ И ДЕРЖИМ ГОТОВЫМИ
+     ---------------------------------------------------------
+     Было: <video> создавался уже внутри сцены, и на телефоне первые
+     300–600 мс эффекта были чёрным кадром — ролик догонял сцену, а вылет
+     оружия начинался, когда видео ещё не проигралось до пика. Причина
+     просадки не в декодере, а в том, что плеер начинает качать файл только
+     в момент показа.
+     Стало: у золота и красного по ОДНОМУ постоянному <video>. Он лежит вне
+     экрана (2×2 px, opacity .01 — не display:none: WebKit выгружает скрытые
+     видео), прогревается в фоне и на сцене просто переезжает в оверлей.
+     После сцены возвращается обратно, поэтому второй дроп того же тира
+     играет без единого байта загрузки.
+     ========================================================= */
+  var CINE_POOL_CSS = 'position:fixed;left:-2px;top:-2px;width:2px;height:2px;opacity:.01;' +
+                      'pointer-events:none;z-index:-1';
+  var CINE_SCENE_CSS = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;' +
+                       'object-position:50% 48%;background:#07090d;opacity:0;transform:scale(1.02);' +
+                       'transition:opacity .22s ease-out, transform 5.4s linear;will-change:opacity,transform';
+
+  function cineMake(r){
+    var cfg = CINEMA[r];
+    if(!cfg) return null;
+    var el = document.createElement('video');
+    var st = { el: el, cfg: cfg, si: 0, ready: false, fail: false };
+    el.className = 'ds-cine';
+    el.muted = true;                 /* прогрев идёт молча — иначе iOS не даст грузить */
+    el.defaultMuted = true;
+    el.playsInline = true;
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+    el.setAttribute('disableremoteplayback', '');
+    el.setAttribute('aria-hidden', 'true');
+    el.preload = 'auto';
+    el.style.cssText = CINE_POOL_CSS;
+    function mark(){ if(el.videoWidth) st.ready = true; }
+    el.addEventListener('loadeddata', mark);
+    el.addEventListener('canplay', mark);
+    el.addEventListener('canplaythrough', mark);
+    el.addEventListener('error', function(){
+      /* адрес не открылся — перебираем следующий (как у разлома) */
+      if(st.si >= cfg.src.length){ st.fail = true; return; }
+      el.src = cfg.src[st.si++];
+      try{ el.load(); }catch(e){ st.fail = true; }
+    });
+    el.src = cfg.src[st.si++];
+    try{ el.load(); }catch(e){ st.fail = true; }
+    (document.body || document.documentElement).appendChild(el);
+    cinePool[r] = st;
+    return st;
+  }
+  /* прогреть ролик нужного тира. Повторный вызов ничего не делает:
+     элемент уже создан и качается (или готов) */
+  function cineWarm(r){
+    if(!CINEMA[r]) return null;
+    var st = cinePool[r];
+    if(!st) st = cineMake(r);
+    /* прогретый, но так и не начавшийся ролик иногда «засыпает» — толкаем ещё раз */
+    else if(!st.ready && !st.fail && st.el.readyState === 0){
+      try{ st.el.load(); }catch(e){}
+    }
+    return st;
+  }
+  window.__srCineWarm = cineWarm;
+  /* фоновая загрузка: сначала золото, потом красный — не забиваем канал разом */
+  (function warmCineVideos(){
+    var conn = null;
+    try{ conn = navigator.connection || navigator.mozConnection || null; }catch(e){}
+    if(conn && conn.saveData) return;                       /* экономия трафика включена */
+    if(conn && /^(slow-2g|2g)$/.test(conn.effectiveType || '')) return;
+    function step(){
+      var a = cineWarm('legend');
+      var iv = setInterval(function(){
+        if(!a || a.ready || a.fail){ clearInterval(iv); setTimeout(function(){ cineWarm('epic'); }, 1500); }
+      }, 400);
+      setTimeout(function(){ clearInterval(iv); cineWarm('epic'); }, 25000);
+    }
+    /* не мешаем первой отрисовке: ждём полной загрузки страницы и ещё пару секунд */
+    function arm(){ setTimeout(step, 2200); }
+    if(document.readyState === 'complete') arm();
+    else window.addEventListener('load', arm, {once:true});
   })();
 
   function later(fn, ms){ var t = setTimeout(fn, Math.max(0, ms)); timers.push(t); return t; }
@@ -18931,6 +19055,17 @@ var DROP_SCENE = (function(){
       'opacity:0;transition:opacity .3s ease-out;pointer-events:none';
     overlay.appendChild(dim);
 
+    /* 4.21.0: кино-слой — ПОД канвасом и оружием: ролик кейса служит фоном,
+       а оружие и рамка-карточка идут поверх него. Своего затемнения не имеет:
+       ролик сам тёмный, сверху работает общая виньетка оверлея. */
+    cinemWrap = document.createElement('div');
+    cinemWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;' +
+      'display:none;background:#07090d';
+    overlay.appendChild(cinemWrap);
+
+    /* 4.21.1: готовый <video> переезжает сюда из пула (cinemUse) — своего не создаём */
+    cinemVid = null; cinemSt = null; cinemReady = false; cinemFail = false;
+
     cv = document.createElement('canvas');
     cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
     overlay.appendChild(cv);
@@ -18963,6 +19098,7 @@ var DROP_SCENE = (function(){
     overlay.appendChild(gwrap);
 
     gvid = document.createElement('video');
+    gvid.className = 'ds-glass';
     gvid.muted = true;
     gvid.playsInline = true;
     gvid.setAttribute('playsinline', '');
@@ -18982,8 +19118,10 @@ var DROP_SCENE = (function(){
       try{ gvid.load(); }catch(e){}
     }
     gvid.addEventListener('error', tryNextGlass);
-    gvid.addEventListener('loadedmetadata', function(){ if(gvid.videoWidth) vidOk = true; });
-    gvid.addEventListener('canplay', function(){ if(gvid.videoWidth) vidOk = true; });
+    /* 4.21.0: gvid обнуляется в cleanup, а события с видео приходят позже —
+       без проверки на null здесь падало «reading 'videoWidth'» (как в 4.19.0 с src) */
+    gvid.addEventListener('loadedmetadata', function(){ if(gvid && gvid.videoWidth) vidOk = true; });
+    gvid.addEventListener('canplay', function(){ if(gvid && gvid.videoWidth) vidOk = true; });
     tryNextGlass();
     gwrap.appendChild(gvid);
 
@@ -19012,8 +19150,8 @@ var DROP_SCENE = (function(){
     if(vidTried) return;
     vidTried = true;
     if(!gvid) return;
-    gvid.addEventListener('loadedmetadata', function(){ vidOk = true; });
-    gvid.addEventListener('canplay', function(){ vidOk = true; });
+    gvid.addEventListener('loadedmetadata', function(){ if(gvid && gvid.videoWidth) vidOk = true; });
+    gvid.addEventListener('canplay', function(){ if(gvid && gvid.videoWidth) vidOk = true; });
     gvid.addEventListener('error', function(){ vidOk = false; });
     try{ gvid.load(); }catch(e){ vidOk = false; }
   }
@@ -19598,6 +19736,96 @@ var DROP_SCENE = (function(){
              aw:a.width || r.width, ah:a.height || 104 };
   }
 
+  /* ---------- 4.21.0: КИНО-СЦЕНА для золотого и красного дропа ----------
+     Что делает шаг:
+       1) достаёт ролик кейса (свой файл, потом сайт) и играет его 1:1 СО ЗВУКОМ;
+       2) музыку уводит почти в ноль — в кадре звучит сам кейс;
+       3) держит ролик ровно столько, сколько нужно до вылета оружия (lead);
+       4) если ролика нет (офлайн, файл не залит) — молча играет на градиенте,
+          оружие и рамка всё равно выходят: сцену не ломаем. */
+  /* 4.21.0: данные ИМЕННО ЭТОГО дропа для сцены. Сцена стартует раньше окна
+     награды, поэтому глобальную переменную берём только если она про этот же скин,
+     иначе собираем сами. Нужны и рамке, и вылету — чтобы ствол целился в слот
+     уже наполненной карточки, а не в габариты прошлой награды. */
+  function sceneInfoNow(){
+    if(sceneInfo) return sceneInfo;
+    var gi = (typeof window !== 'undefined' && window.__srWinInfo) || null;
+    if(gi && gi.skin && curSkin && String(gi.skin.id) === String(curSkin.id)) return gi;
+    if(!curSkin) return null;
+    try{ return { skin: curSkin, item: (typeof makeItem === 'function' ? makeItem(curSkin) : null) }; }
+    catch(e){ return { skin: curSkin, item: null }; }
+  }
+  /* 4.21.1: вместо создания плеера берём прогретый элемент из пула и
+     переносим его в слой сцены. Никакой загрузки в момент эффекта. */
+  function cinemUse(r){
+    cinemFail = false; cinemReady = false; cinemVid = null; cinemSt = null;
+    var st = cineWarm(r);
+    if(!st){ cinemFail = true; return false; }
+    cinemSt = st;
+    cinemVid = st.el;
+    cinemReady = st.ready;
+    if(st.fail){
+      cinemFail = true;
+      try{ if(cinemWrap) cinemWrap.style.display = 'none'; }catch(e){}
+      return false;
+    }
+    if(!cinemWrap) return false;
+    try{
+      cinemVid.style.cssText = CINE_SCENE_CSS;
+      if(cinemVid.parentNode !== cinemWrap) cinemWrap.appendChild(cinemVid);
+    }catch(e){ cinemFail = true; }
+    cinemSound();
+    cinemWrap.style.display = 'block';
+    return true;
+  }
+  /* вернуть ролик в пул: пауза, первый кадр, крошечный невидимый вид.
+     Элемент остаётся в документе — иначе WebKit его выгружает и прогрев пропадает */
+  function cinemRelease(){
+    var el = cinemVid;
+    cinemVid = null; cinemSt = null;
+    if(!el) return;
+    try{ el.pause(); }catch(e){}
+    try{ el.muted = true; }catch(e){}
+    try{ el.style.transition = 'none'; el.style.cssText = CINE_POOL_CSS; }catch(e){}
+    try{ el.currentTime = 0; }catch(e){}
+    try{ (document.body || document.documentElement).appendChild(el); }catch(e){}
+  }
+  /* звук ролика: если в игре выключен звук, ролик тоже молчит */
+  function cinemSound(){
+    var on = true;
+    try{ if(window.__sr && window.__sr.sfxIsMuted) on = !window.__sr.sfxIsMuted(); }catch(e){}
+    if(!cinemVid) return;
+    cinemVid.muted = !on;
+    cinemVid.volume = 0.85;
+  }
+
+  STEPS.cinema = function(ms, next){
+    var cfg = cinemaCfg;
+    /* длительность приходит извне (fixedMs): она привязана к кадрам ролика */
+    var dur = (fixedMs && fixedMs.cinema) || Math.max(600, ms);
+    if(!cfg || !cinemVid || cinemFail){ later(next, dur); return; }
+    try{ if(window.musDuck) window.musDuck(0.10); }catch(e){}
+    {
+      cinemWrap.style.display = 'block';
+      cinemSound();
+      try{
+        cinemVid.currentTime = 0;
+        cinemVid.playbackRate = 1;
+        var pr = cinemVid.play();
+        if(pr && pr.catch) pr.catch(function(){
+          /* iOS не дал звук вне жеста — повторяем без звука, картинка важнее */
+          try{ cinemVid.muted = true; cinemVid.play(); }catch(e){}
+        });
+      }catch(e){}
+      requestAnimationFrame(function(){
+        if(!cinemVid) return;
+        cinemVid.style.opacity = '1';
+        cinemVid.style.transform = 'scale(1)';     /* медленный наезд кадра */
+      });
+    }
+    later(next, dur);
+  };
+
   STEPS.frame = function(ms, next){
     /* остатки частиц прошлых шагов: пыль и осколки продолжали крутиться
        внизу экрана под карточкой */
@@ -19609,15 +19837,15 @@ var DROP_SCENE = (function(){
 
     /* 4.20.1: берём данные СВОЕГО дропа, а глобальную переменную — только если
        она про этот же скин. Иначе рамка показывала предыдущую награду. */
-    var info = sceneInfo;
-    if(!info){
-      var gi = (typeof window !== 'undefined' && window.__srWinInfo) || null;
-      if(gi && gi.skin && curSkin && String(gi.skin.id) === String(curSkin.id)) info = gi;
-    }
-    if(!info && curSkin){
-      /* запасной путь (стенды, dropPlay): показываем текущий скин, а не чужой */
-      try{ info = { skin: curSkin, item: (typeof makeItem === 'function' ? makeItem(curSkin) : null) }; }catch(e){ info = { skin: curSkin, item: null }; }
-    }
+    /* ролик не гасим в ноль: он остаётся тёмной подложкой под рамкой и карточкой */
+    try{
+      if(cinemVid && cinemWrap && cinemWrap.style.display !== 'none'){
+        cinemVid.style.transition = 'opacity .5s ease-out';
+        cinemVid.style.opacity = '0.34';
+      }
+    }catch(e){}
+
+    var info = sceneInfoNow();
     var g = null;
     try{ g = info ? frameRender(info) : null; }
     catch(e){
@@ -19676,7 +19904,13 @@ var DROP_SCENE = (function(){
          останавливался в центре экрана, и рамке приходилось его догонять:
          отсюда и брался «пустой кадр» между вылетом и карточкой. */
       var tgt = null;
-      try{ tgt = frameGeomAt(document.getElementById('winCard')); }catch(e){}
+      try{
+        /* сначала наполняем карточку ЭТИМ дропом: иначе слот меряется по вёрстке
+           прошлой награды и ствол останавливается на 10–20 px мимо */
+        var si = sceneInfoNow();
+        if(si && si.item) fillWinCard(si.skin, si.item);
+        tgt = frameGeomAt(document.getElementById('winCard'));
+      }catch(e){}
       var cx0 = window.innerWidth / 2, cy0 = window.innerHeight / 2;
       var dx = tgt ? Math.round(tgt.ax - cx0) : 0;
       var dy = tgt ? Math.round(tgt.ay - cy0) : -Math.round(window.innerHeight * 0.06);
@@ -19686,7 +19920,10 @@ var DROP_SCENE = (function(){
       wrap.appendChild(skinVisual(curSkin, '34vh'));
       stage.appendChild(wrap);
       requestAnimationFrame(function(){
-        wrap.style.transform = 'translateY(-30px) translate(' + dx + 'px,' + dy + 'px) rotateX(0deg) scale(1)';
+        /* 4.21.0: если есть цель (слот в рамке), останавливаемся РОВНО в нём,
+           без прежнего «-30px»: оружие замирает на уровне слота карточки, и
+           подмена на копию в рамке не даёт скачка ни на пиксель. */
+        wrap.style.transform = 'translateY(' + (tgt ? 0 : -30) + 'px) translate(' + dx + 'px,' + dy + 'px) rotateX(0deg) scale(1)';
       });
     }
     if(overlay){
@@ -19809,7 +20046,9 @@ var DROP_SCENE = (function(){
       if(done || !overlay){ return; }
       if(idx >= list.length){ cb(); return; }
       var name = list[idx++];
-      var ms = Math.max(220, Math.round(totalMs * (WEIGHT[name] || 0.2) / sum));
+      var ms = (fixedMs && fixedMs[name] != null)
+        ? fixedMs[name]
+        : Math.max(220, Math.round(totalMs * (WEIGHT[name] || 0.2) / sum));
       try{ STEPS[name](ms, step); }
       catch(e){
         /* 4.19.0: шаг, который упал, раньше просто пропускался молча —
@@ -19832,10 +20071,16 @@ var DROP_SCENE = (function(){
     if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     overlay = null; cv = null; cx = null; svg = null; stage = null; flash = null; slit = null;
     shards = []; dust = []; bolts = []; tunnelT = 0; shakeT = 0; running = null; curSkin = null; sceneInfo = null;
+    fixedMs = null; cinemaCfg = null; cinemaK = 1;
     dim = null; syncMode = false; syncRibbon = false;
     webV = null; webCols = 0; webRows = 0; glassGlow = 0;
     try{ if(gvid){ gvid.pause(); gvid.removeAttribute('src'); } }catch(e){}
     gvid = null; gwrap = null; gframe = null; gcapEl = null; vidOk = false; vidTried = false; glassPulse = 0;
+    /* 4.21.1: ролик не выбрасываем, а возвращаем в пул: пауза + первый кадр.
+       Так второй золотой/красный дроп играет без загрузки. */
+    cinemRelease();
+    try{ if(cinemWrap && cinemWrap.parentNode) cinemWrap.parentNode.removeChild(cinemWrap); }catch(e){}
+    cinemWrap = null; cinemReady = false; cinemFail = false;
   }
 
   function release(){
@@ -19879,6 +20124,10 @@ var DROP_SCENE = (function(){
       onComplete = null; if(typeof cb === 'function') cb(); return;
     }
     if(!overlay){ onComplete = null; if(typeof cb === 'function') cb(); return; }
+    /* 4.21.0: ролик начинаем качать сразу — сцена стартует через 600–900 мс,
+       и этого хватает, чтобы первый кадр уже был готов */
+    cinemaCfg = (typeof CINEMA !== 'undefined' && CINEMA[skin && skin.r]) || null;
+    if(cinemaCfg) cinemUse(skin && skin.r);
 
     overlay.style.transition = 'none';
     overlay.style.opacity = '1';
@@ -19910,8 +20159,21 @@ var DROP_SCENE = (function(){
       total = Math.round(total * Math.max(0.25, Math.min(1, k)));
     }
 
-    try{ if(window.musDuck) window.musDuck(0.35); }catch(e){}
+    /* 4.21.0: у кино-сцены длительности привязаны к кадрам ролика, поэтому
+       они заданы явно, а не долей бюджета. Если дневной запас полных сцен вышел,
+       ужимаем всю сцену тем же коэффициентом, что и обычные. */
+    fixedMs = null; cinemaK = 1;
+    if(cinemaCfg){
+      cinemaK = full ? 1 : Math.max(0.25, Math.min(1, k));
+      fixedMs = {
+        cinema: Math.round(cinemaCfg.lead * cinemaK),
+        bullet: Math.round(CINEMA_STEPS.bullet * (0.7 + 0.3 * cinemaK)),
+        frame:  Math.round(CINEMA_STEPS.frame * cinemaK)
+      };
+      total = fixedMs.cinema + fixedMs.bullet + fixedMs.frame;
+    }
 
+    try{ if(window.musDuck) window.musDuck(0.35); }catch(e){}
     overlay.addEventListener('pointerdown', finish, { once: true });
     dog = setTimeout(finish, Math.min(WATCHDOG_MS, total + 2500));
 
@@ -19951,6 +20213,15 @@ var DROP_SCENE = (function(){
                fullLeft: fullScenesLeft(),
                shortK: (SR_CONFIG && SR_CONFIG.dropShortK != null) ? SR_CONFIG.dropShortK : 0.4,
                video: !!(vidOk || (gvid && gvid.readyState >= 2)), videoSrc: glassSrc[0], weights: WEIGHT,
+               /* 4.21.0: кино-сцена — что за ролик, сколько играет до вылета,
+                  готов ли файл и не свалились ли мы на градиент */
+               cinema: CINEMA, cinemaNow: cinemaCfg ? {
+                 lead: cinemaCfg.lead, src: cinemaCfg.src[0],
+                 ready: !!(cinemReady || (cinemVid && cinemVid.readyState >= 2)),
+                 fail: !!cinemFail, playing: !!(cinemVid && !cinemVid.paused),
+                 muted: !!(cinemVid && cinemVid.muted),
+                 time: cinemVid ? +cinemVid.currentTime.toFixed(2) : null
+               } : null,
                openSample: !!openBuf, openSrc: openUsed, openFail: openFail,
                openState: openBuf ? 'ok' : (openLoading ? 'загружается' : 'не начата') };
     },
@@ -19962,6 +20233,21 @@ var DROP_SCENE = (function(){
       var v = (n == null) ? 15 : (n | 0);
       try{ state.dropFull = v; SR_CONFIG.dropFull = v; save(); }catch(e){}
       return dropFullLimit();
+    },
+    /* 4.21.1: игра знает тир дропа ДО прокрутки ленты (2–7 с запаса) —
+       просит прогреть нужный ролик, и к моменту сцены он уже в буфере */
+    warm: function(r){
+      try{ cineWarm(r); return true; }catch(e){ return false; }
+    },
+    warmInfo: function(){
+      var out = {};
+      for(var k in cinePool){
+        if(!Object.prototype.hasOwnProperty.call(cinePool, k)) continue;
+        var st = cinePool[k];
+        out[k] = { ready: !!st.ready, fail: !!st.fail, state: st.el.readyState,
+                   buffered: st.el.buffered && st.el.buffered.length ? +st.el.buffered.end(0).toFixed(2) : 0 };
+      }
+      return out;
     },
     config: { get MIN_RARITY(){ return MIN_RARITY; } }
   };
