@@ -7752,7 +7752,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.20.0';
+const VERSION = '4.20.1';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10763,9 +10763,15 @@ function processCaseQueue(){
   const startScene = () => {
     if(sceneStarted || !glassNext) return;
     sceneStarted = true;
+    /* 4.20.1: ГЛАВНОЕ. Сцена начинается за 600–900 мс ДО остановки ленты, а
+       showWin() вызывается только после неё. Значит на момент шага «рамка»
+       window.__srWinInfo ещё держал ПРОШЛЫЙ дроп — рамка показывала предыдущую
+       награду, а карточка потом текущую. Кладём данные этого дропа здесь. */
+    try{ window.__srWinInfo = { skin: winSkin, item: winItem }; }catch(e){}
     try{ showWin._glassBusy = true; }catch(e){}   /* второе открытие под сценой не пройдёт */
     try{ if(window.musDuck) window.musDuck(0.35); }catch(e){}
-    try{ GLASS_BREAK.play(winSkin, onSceneEnd, { syncWith: 'roulette', lead: lead }); }
+    try{ GLASS_BREAK.play(winSkin, onSceneEnd, { syncWith: 'roulette', lead: lead,
+                                                 info: { skin: winSkin, item: winItem } }); }
     catch(e){ onSceneEnd(); }
   };
 
@@ -18691,6 +18697,11 @@ var DROP_SCENE = (function(){
      осколки продолжали крутиться внизу под карточкой — их видно как «вращающийся
      осколок». Пока идёт шаг разлома k=1, после него — k=4. */
   var shardFadeK = 1;
+  /* 4.20.1: данные текущего дропа для сцены. Раньше рамка читала глобальную
+     window.__srWinInfo, а она на момент сцены ещё держала ПРОШЛЫЙ дроп:
+     сцена стартует за 600–900 мс до остановки ленты, showWin позже.
+     Теперь сцена получает свой дроп параметром и ни на что чужое не смотрит. */
+  var sceneInfo = null;
   /* 4.13.4: паутина трещин — это рёбра той же сетки, из которой нарезаны
      осколки. Иначе трещины и осколки живут отдельно и не стыкуются. */
   var webV = null, webCols = 0, webRows = 0, glassGlow = 0;
@@ -19596,7 +19607,17 @@ var DROP_SCENE = (function(){
     try{ if(slit) slit.style.opacity = '0'; }catch(e){}
     try{ if(gcapEl) gcapEl.style.opacity = '0'; }catch(e){}   /* подпись в сцене больше не нужна: она в рамке */
 
-    var info = (typeof window !== 'undefined' && window.__srWinInfo) || null;
+    /* 4.20.1: берём данные СВОЕГО дропа, а глобальную переменную — только если
+       она про этот же скин. Иначе рамка показывала предыдущую награду. */
+    var info = sceneInfo;
+    if(!info){
+      var gi = (typeof window !== 'undefined' && window.__srWinInfo) || null;
+      if(gi && gi.skin && curSkin && String(gi.skin.id) === String(curSkin.id)) info = gi;
+    }
+    if(!info && curSkin){
+      /* запасной путь (стенды, dropPlay): показываем текущий скин, а не чужой */
+      try{ info = { skin: curSkin, item: (typeof makeItem === 'function' ? makeItem(curSkin) : null) }; }catch(e){ info = { skin: curSkin, item: null }; }
+    }
     var g = null;
     try{ g = info ? frameRender(info) : null; }
     catch(e){
@@ -19706,11 +19727,8 @@ var DROP_SCENE = (function(){
       'mask-image:linear-gradient(to bottom, rgba(0,0,0,.6), transparent 72%);' +
       'filter:blur(1.2px)';
 
-    var ring = document.createElement('div');
-    ring.style.cssText = 'position:absolute;left:50%;bottom:-16px;width:min(64vw,300px);height:52px;' +
-      'transform:translateX(-50%) rotateX(74deg);border-radius:50%;' +
-      'border:2px solid ' + color + 'aa;box-shadow:0 0 30px ' + color + '88, inset 0 0 26px ' + color + '55;' +
-      'animation:dsSpin ' + Math.max(900, Math.round(ms)) + 'ms linear infinite';
+    /* 4.20.1: кольцо-подиум с вращением (dsSpin) убрано: оно крутилось отдельно
+       внизу экрана и читалось как «стекляшка, которая живёт своей жизнью». */
 
     var title = document.createElement('div');
     title.style.cssText = 'margin-top:14px;text-align:center;opacity:0;transform:translateY(10px);' +
@@ -19722,7 +19740,6 @@ var DROP_SCENE = (function(){
 
     holder.appendChild(art);
     holder.appendChild(refl);
-    stage.appendChild(ring);
     stage.appendChild(holder);
     stage.appendChild(title);
 
@@ -19814,7 +19831,7 @@ var DROP_SCENE = (function(){
     try{ if(window.musUnduck) window.musUnduck(); }catch(e){}
     if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     overlay = null; cv = null; cx = null; svg = null; stage = null; flash = null; slit = null;
-    shards = []; dust = []; bolts = []; tunnelT = 0; shakeT = 0; running = null; curSkin = null;
+    shards = []; dust = []; bolts = []; tunnelT = 0; shakeT = 0; running = null; curSkin = null; sceneInfo = null;
     dim = null; syncMode = false; syncRibbon = false;
     webV = null; webCols = 0; webRows = 0; glassGlow = 0;
     try{ if(gvid){ gvid.pause(); gvid.removeAttribute('src'); } }catch(e){}
@@ -19849,6 +19866,7 @@ var DROP_SCENE = (function(){
     }
     syncMode = (opts.syncWith === 'roulette');
     syncRibbon = syncMode;
+    sceneInfo = (opts.info && opts.info.skin) ? opts.info : null;
     done = false;
     onComplete = cb || null;
     curSkin = skin || null;
