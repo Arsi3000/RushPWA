@@ -28099,7 +28099,7 @@ window.__sr = {
   }
   function barRow(r, pos, max, opts){
     opts = opts || {};
-    var v = r[S.metric] || 0;
+    var v = (opts.val != null) ? opts.val : (r[S.metric] || 0);
     var w = max > 0 ? Math.max(6, Math.min(100, v / max * 100)) : 6;
     var me = !!opts.me;
     var cls = 'rk2-brow' + (pos <= 3 && !opts.plainPos ? ' top' + pos : '') + (me ? ' me' : '');
@@ -28113,7 +28113,8 @@ window.__sr = {
     return '<div class="' + cls + '">' +
       '<div class="rk2-pos"><i>' + (opts.posTxt || pos) + '</i></div>' +
       '<div class="rk2-bar"><i style="width:' + w.toFixed(1) + '%"></i>' +
-        '<u>' + (me ? 'ТЫ · ' : '') + esc(r.nick || '—') + tr + '</u></div>' +
+        '<u>' + (me ? ('ТЫ' + (r.nick && r.nick !== 'ТЫ' ? ' · ' + esc(r.nick) : ''))
+                    : esc(r.nick || '—')) + tr + '</u></div>' +
       '<div class="rk2-val">' + sky + '</div></div>';
   }
 
@@ -28270,12 +28271,10 @@ window.__sr = {
     var fromIdx = S.myPlace - 2;              /* индекс в списке (0-based) для #(myPlace-1) */
     var below = (S.myPlace < S.list.length) ? S.list[S.myPlace] : null;
     if(above) html += barRow(above, S.myPlace - 1, max, { noTrend:true });
-    html += barRow({ nick:'ТЫ', upd:0, worth:0, bestDrop:0, opened:0, upOk:0,
-                     measure: 0 }, S.myPlace, max, { me:true, posTxt:'●' });
+    html += barRow({ nick:'ТЫ', upd:0 }, S.myPlace, max, { me:true, posTxt:'●', val: mv });
     if(below) html += barRow(below, S.myPlace + 1, max, { noTrend:true });
     /* значения в своей строке подставляем руками: объект-заглушка нужна только
        для того, чтобы не дублировать верстку */
-    html = html.replace('<div class="rk2-val">1</div>', '<div class="rk2-val">' + fmt(mv) + '</div>');
     box.innerHTML = html;
     if(note) note.textContent = (above ? '1' : '0') + '+' + (below ? '1' : '0') + ' сосед';
   }
@@ -28353,8 +28352,8 @@ window.__sr = {
     var my = myStats();
     var max = Math.max(1, (S.list[0] && S.list[0][S.metric]) || 0, my[S.metric] || 0);
     wrap.hidden = false;
-    box.innerHTML = barRow({ nick:'ТЫ', worth:my.worth, bestDrop:my.bestDrop,
-      opened:my.opened, upOk:my.upOk, upd:0 }, S.myPlace, max, { me:true, posTxt:'●' });
+    box.innerHTML = barRow({ nick:'ТЫ', upd:0 }, S.myPlace, max,
+      { me:true, posTxt:'●', val: my[S.metric] || 0 });
   }
 
   function drawLeaguePill(){
