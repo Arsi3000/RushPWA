@@ -14,7 +14,9 @@
 <meta property="og:description" content="Симулятор открытия кейсов в стиле CS:GO. Апгрейд, миссии дня, рейтинг.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <title>SKIN RUSH — кейсы и апгрейд скинов</title>
 <style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* 4.12.0: атрибут hidden должен побеждать любой display из классов.
@@ -432,22 +434,22 @@ body.sr-live #app{visibility:hidden}
     border-radius:10px;font-size:var(--fs-16, 16px);cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
 .x:hover{background:rgba(255,255,255,.14)}
 /* ---------- ВЫПАДЕНИЕ ---------- */
-  #winCard{width:min(92vw,340px);text-align:center;padding:22px 20px;border-radius:20px;
+  .win-card{width:min(92vw,340px);text-align:center;padding:22px 20px;border-radius:20px;
     background:linear-gradient(180deg,#1e2432,#12151c);border:1px solid var(--c);
     box-shadow:0 0 0 1px var(--c), 0 30px 80px -20px var(--c);position:relative;overflow:hidden}
-#winCard .rays{position:absolute;inset:-30%;opacity:.55;
+.win-card .rays{position:absolute;inset:-30%;opacity:.55;
     background:radial-gradient(closest-side, var(--c), transparent 72%);
     animation:spin 18s linear infinite}
 
   @keyframes spin{to{transform:rotate(360deg)}
-}#winCard .inner{position:relative;z-index:2}
-#winCard .rar{font-size:var(--fs-11, 11px);letter-spacing:.2em;text-transform:uppercase;color:var(--c);font-weight:800}
-#winCard .art{height:104px;display:flex;align-items:center;justify-content:center;margin:6px 0 2px;overflow:hidden}
-#winCard .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
-#winCard h3{margin:2px 0 4px;font-size:var(--fs-18, 18px)}
-#winCard .vv{color:#ffd08a;font-weight:800;font-size:var(--fs-14, 14px);margin-bottom:16px}
-#winCard .row{display:flex;gap:8px}
-#winCard .row button{flex:1}
+}.win-card .inner{position:relative;z-index:2}
+.win-card .rar{font-size:var(--fs-11, 11px);letter-spacing:.2em;text-transform:uppercase;color:var(--c);font-weight:800}
+.win-card .art{height:104px;display:flex;align-items:center;justify-content:center;margin:6px 0 2px;overflow:hidden}
+.win-card .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
+.win-card h3{margin:2px 0 4px;font-size:var(--fs-18, 18px)}
+.win-card .vv{color:#ffd08a;font-weight:800;font-size:var(--fs-14, 14px);margin-bottom:16px}
+.win-card .row{display:flex;gap:8px}
+.win-card .row button{flex:1}
 .btn-ghost{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#dfe6f5;
     font:inherit;font-weight:700;font-size:var(--fs-12, 12px);padding:12px;border-radius:10px;cursor:pointer;transition:.15s}
 .btn-ghost:hover{background:rgba(255,255,255,.12)}
@@ -528,26 +530,480 @@ nav{gap:8px;padding-top:12px}
    давали сплошную рябь по сетке, карточки всё равно подсвечены редкостью */
 
   /* выпадение: объём и блик */
-  #winCard{transform-style:preserve-3d;will-change:transform;
+  .win-card{transform-style:preserve-3d;will-change:transform;
     box-shadow:0 0 0 1px var(--c), 0 26px 70px -18px var(--c), 0 0 90px -20px var(--c)}
-#winCard .art svg{filter:drop-shadow(0 14px 18px rgba(0,0,0,.65))}
-#winCard .rar{text-shadow:0 0 16px var(--c)}
-  /* ---------- 4.19.0: РАМКА ВЫЛЕТА ----------
-     Контур ровно по габаритам будущей #winCard, «жидкое стекло»:
-     полупрозрачная плёнка .055, верхний блик .16, каёмка цвета редкости.
-     Живёт в body, а не в оверлее сцены: оверлей гаснет, а рамка остаётся
-     и становится карточкой (см. FLIP в showWin). */
-  #dropFrame{position:fixed;z-index:97;pointer-events:none;border-radius:20px;
-    border:1.5px solid var(--c,#a970ff);background:rgba(255,255,255,.055);
-    box-shadow:0 0 0 1px rgba(0,0,0,.45), 0 0 26px -2px var(--c,#a970ff), 0 26px 70px -18px var(--c,#a970ff),
-      inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 30px -10px var(--c,#a970ff);
-    -webkit-backdrop-filter:blur(14px) saturate(165%);backdrop-filter:blur(14px) saturate(165%);
-    opacity:0;will-change:opacity}
-  #dropFrame::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.02) 42%,transparent 70%)}
-  #dropFrame::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
-    border:1px solid var(--c,#a970ff);opacity:.3;animation:dfPulse 1.6s ease-in-out infinite}
-  @keyframes dfPulse{0%,100%{opacity:.1}50%{opacity:.4}}
+.win-card .art svg{filter:drop-shadow(0 14px 18px rgba(0,0,0,.65))}
+.win-card .rar{text-shadow:0 0 16px var(--c)}
+/* ---------- 4.20.0: РАМКА В СЦЕНЕ = КАРТОЧКА ----------
+     Раньше рамка была отдельным пустым контуром, и в сцене выходило три кадра:
+     вылет оружия → пустая рамка → карточка. Теперь рамка это КОПИЯ #winCard,
+     наполненная тем же дропом (редкость, ствол, название, цена, износ):
+       • «пустого кадра» нет — всё появляется одним кадром;
+       • геометрию и вёрстку берём у настоящей карточки (.win-card), поэтому
+         подмена в момент награды идёт без сдвига;
+       • у копии нет backdrop-filter: он размывал ствол под собой, из-за чего
+         рамка и выглядела пустой.
+     Фон — тот же градиент карточки, но на 12–16 % прозрачный: «жидкое стекло»,
+     сквозь которое видно сцену разлома. */
+#dropFrame{position:fixed;z-index:97;pointer-events:none;margin:0;
+  background:linear-gradient(180deg, rgba(26,31,43,.80), rgba(13,16,22,.86));
+  -webkit-backdrop-filter:blur(20px) saturate(175%);backdrop-filter:blur(20px) saturate(175%);
+  transform-origin:50% 50%;will-change:opacity,transform;opacity:0;overflow:hidden}
+/* без поддержки размытия стекло должно быть плотнее, иначе текст не прочесть */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #dropFrame{background:linear-gradient(180deg, rgba(30,36,50,.93), rgba(16,19,26,.95))}
+}
+#dropFrame::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.02) 44%,transparent 72%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 40px -12px var(--c,#a970ff)}
+#dropFrame::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  border:1.5px solid var(--c,#a970ff);animation:dfPulse 1.5s ease-in-out infinite}
+@keyframes dfPulse{0%,100%{opacity:.55}50%{opacity:1}}
+/* кнопки в копии не нужны и не должны занимать место */
+#dropFrame .row{display:none}
+/* ---------- РЕДКОСТИ ---------- */
+  .r-common{--c:var(--rar-c-common)}
+.r-uncommon{--c:var(--rar-c-uncommon)}
+.r-rare{--c:var(--rar-c-rare)}
+.r-epic{--c:var(--rar-c-epic)}
+.r-legend{--c:var(--rar-c-legend)}
+.r-myth{--c:var(--rar-c-myth)}
+/* ---------- РЕЙТИНГ ---------- */
+  .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#43e07a;margin-left:4px;
+    vertical-align:2px;box-shadow:0 0 8px rgba(67,224,122,.9)}
+
+
+.rank-hero .sub{font-size:var(--fs-12, 12px);color:#93a0b8;line-height:1.5}
+
+
+
+
+.rk-err{margin-top:8px;font-size:var(--fs-11, 11px);color:#ff8f9f;min-height:14px}
+.rk-card{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.rk-av{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:var(--fs-18, 18px);
+    background:linear-gradient(150deg,var(--accent),var(--accent-deep));color:#1a0f04;flex:0 0 auto}
+.rk-me{flex:1 1 170px;min-width:0}
+.rk-me b{display:block;font-size:var(--fs-16, 16px);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-me span{font-size:var(--fs-11, 11px);color:#93a0b8}
+.rk-nums{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.rk-nums div{font-size:var(--fs-11, 11px);color:#8b98ae;line-height:1.3}
+.rk-nums b{display:block;font-size:var(--fs-14, 14px);color:#ffd08a;font-variant-numeric:tabular-nums}
+.rk-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.rk-state{font-size:var(--fs-11, 11px);color:#8b98ae}
+.rank-top{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.rank-top .hd, .rank-top .row{display:grid;grid-template-columns:34px 1fr 96px 92px;gap:8px;
+    padding:10px 13px;align-items:center;font-size:var(--fs-12, 12px)}
+.rank-top .hd{background:rgba(255,255,255,.05);color:#8b98ae;font-size:var(--fs-11, 11px);
+    letter-spacing:.08em;text-transform:uppercase}
+.rank-top .row{border-top:1px solid rgba(255,255,255,.05);color:#c7d2e2}
+.rank-top .row.me{background:rgba(var(--accent-rgb),.12);color:#ffd08a}
+.rank-top .row .p{font-weight:800;color:#7f8ca5;text-align:center;font-variant-numeric:tabular-nums}
+.rank-top .row.me .p{color:var(--accent)}
+.rank-top .row .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.rank-top .row .v{text-align:right;font-variant-numeric:tabular-nums;color:#ffd08a}
+.rank-top .row .d{text-align:right;font-variant-numeric:tabular-nums;color:#9fb0c6;font-size:var(--fs-11, 11px)}
+.rank-top .row .p.medal{font-size:var(--fs-14, 14px)}
+.rank-empty{padding:22px 14px;text-align:center;color:#8b98ae;font-size:var(--fs-12, 12px);line-height:1.6}
+
+  @media(max-width:560px){.rank-top .hd, .rank-top .row{grid-template-columns:28px 1fr 82px;gap:6px;padding:9px 10px;font-size:var(--fs-11, 11px)}
+.rank-top .hd .d, .rank-top .row .d{display:none}
+.rk-nums{gap:12px}
+
+  }/* ---------- КЕЙСЫ ---------- */
+  .cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:clamp(10px,1.8vw,16px)}
+.case{
+    position:relative;border-radius:14px;padding:14px;overflow:hidden;cursor:pointer;
+    background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.09);transition:.18s
+  }
+.case:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+.case.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent), 0 14px 40px -14px rgba(var(--accent-rgb),.6)}
+.case h3{margin:0 0 2px;font-size:var(--fs-14, 14px)}
+.case .sub{font-size:var(--fs-11, 11px);color:#8a97b0;letter-spacing:.08em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.case .art{display:flex;justify-content:center;align-items:center;height:96px;margin:6px 0;overflow:hidden}
+
+  @media(max-width:560px){.cases{grid-template-columns:repeat(2,1fr);gap:9px}
+.case{padding:11px 10px}
+.case .art{height:64px;margin:5px 0}
+.case h3{font-size:var(--fs-12, 12px)}
+.case .sub{font-size:var(--fs-11, 11px);letter-spacing:.03em}
+.case .price{font-size:var(--fs-12, 12px)}
+.case .odds{margin-top:7px}
+
+
+  }.case .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
+.case .price{display:flex;align-items:center;gap:6px;font-weight:800;font-size:var(--fs-14, 14px);color:#ffd08a;justify-content:center}
+.case .price i{width:13px;height:13px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--accent2) 55%,var(--accent-deep));display:inline-block}
+.case .odds{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:9px;background:rgba(0,0,0,.35)}
+.case .odds span{display:block;height:100%}
+
+
+
+.open-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.qty-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.qty-btn{
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#a8b4ca;
+  font:inherit;font-size:var(--fs-12, 12px);font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;transition:.15s;
+  min-width:42px
+}
+.qty-btn:hover{border-color:rgba(255,255,255,.35);color:#fff;background:rgba(255,255,255,.09)}
+.qty-btn.on{border-color:var(--accent);background:rgba(var(--accent-rgb),.18);color:#ffd08a;box-shadow:0 0 0 1px rgba(var(--accent-rgb),.35)}
+.qty-btn:disabled{opacity:.35;cursor:default;border-color:rgba(255,255,255,.08)}
+.btn-primary{
+    border:none;border-radius:14px;padding:13px 26px;font:inherit;font-weight:800;font-size:var(--fs-14, 14px);letter-spacing:.03em;
+    background:linear-gradient(180deg,#ffa04a,#f07417);color:#20120a;cursor:pointer;transition:.15s;
+    box-shadow:0 12px 30px -12px rgba(255,130,40,.9);white-space:nowrap
+  }
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-primary:active{transform:translateY(1px)}
+.btn-primary:disabled{opacity:.45;cursor:default;box-shadow:none;filter:none}
+.hint{font-size:var(--fs-12, 12px);color:#7c89a2}
+/* 4.11.0: заказы коллекционера и мастерство стволов */
+.ord-box{margin-top:10px;padding:12px;border-radius:14px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.09)}
+.ord-head{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-12, 12px);
+  font-weight:800;letter-spacing:.04em;color:#cfd8ea;margin-bottom:8px}
+.ord-head span:last-child{color:#8b98ae;font-weight:600;font-size:var(--fs-11, 11px);letter-spacing:0}
+.ord-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:6px}
+.ord-row.ready{border-color:rgba(120,220,160,.5);background:rgba(120,220,160,.08)}
+.ord-row.done{opacity:.55}
+.ord-art{flex:0 0 auto;min-width:56px;text-align:center}
+.ord-rar{font-size:var(--fs-11, 11px);letter-spacing:.06em;text-transform:uppercase;font-weight:800;
+  color:var(--c);display:block}
+.ord-mid{flex:1 1 auto;min-width:0}
+.ord-nm{font-size:12.5px;font-weight:700;color:#e8ecf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ord-gun{font-size:var(--fs-11, 11px);color:#8b98ae;margin-top:1px}
+.ord-rew{font-size:11.5px;color:#ffd08a;font-weight:700;margin-top:2px}
+.ord-rew span{color:#8b98ae;font-weight:600}
+.ord-btn{flex:0 0 auto;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);
+  color:#dfe6f5;font:inherit;font-size:11.5px;font-weight:700;padding:8px 12px;border-radius:10px;
+  cursor:pointer;min-width:64px;min-height:36px}
+.ord-btn:disabled{opacity:.4;cursor:default}
+.ord-btn:hover:not(:disabled){background:rgba(255,255,255,.13)}
+.mast-title{margin:12px 0 6px;font-size:var(--fs-12, 12px);font-weight:800;letter-spacing:.04em;color:#cfd8ea}
+.mast-row{padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.mast-row:first-child{border-top:none}
+.mast-top{display:flex;justify-content:space-between;font-size:11.5px;color:#aab6c9}
+.mast-top b{color:#e8ecf5;font-size:var(--fs-12, 12px)}
+.mast-bar{height:5px;border-radius:3px;background:rgba(0,0,0,.4);margin:5px 0 4px;overflow:hidden}
+.mast-bar i{display:block;height:100%;background:linear-gradient(90deg,#5baaff,#9a7bff);border-radius:3px}
+.mast-foot{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#7f8ca5}
+.mast-btn{border:none;background:linear-gradient(180deg,#ffd06a,#e9a316);color:#2a1c00;
+  font:inherit;font-size:var(--fs-11, 11px);font-weight:800;padding:5px 10px;border-radius:8px;cursor:pointer}
+
+/* ---------- РУЛЕТКА ---------- */
+  .rl-wrap{position:relative;margin-top:22px;overflow:hidden}
+/* 4.3.9: качающийся треугольник над лентой убран (мешал читать).
+     Осталась только вертикальная риска rl-mark — по ней видно, куда встал выигрыш. */
+  .rl-item.hit{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent), 0 0 26px rgba(var(--accent-rgb),.55);z-index:2}
+.roulette{
+    position:relative;margin-top:0;height:118px;border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,#161a24,#10131a);border:1px solid rgba(255,255,255,.09)
+  }
+.roulette::before, .roulette::after{
+    content:"";position:absolute;top:0;bottom:0;width:70px;z-index:3;pointer-events:none
+  }
+.roulette::before{left:0;background:linear-gradient(90deg,#101319,rgba(16,19,25,0))}
+.roulette::after{right:0;background:linear-gradient(270deg,#101319,rgba(16,19,25,0))}
+.rl-track{display:flex;height:100%;align-items:center;will-change:transform}
+.rl-item{
+    flex:0 0 auto;width:104px;height:96px;margin:0 4px;border-radius:10px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-bottom:3px solid var(--c);position:relative;overflow:hidden
+  }
+.rl-item[data-rarity]{box-shadow:inset 0 0 0 var(--rar-w) var(--rar-line)}
+.rl-item svg{width:auto;height:auto;max-width:94px;max-height:58px;display:block}
+.rl-item .nm{font-size:var(--fs-11, 11px);color:#9aa7c0;text-align:center;padding:0 4px;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* 4.6.0: характер кейса виден и в оформлении ленты */
+  .roulette[data-spin="rush"]{background:linear-gradient(180deg,#181d29,#0b0e14)}
+.roulette[data-spin="rush"] .rl-mark{box-shadow:0 0 18px 2px rgba(var(--accent-rgb),.72)}
+.roulette[data-spin="heavy"]{height:126px}
+.roulette[data-spin="heavy"] .rl-item{width:112px}
+.roulette[data-spin="storm"]::before, .roulette[data-spin="storm"]::after{width:96px}
+.roulette[data-spin="storm"] .rl-item{border-bottom-width:4px}
+.rl-spin-cap{margin-top:6px;text-align:center;font-size:var(--fs-11, 11px);letter-spacing:.06em;
+    text-transform:uppercase;color:#6f7d93;font-weight:800}
+.rl-mark{
+    position:absolute;left:50%;top:0;bottom:0;width:2px;z-index:4;transform:translateX(-1px);
+    background:linear-gradient(180deg,rgba(var(--accent-rgb),.95),rgba(var(--accent-rgb),.45));
+    box-shadow:0 0 12px 1px rgba(var(--accent-rgb),.55)
+  }
+
+.chip{
+    border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#a8b4ca;
+    font:inherit;font-size:var(--fs-12, 12px);font-weight:600;padding:7px 12px;border-radius:20px;cursor:pointer;transition:.15s
+  }
+.chip:hover{color:#fff;background:rgba(255,255,255,.09)}
+.chip.on{background:#fff;color:#12151c;border-color:#fff}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+
+
+
+
+
+
+.inv-more{width:100%;margin-top:14px;min-height:46px;font-size:var(--fs-12, 12px)}
+.inv-more[hidden]{display:none}
+.card{
+    position:relative;border-radius:14px;padding:8px 8px 26px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+    border:1px solid rgba(255,255,255,.08);
+    border-bottom:3px solid var(--c);
+    transition:.15s
+  }
+.card:hover{transform:translateY(-2px);background:rgba(255,255,255,.09)}
+.card .gwrap{height:66px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card .gwrap svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
+.card .nm{font-size:var(--fs-11, 11px);font-weight:700;line-height:1.2;margin-top:6px;height:26px;overflow:hidden}
+.card .rt{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:var(--c);font-weight:700}
+.card .pr{position:absolute;top:8px;right:8px;font-size:var(--fs-11, 11px);font-weight:800;color:#ffd08a;
+    background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px;font-variant-numeric:tabular-nums;
+    max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  @media(max-width:360px){.card .pr{font-size:var(--fs-11, 11px);padding:2px 4px}
+ }
+
+.empty-note{color:#7c89a2;font-size:var(--fs-14, 14px);padding:34px 10px;text-align:center;border:1px dashed rgba(255,255,255,.12);border-radius:14px}
+/* ---------- АПГРЕЙД ---------- */
+  .up{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(8px,2vw,20px);align-items:center}
+
+  @media(max-width:680px){.up{grid-template-columns:1fr auto 1fr;gap:7px}
+.up .slot{min-height:152px;padding:8px 6px}
+.slot svg{max-height:60px}
+.slot .nm{font-size:var(--fs-11, 11px)}
+.circle{width:clamp(104px,26vw,140px);height:clamp(104px,26vw,140px)}
+.pct{font-size:var(--fs-16, 16px)}
+.btn-up{padding:10px 12px;font-size:var(--fs-12, 12px)}
+
+  }.slot{
+    border-radius:14px;border:1px dashed rgba(255,255,255,.16);min-height:190px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;
+    background:rgba(255,255,255,.025);transition:.15s;position:relative;overflow:hidden
+  }
+.slot:hover{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.05)}
+.slot.filled{border-style:solid;border-color:var(--c);border-width:1px;border-bottom-width:3px;
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015))}
+.slot svg{width:auto;height:auto;max-width:100%;max-height:78px;display:block}
+.slot .cap{font-size:var(--fs-11, 11px);letter-spacing:.12em;text-transform:uppercase;color:#7f8ca5;font-weight:700}
+.slot .nm{font-size:var(--fs-12, 12px);font-weight:700;text-align:center;line-height:1.2}
+.slot .val{font-size:var(--fs-12, 12px);color:#ffd08a;font-weight:800}
+/* 3.12.0: подпись редкости в слоте раньше обрезалась на 320 («МИФИЧЕСКИ!») */
+  .slot-rt{max-width:100%;font-size:var(--fs-11, 11px);line-height:1.2;letter-spacing:.04em;text-transform:uppercase;
+    font-weight:700;color:var(--c);overflow-wrap:anywhere}
+
+  @media (max-width:360px){.slot-rt{font-size:var(--fs-11, 11px);letter-spacing:0}
+ }.slot .plus{font-size:var(--fs-32, 32px);color:#4a5568;line-height:1}
+.circle-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:8px}
+.circle{position:relative;width:clamp(112px,22vw,164px);height:clamp(112px,22vw,164px)}
+.circle svg{transform:rotate(-90deg);width:100%;height:100%}
+.circle .lose{fill:none;stroke-width:11;transition:stroke .3s}
+.circle .win{fill:none;stroke-width:11;stroke-linecap:butt;
+    transition:stroke-dasharray .35s ease}
+#wheel svg{transform:none}
+#ticks line{stroke:rgba(255,255,255,.16);stroke-width:1.2}
+#needleG{will-change:transform;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.85))}
+#needleG .ndlBar{fill:#ffffff;stroke:rgba(0,0,0,.75);stroke-width:1.4;stroke-opacity:.5}
+#needleG .ndl{fill:#ffffff;stroke:rgba(0,0,0,.75);stroke-width:1;stroke-opacity:.5}
+.circle.spinning #needleG{filter:drop-shadow(0 0 9px rgba(var(--accent2-rgb),1))}
+.circle.spinning .pct{opacity:.55}
+.circle.ok #needleG .ndlBar, .circle.ok #needleG .ndl{fill:#43e07a}
+.circle.ok #needleG{filter:drop-shadow(0 0 11px rgba(67,224,122,1))}
+.circle.no #needleG .ndlBar, .circle.no #needleG .ndl{fill:#ff5f6d}
+.circle.no #needleG{filter:drop-shadow(0 0 11px rgba(255,95,109,1))}
+.circle.idle #needleG .ndlBar, .circle.idle #needleG .ndl{fill:#9aa4b5}
+.circle.idle #needleG{filter:none}
+.circle.ok{animation:okPulse .7s ease}
+
+  @keyframes okPulse{0%{filter:none}
+35%{filter:drop-shadow(0 0 16px rgba(67,201,122,.9)) brightness(1.3)}
+100%{filter:none}
+}.circle .plate{position:absolute;left:20%;top:20%;width:60%;height:60%;border-radius:50%;
+    background:rgba(11,14,20,.9);box-shadow:0 0 14px 9px rgba(11,14,20,.5);pointer-events:none}
+.circle .txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.circle .pct{font-size:clamp(15px,3vw,20px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.circle .cap{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:#8a97b0;text-align:center;line-height:1.25}
+.btn-up{
+    border:none;border-radius:14px;padding:12px 20px;font:inherit;font-weight:800;font-size:var(--fs-14, 14px);cursor:pointer;
+    background:linear-gradient(180deg,#43c97a,#25994f);color:#062b13;transition:.15s;white-space:nowrap;
+    box-shadow:0 12px 26px -14px rgba(50,200,120,.9)
+  }
+.btn-up:hover:not(:disabled){filter:brightness(1.08)}
+.btn-up:disabled{opacity:.45;cursor:default;box-shadow:none;filter:none;background:linear-gradient(180deg,#5a6570,#3d454e);color:#c3ccd8}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:18px}
+/* 4.11.0: журнал ошибок в «О игре» */
+.erl-row{display:flex;gap:8px;font-size:var(--fs-11, 11px);line-height:1.35;color:#e2c7cd;padding:3px 0;border-top:1px solid rgba(255,255,255,.06)}
+.erl-row:first-child{border-top:none}
+.erl-t{color:#8b98ae;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.erl-m{min-width:0;overflow-wrap:anywhere}
+.erl-m i{color:#8b98ae;font-style:normal}
+/* 4.13.0: вращение кольца подиума в Витрине */
+@keyframes dsSpin{ from{ transform:translateX(-50%) rotateX(74deg) rotate(0deg); }
+                   to{ transform:translateX(-50%) rotateX(74deg) rotate(360deg); } }
+.stats div{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    border-radius:14px;padding:10px 12px}
+.stats .k{font-size:var(--fs-11, 11px);letter-spacing:.12em;text-transform:uppercase;color:#7f8ca5;font-weight:700}
+.stats .v{font-size:var(--fs-14, 14px);font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.up-last{margin-top:16px;text-align:center;font-size:var(--fs-12, 12px);color:#8a97b0;min-height:20px}
+.up-last b.win{color:#6ee7a0}
+.up-last b.lose{color:#ff7a94}
+/* ---------- МОДАЛКИ ---------- */
+  .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+    padding:calc(16px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
+    background:rgba(6,8,13,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.modal.on{display:flex;animation:fin .18s}
+/* 4.4.4: ЗАМЕР FPS. Модалка размывала ВСЮ страницу позади (backdrop-filter: blur(7px)),
+   и пока внутри идёт анимация, браузер пересчитывает это размытие каждый кадр.
+   Замер на сцене башни: 57 fps без модалки → 21 fps с ней, причём сцена тут ни при чём
+   (без сцены те же 21). Там, где открыт «живой» экран, размытие снимаем и заменяем
+   плотным фоном — визуально почти то же, стоит в разы меньше. */
+.modal.live{background:rgba(5,7,11,.94);backdrop-filter:none;-webkit-backdrop-filter:none}
+/* 4.4.4: главная страница продолжает анимировать фон (искры, пульсация, блик кнопки)
+   даже когда сверху открыт полноэкранный режим. Замер: с открытой сценой башни
+   37 fps, а если не рисовать главную — 60 fps. Пока открыт тир/башня/баттл,
+   главную просто не показываем: она всё равно закрыта модалкой. */
+body.sr-live #app{visibility:hidden}
+#towerModal, #sniperModal, #batModal{background:rgba(5,7,11,.94);
+  backdrop-filter:none;-webkit-backdrop-filter:none}
+.sheet{
+    width:min(96vw,720px);max-height:86dvh;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#1a1f2b,#12151c);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;overflow:hidden;box-shadow:0 40px 90px -30px #000
+  }
+.sheet header{border-bottom:1px solid rgba(255,255,255,.08);padding:13px 16px;display:flex;align-items:center;gap:10px}
+.sheet header h3{margin:0;font-size:var(--fs-14, 14px)}
+.sheet .body{padding:14px 16px;overflow-y:auto}
+.x{margin-left:auto;background:rgba(255,255,255,.07);border:none;color:#cfd8ea;width:30px;height:30px;
+    border-radius:10px;font-size:var(--fs-16, 16px);cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+.x:hover{background:rgba(255,255,255,.14)}
+/* ---------- ВЫПАДЕНИЕ ---------- */
+  .win-card{width:min(92vw,340px);text-align:center;padding:22px 20px;border-radius:20px;
+    background:linear-gradient(180deg,#1e2432,#12151c);border:1px solid var(--c);
+    box-shadow:0 0 0 1px var(--c), 0 30px 80px -20px var(--c);position:relative;overflow:hidden}
+.win-card .rays{position:absolute;inset:-30%;opacity:.55;
+    background:radial-gradient(closest-side, var(--c), transparent 72%);
+    animation:spin 18s linear infinite}
+
+  @keyframes spin{to{transform:rotate(360deg)}
+}.win-card .inner{position:relative;z-index:2}
+.win-card .rar{font-size:var(--fs-11, 11px);letter-spacing:.2em;text-transform:uppercase;color:var(--c);font-weight:800}
+.win-card .art{height:104px;display:flex;align-items:center;justify-content:center;margin:6px 0 2px;overflow:hidden}
+.win-card .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
+.win-card h3{margin:2px 0 4px;font-size:var(--fs-18, 18px)}
+.win-card .vv{color:#ffd08a;font-weight:800;font-size:var(--fs-14, 14px);margin-bottom:16px}
+.win-card .row{display:flex;gap:8px}
+.win-card .row button{flex:1}
+.btn-ghost{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#dfe6f5;
+    font:inherit;font-weight:700;font-size:var(--fs-12, 12px);padding:12px;border-radius:10px;cursor:pointer;transition:.15s}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-sell{border:none;background:linear-gradient(180deg,#ffd06a,#e9a316);color:#2a1c00;
+    font:inherit;font-weight:800;font-size:var(--fs-12, 12px);padding:12px;border-radius:10px;cursor:pointer}
+.btn-sell:hover{filter:brightness(1.07)}
+/* ---------- ТОСТ ---------- */
+  #toast{position:fixed;left:50%;bottom:calc(26px + var(--sab));transform:translate(-50%,20px);z-index:95;
+    background:rgba(24,30,42,.97);border:1px solid rgba(255,255,255,.14);color:#e8ecf5;
+    padding:11px 18px;border-radius:14px;font-size:var(--fs-12, 12px);font-weight:600;opacity:0;pointer-events:none;
+    transition:.25s;box-shadow:0 18px 40px -18px #000;max-width:92vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.shake{animation:shk .34s}
+
+  @keyframes shk{0%, 100%{transform:translateX(0)}
+20%{transform:translateX(-7px)}
+40%{transform:translateX(7px)}
+60%{transform:translateX(-4px)}
+80%{transform:translateX(4px)}
+}
+
+  @keyframes gwin{0%{filter:brightness(1)}
+30%{filter:brightness(1.9) saturate(1.4)}
+100%{filter:brightness(1)}
+}::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+/* ================= v2.1.0: ВИЗУАЛ ================= */
+  body{
+    background:#07090d;
+    background-image:
+      radial-gradient(1200px 700px at 12% -8%, rgba(var(--accent-rgb),.13), transparent 62%),
+      radial-gradient(1000px 620px at 92% -4%, rgba(70,120,255,.15), transparent 60%),
+      radial-gradient(900px 700px at 50% 115%, rgba(150,60,255,.10), transparent 65%);
+  }
+/* живой фон */
+  #bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.75}
+#app{position:relative;z-index:1}
+#confetti{position:fixed;inset:0;z-index:90;pointer-events:none}
+/* вспышка экрана */
+  #flash{position:fixed;inset:0;z-index:88;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 45%, var(--fc,#fff), transparent 62%)}
+#flash.on{animation:flashIn .62s ease-out}
+
+  @keyframes flashIn{0%{opacity:0}
+14%{opacity:.85}
+100%{opacity:0}
+}header{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(14,18,26,.9),rgba(10,13,19,.55));
+    border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{position:relative;text-shadow:0 0 22px rgba(var(--accent-rgb),.35)}
+.balance{box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 22px -12px #000}
+.balance .val{transition:color .2s}
+nav{gap:8px;padding-top:12px}
+.tab{border-radius:14px 12px 0 0;letter-spacing:.06em;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tab.on{box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 -8px 24px -14px rgba(var(--accent-rgb),.9)}
+.case{box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 14px 30px -22px #000}
+.case::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,.12), transparent 60%)}
+.case.sel{box-shadow:0 0 0 1px var(--accent), 0 0 34px -6px rgba(var(--accent-rgb),.55), inset 0 1px 0 rgba(255,255,255,.12)}
+.case .art svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
+.btn-primary{position:relative;overflow:hidden}
+
+/* 4.9.0: блик «sheen» с кнопки «Открыть» снят — она и так заметна цветом,
+   а бегущий отблеск каждые 3.2 с мешал читать надпись */
+  @keyframes sheen{0%, 65%{left:-60%}
+100%{left:130%}
+}/* карточки инвентаря: свечение редкости + блик */
+  .card{overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),
+    0 12px 26px -20px #000, 0 0 0 1px rgba(255,255,255,.02)}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(90% 60% at 50% 0%, color-mix(in srgb, var(--c) 26%, transparent), transparent 70%);
+    opacity:.5;transition:opacity .2s}
+.card:hover::before{opacity:1}
+.card:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.1), 0 0 22px -4px var(--c)}
+/* 4.9.0: блик по карточкам инвентаря снят: 4.5 с на каждую карточку
+   давали сплошную рябь по сетке, карточки всё равно подсвечены редкостью */
+
+  /* выпадение: объём и блик */
+  .win-card{transform-style:preserve-3d;will-change:transform;
+    box-shadow:0 0 0 1px var(--c), 0 26px 70px -18px var(--c), 0 0 90px -20px var(--c)}
+.win-card .art svg{filter:drop-shadow(0 14px 18px rgba(0,0,0,.65))}
+.win-card .rar{text-shadow:0 0 16px var(--c)}
+  /* ---------- 4.20.0: РАМКА В СЦЕНЕ = КАРТОЧКА ----------
+     Раньше рамка была отдельным контуром, и в сцене получалось три кадра:
+     вылет оружия → пустая рамка → карточка. Теперь рамка это КОПИЯ #winCard,
+     заполненная тем же дропом, поэтому:
+       • «пустого кадра» нет — редкость и название проступают вместе со стеклом;
+       • оружие внутри рамки резкое: у рамки нет backdrop-filter, он размывал
+         то, что под ней (включая ствол), и рамка выглядела пустой;
+       • в момент показа настоящей карточки копия гаснет мгновенно и на том же
+         месте — картинка не меняется вовсе.
+     z-index 97 — выше оверлея сцены (96), поэтому копия видна поверх разлома. */
+  #dropFrame{position:fixed;z-index:97;pointer-events:none;margin:0;
+    transform-origin:50% 50%;will-change:opacity,transform;opacity:0}
+  /* стекло: полупрозрачная плёнка с бликом, без размытия содержимого */
+  #dropFrame .dfGlass{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.02) 46%,rgba(255,255,255,.05));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.07),
+      inset 0 0 40px -10px var(--c,#a970ff)}
+  #dropFrame .dfPulse{position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+    border:1.5px solid var(--c,#a970ff);opacity:.45;animation:dfPulse 1.5s ease-in-out infinite}
+  @keyframes dfPulse{0%,100%{opacity:.18}50%{opacity:.55}}
+  /* кнопки в рамке появляются последними: до этого их нет, чтобы кадр не спорил с финалом */
+  #dropFrame .row{opacity:0}
 .rr-badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;
     font-size:var(--fs-11, 11px);font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:7px;
     background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#cfd8ea}
@@ -3675,7 +4131,7 @@ header.hud .ver{ display: none !important; }
 /* инвентарь */
 .slot .weapon-img{ max-height: 78px; }
 /* апгрейд */
-#winCard .art .weapon-img{ max-height: 104px; }
+.win-card .art .weapon-img{ max-height: 104px; }
 /* окно выигрыша */
 .bat-cell .weapon-img{ max-height: 96px; }
 /* баттл */
@@ -3774,7 +4230,7 @@ header.hud .ver{ display: none !important; }
 .badge-item .bi-ic{font-size:var(--fs-18, 18px)}
 
 }/* ===== 4.3.2: ПЕРВЫЙ ВХОД — экран знакомства, первый дроп, блокировка вкладок ===== */
-#winCard.first-drop{
+.win-card.first-drop{
   box-shadow:0 0 0 2px #ffd76a, 0 0 40px rgba(255,215,106,.7), 0 26px 70px -18px #ffd76a !important;
   animation:firstPulse 1.2s ease-in-out infinite;
 }
@@ -3862,8 +4318,8 @@ to{opacity:1}
    data-rarity и обрезается аккуратно, повторяя border-radius), а под стволом лежит
    тонкая цветная «полка» — linear-gradient с прозрачными краями, ей обрезка не мешает.
    Яркость ниже: тень мягкая, без второго цветного слоя. */
-.card .gwrap, .craft-it .art, #winCard .art{position:relative}
-.card .gwrap .weapon-img, .slot .weapon-img, #winCard .art .weapon-img, .craft-it .art .weapon-img, .run-piece .weapon-img, .rl-item .weapon-img, .bat-cell .weapon-img{
+.card .gwrap, .craft-it .art, .win-card .art{position:relative}
+.card .gwrap .weapon-img, .slot .weapon-img, .win-card .art .weapon-img, .craft-it .art .weapon-img, .run-piece .weapon-img, .rl-item .weapon-img, .bat-cell .weapon-img{
   filter: drop-shadow(0 3px 5px rgba(0,0,0,.55));
   position:relative; z-index:1;
 }
@@ -3872,7 +4328,7 @@ to{opacity:1}
    4.7.1: свечение вернул, но другим способом — радиальный градиент ПОЗАДИ картинки
    (не filter:drop-shadow). Радиальный сам сходит на нет, поэтому обрезка по
    прямоугольнику не видна: линий нет, а ствол снова светится цветом редкости. */
-.card .gwrap::after, #winCard .art::after, .craft-it .art::after{
+.card .gwrap::after, .win-card .art::after, .craft-it .art::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 62% 52% at 50% 50%,var(--rar-line) 0%,transparent 78%);
   opacity:.9}
@@ -5038,7 +5494,7 @@ html.sr-calm .hero-sparks i, html.sr-calm .card.excl::after, html.sr-calm .case-
 
 <!-- ВЫПАДЕНИЕ -->
 <div class="modal" id="winModal">
-  <div id="winCard">
+  <div id="winCard" class="win-card">
     <div class="rays"></div>
     <div class="inner">
       <div class="rar" id="winRar">Редкость</div>
@@ -7296,7 +7752,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.19.0';
+const VERSION = '4.20.0';
 const BUILD   = '2026-11-09';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10419,7 +10875,37 @@ function showBatch(){
    7. ВЫПАДЕНИЕ
    ========================================================= */
 let pendingWin = null;
+/* 4.20.0: наполнение карточки вынесено отдельно. Рамка в сцене меряет высоту
+   #winCard, и мерить надо уже наполненную карточку этого дропа: раньше высота
+   бралась от предыдущей награды (264 px против 302) и карточка «подрастала»
+   в момент показа. */
+function fillWinCard(skin, item){
+  const R = RAR[skin.r];
+  const val = itemVal(item);
+  const card = $('#winCard');
+  card.className = 'win-card ' + (R.cls || '');
+  card.dataset.rarity = skin.r;              /* 3.12.0 */
+  card.classList.toggle('first-drop', !!item.first);   /* 4.3.2: золотая пульсация первого дропа */
+  card.style.setProperty('--c', R.color);
+  $('#winRar').textContent = R.name;
+  $('#winArt').innerHTML = svgWeapon(skin);
+  $('#winName').textContent = skin.n;
+  $('#winVal').innerHTML = val.toLocaleString('ru-RU') + ' кредитов'
+    + `<div style="margin-top:7px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+         <span class="rr-badge">Износ ${item.fl.toFixed(3)} · ${floatName(item.fl)}</span>
+         ${item.st ? '<span class="rr-badge st">★ StatTrak™</span>' : ''}
+       </div>`;
+  $('#winSell').textContent = `Продать за ${val}`;
+  const fbd = $('#winFirst');
+  if(fbd) fbd.hidden = !item.first;
+}
+
 function showWin(skin, item, alreadyOwned, _skipGlass){
+  /* 4.20.0: предмет создаём ДО сцены, чтобы рамка в сцене и настоящая карточка
+     показывали один и тот же дроп. Раньше makeItem() звался уже после разлома,
+     и рамку нельзя было заполнить: износ в ней и в карточке не совпал бы. */
+  if(!_skipGlass) item = item || makeItem(skin);
+  try{ window.__srWinInfo = { skin: skin, item: item }; }catch(e){}
   /* 4.10.0: сначала стеклобой, потом окно. Одна и та же функция вызывается
      из кейсов, босса, крафта, наград тира и апгрейда — эффект включится сам.
      Возврат без показа окна безопасен: показ идёт в колбэке эффекта,
@@ -10444,46 +10930,21 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   pendingWin = {skin, item, owned: !!alreadyOwned};
   const R = RAR[skin.r];
   const val = itemVal(item);
+  fillWinCard(skin, item);
   const card = $('#winCard');
-  card.className = R.cls;
-  card.dataset.rarity = skin.r;              /* 3.12.0 */
-  card.classList.toggle('first-drop', !!item.first);   /* 4.3.2: золотая пульсация первого дропа */
-  card.style.setProperty('--c', R.color);
-  $('#winRar').textContent = R.name;
-  $('#winArt').innerHTML = svgWeapon(skin);
-  $('#winName').textContent = skin.n;
-  $('#winVal').innerHTML = val.toLocaleString('ru-RU') + ' кредитов'
-    + `<div style="margin-top:7px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-         <span class="rr-badge">Износ ${item.fl.toFixed(3)} · ${floatName(item.fl)}</span>
-         ${item.st ? '<span class="rr-badge st">★ StatTrak™</span>' : ''}
-       </div>`;
-  $('#winSell').textContent = `Продать за ${val}`;
-  const fbd = $('#winFirst');
-  if(fbd) fbd.hidden = !item.first;
-  $('#winModal').classList.add('on');
-  /* 4.19.0: карточка не «появляется из ниоткуда», а раскрывается из рамки сцены.
-     Рамка нарисована ровно в габаритах #winCard, поэтому масштаб почти 1 —
-     шва между сценой и наградой не видно; содержимое просто проявляется. */
+  /* 4.20.0: приход из сцены — карточка обязана встать на место копии В ТОТ ЖЕ
+     кадр. Поэтому .18s появление (.modal.on → fin) отключаем: иначе копия
+     исчезает, а карточка ещё полкадра прозрачная — та самая «мигающая» склейка. */
+  var fromScene = !!window.__srFrameOff;
+  var wm = $('#winModal');
+  if(fromScene){ wm.style.animation = 'none'; }
+  wm.classList.add('on');
   try{
-    var fr = window.__srFrame;
-    if(fr && card){
-      var wr = card.getBoundingClientRect();
-      if(wr.width > 8 && wr.height > 8){
-        var sx = Math.max(.55, Math.min(1.2, fr.w / wr.width));
-        var sy = Math.max(.55, Math.min(1.2, fr.h / wr.height));
-        card.style.transition = 'none';
-        card.style.transformOrigin = '50% 50%';
-        card.style.transform = 'translate(' + (fr.cx - (wr.left + wr.width / 2)) + 'px,' +
-                               (fr.cy - (wr.top + wr.height / 2)) + 'px) scale(' + sx + ',' + sy + ')';
-        requestAnimationFrame(function(){
-          card.style.transition = 'transform .42s cubic-bezier(.2,.8,.3,1)';
-          card.style.transform = '';
-          setTimeout(function(){ card.style.transition = ''; }, 470);
-        });
-      }
-      if(window.__srFrameOff){ try{ window.__srFrameOff(true); }catch(e){} }
-      window.__srFrame = null; window.__srFrameOff = null;
-    }
+    /* копия в сцене стоит ровно на месте карточки и содержит то же самое,
+       поэтому «переход» это один кадр: гасим копию, карточка уже под ней. */
+    if(window.__srFrameOff){ try{ window.__srFrameOff(true); }catch(e){} }
+    window.__srFrame = null; window.__srFrameOff = null;
+    if(fromScene) setTimeout(function(){ wm.style.animation = ''; }, 240);
   }catch(e){}
   try{ tutEvent('win_show'); }catch(e){}
   if(item.first){ questState().firstUid = item.uid; questEvent('opened'); }
@@ -18226,6 +18687,10 @@ var DROP_SCENE = (function(){
   var raf = 0, done = false, onComplete = null, curSkin = null, color = '#ffb02e';
   var timers = [], dog = 0, sizeH = null;
   var shards = [], dust = [], bolts = [], tunnelT = 0, shakeT = 0, running = null;
+  /* 4.20.0: множитель затухания осколков. После разлома стекло убираем быстро:
+     осколки продолжали крутиться внизу под карточкой — их видно как «вращающийся
+     осколок». Пока идёт шаг разлома k=1, после него — k=4. */
+  var shardFadeK = 1;
   /* 4.13.4: паутина трещин — это рёбра той же сетки, из которой нарезаны
      осколки. Иначе трещины и осколки живут отдельно и не стыкуются. */
   var webV = null, webCols = 0, webRows = 0, glassGlow = 0;
@@ -18412,8 +18877,8 @@ var DROP_SCENE = (function(){
     stage.textContent = '';
     stage.appendChild(card);
     overlay.__card = card;
-    /* 4.19.0: в короткой сцене рамка та же — переход в карточку общий */
-    try{ var _g = frameGeom(); if(_g && typeof frameShow === 'function') frameShow(_g); }catch(e){}
+    /* 4.20.0: отдельной рамки здесь нет. Сама карточка короткой сцены —
+       это уже рамка с названием и стволом, второй контур был лишним кадром. */
 
     var behind = overlay.__behind;
     if(behind){ behind.style.opacity = '1'; }
@@ -18510,13 +18975,6 @@ var DROP_SCENE = (function(){
     gvid.addEventListener('canplay', function(){ if(gvid.videoWidth) vidOk = true; });
     tryNextGlass();
     gwrap.appendChild(gvid);
-
-    /* рамка кадра: тонкая линия в цвете редкости с медленной пульсацией */
-    gframe = document.createElement('div');
-    gframe.style.cssText = 'position:absolute;inset:5px;border-radius:8px;pointer-events:none;' +
-      'border:1px solid ' + color + '57;opacity:0;transition:opacity .4s ease-out;' +
-      'box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 64px ' + color + '1a';
-    overlay.appendChild(gframe);
 
     gcapEl = document.createElement('div');
     gcapEl.style.cssText = 'position:absolute;left:0;right:0;text-align:center;padding:0 22px;' +
@@ -18675,7 +19133,7 @@ var DROP_SCENE = (function(){
       var sh = shards[i];
       if(sh.alpha <= 0) continue;
       if(sh.ready){
-        sh.vy += 0.55; sh.px += sh.vx; sh.py += sh.vy; sh.rot += sh.vr; sh.alpha -= 0.012;
+        sh.vy += 0.55; sh.px += sh.vx; sh.py += sh.vy; sh.rot += sh.vr; sh.alpha -= 0.012 * shardFadeK;
         if(sh.alpha <= 0) continue;
       }
       alive = true;
@@ -18962,12 +19420,6 @@ var DROP_SCENE = (function(){
     }catch(e){}
     requestAnimationFrame(function(){ if(gvid) gvid.style.opacity = '1'; });
 
-    if(gframe){
-      gframe.style.borderColor = color + '57';
-      gframe.style.boxShadow = '0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 64px ' + color + '1a';
-      gframe.style.opacity = syncMode && syncRibbon ? '0' : '1';
-      gframe.style.animation = 'srFramePulse 2.6s ease-in-out infinite alternate';
-    }
     if(flash){
       flash.style.transition = 'none'; flash.style.opacity = '0.85';
       requestAnimationFrame(function(){
@@ -18987,9 +19439,15 @@ var DROP_SCENE = (function(){
       if(!gvid) return;
       gvid.style.transition = 'opacity ' + Math.round(ms * 0.22) + 'ms ease-in';
       gvid.style.opacity = '0';
-      if(gframe) gframe.style.boxShadow = '0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px ' + color + '12';
     }, Math.round(ms * 0.70));
-    later(function(){ try{ if(gvid) gvid.pause(); }catch(e){} next(); }, ms);
+    later(function(){
+      try{ if(gvid) gvid.pause(); }catch(e){}
+      /* 4.20.0: стекло ушло — осколкам даём полсекунды догореть и всё,
+         иначе они досыпают до самого низа экрана под карточкой */
+      shardFadeK = 4;
+      setTimeout(function(){ try{ shards.length = 0; }catch(e){}; shardFadeK = 1; }, 700);
+      next();
+    }, ms);
     return true;
   }
 
@@ -19020,11 +19478,14 @@ var DROP_SCENE = (function(){
     /* Ролик качается в фоне с момента сборки оверлея. К первому разлому он обычно
        уже готов; если нет — ждём до трети шага (максимум 600 мс) и только потом
        играем старую сцену. Так первый же разлом не выглядит «пустым». */
-    if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
+    /* 4.19.0: проверяем и vidOk. В Safari метаданные приходят позже, чем readyState>=2,
+       и получалось так: playGlassVideo() возвращает false (videoWidth ещё 0),
+       а next() уже никто не вызовет — шаг висел до сторожа, сцена выглядела рваной. */
+    if(gvid && gvid.readyState >= 2 && vidOk){ if(playGlassVideo(ms, next)) return; }
     var waited = 0, cap = Math.min(900, Math.round(ms * 0.4));
     (function tick(){
       if(done || !overlay) return;
-      if(gvid && gvid.readyState >= 2){ playGlassVideo(ms, next); return; }
+      if(gvid && gvid.readyState >= 2 && vidOk){ if(playGlassVideo(ms, next)) return; }
       waited += 120;
       if(waited >= cap || !gvid){ playGlassLegacy(ms, next); return; }
       setTimeout(tick, 120);
@@ -19035,121 +19496,136 @@ var DROP_SCENE = (function(){
      Зачем измерять карточку заранее: рамка должна появиться СРАЗУ в её
      габаритах, иначе между сценой и окном награды виден сдвиг. Меряем
      #winCard, показав модалку невидимой на один кадр (display:none даёт 0). */
-  function frameGeom(){
-    var m = document.getElementById('winModal'), c = document.getElementById('winCard');
-    if(!m || !c) return null;
-    var art = document.getElementById('winArt');
+  /* ---------- 4.20.0: рамка = копия карточки ----------
+     Что делает frameRender(info):
+       1) заполняет копию #winCard тем же дропом (редкость, имя, цена, износ);
+       2) ставит её ровно туда, где появится настоящая карточка;
+       3) показывает стекло и текст, оружие уже летит в свой слот.
+     Ни layout-измерений в середине анимации, ни второго кадра. */
+  /* убрать копию: гасим без перехода (копия и так стоит на месте карточки) */
+  function frameHide(){
+    var f = document.getElementById('dropFrame');
+    if(f && f.parentNode) f.parentNode.removeChild(f);
+    window.__srFrame = null; window.__srFrameOff = null;
+  }
+
+  function frameRender(info){
+    frameHide();
+    var src = document.getElementById('winCard');
+    if(!src || !info || !info.skin) return null;
+    /* мерим карточку, наполненную этим же дропом: иначе высота от прошлой награды */
+    try{ if(info.item) fillWinCard(info.skin, info.item); }catch(e){}
+    var g = frameGeomAt(src);
+    if(!g) return null;
+
+    var R = (typeof RAR !== 'undefined' && RAR[info.skin.r]) || { name:'', color:color, cls:'' };
+    var F = document.createElement('div');
+    F.id = 'dropFrame';
+    F.style.cssText = 'left:' + Math.round(g.x) + 'px;top:' + Math.round(g.y) + 'px;' +
+      'width:' + Math.ceil(g.w) + 'px;min-height:' + Math.round(g.h) + 'px';
+
+    /* 4.20.0: содержимое не дублируем руками, а берём из самой карточки —
+       она уже наполнена тем же дропом (fillWinCard выше). Поэтому рамка и
+       карточка не могут разойтись ни в тексте, ни в вёрстке, ни в размерах. */
+    F.className = 'win-card ' + ((R && R.cls) || '');
+    F.dataset.rarity = info.skin.r || '';
+    F.style.setProperty('--c', (R && R.color) || color);
+    F.innerHTML = src.innerHTML;
+
+    F.style.opacity = '0';
+    F.style.transform = 'scale(.965)';
+    document.body.appendChild(F);
+    window.__srFrame = { x:g.x, y:g.y, w:g.w, h:g.h, cx:g.x + g.w/2, cy:g.y + g.h/2,
+                         ax:g.ax, ay:g.ay, aw:g.aw, ah:g.ah, color:color };
+    window.__srFrameOff = frameHide;
+    /* проявление: стекло с текстом проступает за 260 мс, пока ствол долетает */
+    setTimeout(function(){
+      if(!F.parentNode) return;
+      F.style.transition = 'opacity .26s ease-out, transform .34s cubic-bezier(.2,.8,.3,1)';
+      F.style.opacity = '1';
+      F.style.transform = 'scale(1)';
+      setTimeout(function(){
+        var row = F.querySelector('.row');
+        if(row){ row.style.transition = 'opacity .3s ease-out'; row.style.opacity = '1'; }
+      }, 240);
+    }, 16);
+    return g;
+  }
+
+  /* геометрия настоящей карточки без показа окна */
+  function frameGeomAt(card){
+    var m = document.getElementById('winModal');
+    if(!m || !card) return null;
     var hid = false;
     if(!m.classList.contains('on')){
+      /* 4.20.0: у .modal.on есть анимация появления (fin: translateY(6px) → 0).
+         С ней карточка измерялась на 6–7 px ниже, и в момент показа награда
+         дёргалась вверх. На время замера анимацию снимаем. */
+      m.style.animation = 'none';
+      /* у первого дропа на карточке пульсирует firstPulse (scale), и замер
+         попадал в середину пульсации — рамка выходила на 2–3 px меньше */
+      card.style.animation = 'none';
       m.classList.add('on');
       m.style.visibility = 'hidden'; m.style.pointerEvents = 'none';
       hid = true;
     }
-    var r = c.getBoundingClientRect();
+    var r = card.getBoundingClientRect();
+    var art = document.getElementById('winArt');
     var a = art ? art.getBoundingClientRect() : r;
-    if(hid){ m.classList.remove('on'); m.style.visibility = ''; m.style.pointerEvents = ''; }
-    /* запасной путь: если карточка почему-то не измерилась (модалка в скрытом
-       контейнере, шрифты ещё не пришли), рамка всё равно должна появиться —
-       берём её собственные размеры из CSS. Без этого сцена оставалась без
-       рамки, и переход «рамка → карточка» пропадал целиком. */
+    if(hid){
+      m.classList.remove('on'); m.style.visibility = ''; m.style.pointerEvents = '';
+      m.style.animation = ''; card.style.animation = '';
+    }
     if(!r.width || !r.height){
-      var fw = Math.min(Math.round(window.innerWidth * 0.92), 340);
-      var fh = 302;
-      try{
-        if(typeof errLogAdd === 'function') errLogAdd('drop-frame', 'карточка не измерилась, рамка по CSS', 'frameGeom');
-      }catch(e){}
-      return { x: (window.innerWidth - fw) / 2, y: (window.innerHeight - fh) / 2, w: fw, h: fh,
-               ax: window.innerWidth / 2, ay: window.innerHeight / 2 - fh / 2 + 22 + 11 + 52,
-               aw: fw * 0.86, ah: 104, fallback: true };
+      /* запасной путь, если карточка не измерилась: размеры из её же CSS */
+      var fw = Math.min(Math.round(window.innerWidth * 0.92), 340), fh = 302;
+      return { x:(window.innerWidth - fw)/2, y:(window.innerHeight - fh)/2, w:fw, h:fh,
+               ax:window.innerWidth/2, ay:window.innerHeight/2, aw:fw*0.86, ah:104 };
     }
-    return { x: r.left, y: r.top, w: r.width, h: r.height,
-             ax: a.left + a.width / 2, ay: a.top + a.height / 2,
-             aw: a.width || r.width, ah: a.height || 104 };
-  }
-
-  function frameShow(g){
-    frameHide();
-    var f = document.createElement('div');
-    f.id = 'dropFrame';
-    f.style.setProperty('--c', color);
-    f.style.left = Math.round(g.x) + 'px';
-    f.style.top = Math.round(g.y) + 'px';
-    f.style.width = Math.round(g.w) + 'px';
-    f.style.height = Math.round(g.h) + 'px';
-    document.body.appendChild(f);
-    /* setTimeout, а не requestAnimationFrame: в фоновой вкладке и в headless
-       rAF приходит раз в секунду-две, и рамка успевала простоять невидимой
-       весь шаг. Таймер срабатывает и там. */
-    setTimeout(function(){
-      if(!f.parentNode) return;
-      f.style.transition = 'opacity .22s ease-out';
-      f.style.opacity = '1';
-    }, 16);
-    window.__srFrame = { x: g.x, y: g.y, w: g.w, h: g.h,
-                         cx: g.x + g.w / 2, cy: g.y + g.h / 2, color: color };
-    window.__srFrameOff = frameHide;
-    /* страховка: если награда по какой-то причине не покажется, рамка не залипнет */
-    setTimeout(function(){ if(!window.__srFrame) frameHide(); }, 2600);
-  }
-
-  function frameHide(fast){
-    var f = document.getElementById('dropFrame');
-    if(!f) return;
-    if(fast){
-      /* карточка (z80) ниже рамки (z97): перед её показом рамка уходит сразу,
-         иначе последние 200 мс она лежит поверх текста награды */
-      f.style.zIndex = '60';
-      f.style.transition = 'none';
-      f.style.opacity = '0';
-      setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); }, 60);
-      return;
-    }
-    f.style.transition = 'opacity .18s ease-out';
-    f.style.opacity = '0';
-    setTimeout(function(){ if(f.parentNode) f.parentNode.removeChild(f); }, 220);
-  }
-
-  /* оружие приезжает в слот арта карточки: то самое «сжатие», но не от
-     поворота в 3D, а от честного масштаба — и оно уже там, где будет в карточке */
-  function moveWeaponToSlot(g){
-    if(!stage || !curSkin) return;
-    var prev = stage.querySelector('.ds-holder') || stage.querySelector('img') || stage.querySelector('svg');
-    var pr = prev ? prev.getBoundingClientRect() : null;
-    var h = Math.max(56, Math.min(132, Math.round(g.ah * 0.9)));
-    stage.innerHTML = '';
-    stage.style.opacity = '1';
-    stage.style.perspective = '';
-    stage.style.boxShadow = '';
-    var art = skinVisual(curSkin, h + 'px');
-    art.style.cssText = 'position:absolute;left:' + Math.round(g.ax) + 'px;top:' + Math.round(g.ay) + 'px;' +
-      'transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;' +
-      'width:min(78vw,' + Math.round(g.aw * 0.86) + 'px);height:' + h + 'px;pointer-events:none';
-    stage.appendChild(art);
-    if(pr && pr.width > 8 && pr.height > 8){
-      var nr = art.getBoundingClientRect();
-      if(nr.width > 8 && nr.height > 8){
-        var sx = pr.width / nr.width, sy = pr.height / nr.height;
-        var dx = (pr.left + pr.width / 2) - (nr.left + nr.width / 2);
-        var dy = (pr.top + pr.height / 2) - (nr.top + nr.height / 2);
-        try{
-          art.animate([
-            { transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' },
-            { transform: 'translate(-50%,-50%) translate(0,0) scale(1,1)' }
-          ], { duration: 520, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
-        }catch(e){}
-      }
-    }
+    return { x:r.left, y:r.top, w:r.width, h:r.height,
+             ax:a.left + a.width/2, ay:a.top + a.height/2,
+             aw:a.width || r.width, ah:a.height || 104 };
   }
 
   STEPS.frame = function(ms, next){
+    /* остатки частиц прошлых шагов: пыль и осколки продолжали крутиться
+       внизу экрана под карточкой */
+    try{ shards.length = 0; dust.length = 0; bolts.length = 0; glassGlow = 0; }catch(e){}
+    try{ if(cx) cx.clearRect(0, 0, cv.width / DPR, cv.height / DPR); }catch(e){}
+    try{ if(svg) svg.innerHTML = ''; }catch(e){}
+    try{ if(slit) slit.style.opacity = '0'; }catch(e){}
+    try{ if(gcapEl) gcapEl.style.opacity = '0'; }catch(e){}   /* подпись в сцене больше не нужна: она в рамке */
+
+    var info = (typeof window !== 'undefined' && window.__srWinInfo) || null;
     var g = null;
-    try{ g = frameGeom(); }catch(e){}
+    try{ g = info ? frameRender(info) : null; }
+    catch(e){
+      /* молчать нельзя: без рамки сцена выглядит сломанной, а причина — тут */
+      try{ state.errLog = (state.errLog || []); state.errLog.push({t:Date.now(), kind:'drop-frame', msg:String((e && e.message) || e)}); }catch(_){}
+      window.__srFrameErr = String((e && e.stack) || e);
+    }
     if(g){
       try{ SFX.frameOpen(); }catch(e){}
-      moveWeaponToSlot(g);
-      frameShow(g);
+      /* 4.20.0: оружие из вылета садится в слот рамки. Летит оно крупным
+         (34vh), а в карточке слот 104 px — поэтому за те же 240 мс оно
+         уменьшается и уходит за стекло, а в рамке уже стоит его точная копия
+         в слоте. Без этого крупный ствол торчал из-за краёв карточки. */
+      try{
+        var wrapEl = stage && stage.querySelector('.ds-art');
+        if(wrapEl){
+          var r0 = wrapEl.getBoundingClientRect();
+          var sc = Math.min(g.aw / Math.max(1, r0.width), g.ah / Math.max(1, r0.height));
+          sc = Math.max(0.2, Math.min(1, sc));
+          wrapEl.style.transformOrigin = '50% 50%';
+          wrapEl.style.transition = 'transform .24s cubic-bezier(.2,.8,.3,1), opacity .24s ease-out';
+          wrapEl.style.transform = 'translate(' + Math.round(g.ax - (r0.left + r0.width / 2)) + 'px,' +
+            Math.round(g.ay - (r0.top + r0.height / 2)) + 'px) scale(' + sc.toFixed(3) + ')';
+          wrapEl.style.opacity = '0.12';
+          setTimeout(function(){ if(stage) stage.style.opacity = '0'; }, 220);
+        }
+      }catch(e){}
     }
-    later(next, Math.max(280, ms));
+    later(next, Math.max(240, Math.round(ms * 0.9)));
   };
 
   /* Bullet-Time: мир замирает, скин поднимается — БЕЗ поворота вокруг оси Y.
@@ -19175,12 +19651,21 @@ var DROP_SCENE = (function(){
       stage.style.opacity = '1';
       stage.style.perspective = '900px';
       var wrap = document.createElement('div');
+      /* 4.20.0: цель полёта — сразу слот в будущей карточке. Раньше ствол
+         останавливался в центре экрана, и рамке приходилось его догонять:
+         отсюда и брался «пустой кадр» между вылетом и карточкой. */
+      var tgt = null;
+      try{ tgt = frameGeomAt(document.getElementById('winCard')); }catch(e){}
+      var cx0 = window.innerWidth / 2, cy0 = window.innerHeight / 2;
+      var dx = tgt ? Math.round(tgt.ax - cx0) : 0;
+      var dy = tgt ? Math.round(tgt.ay - cy0) : -Math.round(window.innerHeight * 0.06);
       wrap.style.cssText = 'transform-style:preserve-3d;transition:transform ' + Math.round(ms) + 'ms cubic-bezier(.3,.7,.3,1);' +
-        'transform:translateY(38px) rotateX(6deg) scale(.94)';
+        'transform:translateY(38px) translate(' + dx + 'px,' + (dy + Math.round(window.innerHeight * 0.16)) + 'px) ' +
+        'rotateX(6deg) scale(.94)';
       wrap.appendChild(skinVisual(curSkin, '34vh'));
       stage.appendChild(wrap);
       requestAnimationFrame(function(){
-        wrap.style.transform = 'translateY(-30px) rotateX(0deg) scale(1)';
+        wrap.style.transform = 'translateY(-30px) translate(' + dx + 'px,' + dy + 'px) rotateX(0deg) scale(1)';
       });
     }
     if(overlay){
