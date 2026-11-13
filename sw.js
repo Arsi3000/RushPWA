@@ -10,14 +10,14 @@
    4) Всё, что не GET, и любые внешние хосты (Firebase, картинки с GitHub Pages) —
       сразу в сеть, кэш не трогаем.
 */
-var VERSION = '4.22.5';
+var VERSION = '4.22.6';
 var CACHE = 'skinrush-' + VERSION;
 
-/* ВАЖНО про картинку: игра просит её по адресу aug.png?v=5
+/* ВАЖНО про картинку: игра просит её по адресу aug.png?v=4
    (WEAPON_IMG_V в index.html). Кеш сравнивает полный адрес с query-строкой,
    поэтому предзагружать надо ровно с той же меткой — иначе офлайн будет промах.
    Меняете PNG — поднимайте ?v= и здесь, и в HTML, иначе здесь останется старая.
-   4.0.0: остальные картинки оружия (glock.png и т.д.) в CORE не перечислены
+   3.12.3: остальные картинки оружия (glock.png и т.д.) в CORE не перечислены
    намеренно — их имена теперь свободные, а офлайн-кэш доберёт их сам при
    первой загрузке (стратегия «кэш первым, промах — сеть»). */
 var CORE = [
@@ -27,11 +27,8 @@ var CORE = [
   './icon-180.png',
   './icon-192.png',
   './icon-512.png',
-  './icon-maskable-192.png',
   './icon-maskable-512.png',
-  './favicon-32.png',
-  './aug.png?v=5',
-  './music/open.mp3'
+  './aug.png?v=4'
 ];
 
 self.addEventListener('install', function(e){
@@ -52,21 +49,6 @@ self.addEventListener('activate', function(e){
                              .map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
-  /* 4.12.0: музыка. В install её не кладём — 2.6 МБ задержали бы установку
-     на мобильной сети, а приложение должно открываться сразу. Догружаем
-     фоном после активации; если не успеет — трек закэшируется при первом
-     проигрывании обычной стратегией «кэш первым, промах — сеть». */
-  var warm = ['./music/Skin-rush.ogg', './music/Skin-rush.m4a', './video/glassbreak.webm'];
-  caches.open(CACHE).then(function(c){
-    warm.forEach(function(u){
-      c.match(u).then(function(hit){
-        if(hit) return null;
-        return fetch(u, {cache:'reload'}).then(function(r){
-          if(r && r.ok) return c.put(u, r);
-        }).catch(function(){ return null; });
-      });
-    });
-  }).catch(function(){});
 });
 
 function isExternal(url){
@@ -81,15 +63,6 @@ self.addEventListener('fetch', function(e){
   var url;
   try { url = new URL(req.url); } catch(err){ return; }
   if (isExternal(url)) return;
-
-  /* 4.15.0: видео и звук не перехватываем.
-     Safari (и любой WebKit на iPhone) запрашивает медиа кусками — заголовком
-     Range. Service worker отдаёт из кэша целый ответ 200, Safari такой ответ
-     на Range не принимает и ролик молча не играет. Именно поэтому на iPhone
-     не появлялась заставка, хотя в Chrome и Яндекс.Браузере она работала.
-     Пусть медиа идёт напрямую в сеть — там GitHub Pages сам отдаст куски. */
-  if (req.headers.has('range')) return;
-  if (req.destination === 'video' || req.destination === 'audio') return;
 
   /* навигация: сеть против таймаута, при неудаче — кэш */
   if (req.mode === 'navigate' || req.destination === 'document'){
