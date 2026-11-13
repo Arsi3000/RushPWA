@@ -8126,7 +8126,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.3';
+const VERSION = '4.22.4';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -16265,6 +16265,11 @@ function srAsk(text, opts){
     var box = document.createElement('div');
     box.className = 'modal';
     box.id = 'srAsk';
+    /* 4.22.4: окно вопроса уходило ПОД карточку профиля (у неё z-index
+       2147483600, а у .modal — 80): человек жал «Сменить игрока» и не видел
+       ни вопроса, ни кнопок. Теперь наш вопрос выше всех окон игры,
+       но ниже формы входа (2147483700). */
+    box.style.zIndex = '2147483640';
     box.innerHTML =
       '<div class="sheet" style="max-width:min(400px,calc(100vw - 28px))">' +
         '<header><h3>' + (opts.title || 'Подтвердите') + '</h3></header>' +
@@ -18522,6 +18527,15 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.22.4 · Вход без тупиков</b><br>
+      <b>Окно вопроса больше не прячется.</b> «Сменить игрока» в профиле показывало вопрос
+      ПОД карточкой профиля — его просто не было видно. Теперь он поверх всех окон.<br>
+      <b>«Войти» снова работает.</b> После выхода имя оставалось в памяти, и кнопка «Войти»
+      молча ничего не делала: форма считала, что вы уже вошли. Теперь она открывается всегда
+      и подставляет ваш ник — остаётся ввести пароль.<br>
+      <b>Одна кнопка в форме.</b> «Создать аккаунт» убрана: она делала то же самое. Внизу так
+      и написано — одна кнопка на вход и регистрацию.<br>
+      <b>Пароль — от 6 символов</b> и в поле, и в подсказке: короче Firebase не принимает.<br>
       <b style="color:#ffd166">Что нового в 4.22.3 · Аккаунт возвращает прогресс</b><br>
       <b>Вход возвращает всё, а не только имя.</b> Раньше в аккаунте хранились одни числа:
       при входе на новом устройстве уровень оставался первым, а инвентарь — пустым. Теперь
@@ -21665,7 +21679,7 @@ async function rkAttach(nick, pass){
       err:'Неверный пароль для ника «' + nick + '». Если ник ваш — вспомните пароль; ' +
           'если забыли, выберите другой ник или войдите на том устройстве, где играли.' };
     if(a.bad === 'NO_ACC') return { ok:false, net:true, needPass:true,
-      err:'Аккаунта «' + nick + '» нет — введите пароль и нажмите «Создать аккаунт»' };
+      err:'Аккаунта «' + nick + '» нет — введите пароль и нажмите «Войти в игру»' };
     return { ok:false, net:true, err:a.err || 'Не удалось войти' };
   }
   const madeNew = !!a.made, wasLegacy = !!a.legacy;
@@ -22145,7 +22159,9 @@ function renderRankHero(){
       <div class="rk-err">${rk.err || ''}</div>`;
     const lg2 = $('#rkLogin2');
     if(lg2) lg2.addEventListener('click', ()=>{ if(window.SRT_LOGIN) window.SRT_LOGIN(); });
-    const out2 = $('#rkOut2');
+    /* 4.22.4: кнопка в разметке имеет id rkOut, а обработчик искал rkOut2 —
+       кнопка «Сменить игрока» была мёртвой. Ищем обе. */
+    const out2 = $('#rkOut2') || $('#rkOut');
     if(out2) out2.addEventListener('click', async ()=>{
       if(!await srAsk('Выйти из аккаунта на этом устройстве? Прогресс останется, но вернуться к нему можно будет по коду сохранения.',
                       {ok:'Выйти', cancel:'Остаться'})) return;
@@ -25987,9 +26003,13 @@ window.__sr = {
   }
   function srtSetNick(nick){ var inp=document.getElementById('rkNick'); if(inp){ inp.value=nick||''; try{ inp.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} } }
   function srtCurrentName(){ var a=srtAcc(); return (a&&(a.name||a.nick))||''; }
-  function srtEntryHTML(){
+  function srtEntryHTML(force){
     var acc=srtAcc();
-    if(acc && (acc.name||acc.nick)) return '';
+    /* 4.22.4: раньше при записанном имени форма не строилась вовсе — и кнопка
+       «Войти» в карточке рейтинга молча ничего не делала (человек «вышел»,
+       имя осталось, а вернуться в аккаунт уже некуда). Теперь форма строится
+       всегда: имя из памяти просто подставляется в поле. */
+    if(!force && acc && (acc.name||acc.nick)) return '';
     /* 4.7.0: форма переписана в тонах игры. Никаких «Ник (2–16)» — вместо
        инструкции в скобках живой превью профиля: аватар и ник, как они будут
        выглядеть в игре. Пароль — вторым шагом, кнопка одна главная. */
@@ -26014,12 +26034,11 @@ window.__sr = {
       + '</div>'
       + '<label class="srL-lbl" for="srtPass">Пароль</label>'
       + '<div class="srL-field">'
-      +   '<input id="srtPass" type="password" maxlength="32" autocomplete="current-password" placeholder="минимум 4 символа">'
+      +   '<input id="srtPass" type="password" maxlength="32" autocomplete="current-password" placeholder="минимум 6 символов">'
       + '</div>'
-      + '<button class="srL-primary" id="srtLogin" type="button">В игру</button>'
-      + '<button class="srL-second" id="srtRegister" type="button">Создать аккаунт</button>'
-      + '<div class="srL-note">Вход и регистрация — одна кнопка «В игру»: если ника ещё нет, '
-      + 'аккаунт создастся сам. Пароль запомните — по нему вы войдёте на другом телефоне.</div>'
+      + '<button class="srL-primary" id="srtLogin" type="button">Войти в игру</button>'
+      + '<div class="srL-note">Одна кнопка на всё: если такого ника ещё нет — аккаунт создастся '
+      + 'сам, если есть — просто войдёте. Пароль запомните: по нему вы войдёте на другом телефоне.</div>'
       + '<button class="srL-guest" id="srtGuest" type="button">Играть без аккаунта</button>'
       + '<div id="srtMsg"></div>'
       + '</div></div>';
@@ -26046,7 +26065,7 @@ window.__sr = {
         if(n>=total){
           clearInterval(iv);
           try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
-          srtMsg('Нравится? Тогда жми «В игру»','#8b98b0');
+          srtMsg('Нравится? Тогда жми «Войти в игру»','#8b98b0');
         }
       }, 70);
     });
@@ -26129,7 +26148,7 @@ window.__sr = {
       });
     }
     ln.addEventListener('click',function(){ go('login'); });
-    rg.addEventListener('click',function(){ go('register'); });
+    if(rg) rg.addEventListener('click',function(){ go('register'); });
     if(gs) gs.addEventListener('click',function(){ closeEntry(); srtMsg(''); });
     var cl = document.getElementById('srtClose');
     if(cl) cl.addEventListener('click', function(){ closeEntry(); });
@@ -26144,7 +26163,8 @@ window.__sr = {
   }
   
   function srtOpenLogin(){
-    if(srtCurrentName()) return;
+    /* форма уже открыта — второй раз не плодим; записанное имя больше не блокирует
+       вход: «Сменить игрока» и «Войти» должны открывать форму всегда */
     if(document.getElementById('srtEntry')) return;
     /* 4.22.2: форма входа открывается поверх любого окна. Карточку профиля
        прячем — иначе она остаётся подложкой и её тёмный слой виден сквозь форму.
@@ -26155,10 +26175,24 @@ window.__sr = {
       var pk = document.getElementById('srPicker');
       if(pk && pk.classList.contains('on')) pk.classList.remove('on');
     }catch(e){}
-    var html=srtEntryHTML();
+    var html=srtEntryHTML(true);
     if(!html) return;
     var m=document.createElement('div'); m.innerHTML=html; var node=m.firstChild;
-    if(node){ document.body.appendChild(node); srtHandleAuth(); }
+    if(node){
+      document.body.appendChild(node); srtHandleAuth();
+      /* подставляем запомненный ник — остаётся ввести только пароль */
+      var pn = srtCurrentName();
+      if(pn){
+        var ni = document.getElementById('srtNick');
+        if(ni){
+          ni.value = pn;
+          try{ ni.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
+          var pf = document.getElementById('srtPass');
+          if(pf) setTimeout(function(){ try{ pf.focus(); }catch(e){} }, 240);
+        }
+        srtMsg('Введите пароль от ника «' + pn + '» и нажмите «Войти в игру»', '#ffd27a');
+      }
+    }
   }
   function srtInit(){
     try{
