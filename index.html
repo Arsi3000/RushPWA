@@ -402,6 +402,8 @@ to{opacity:1;transform:none}
 .circle .txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .circle .pct{font-size:clamp(15px,3vw,20px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .circle .cap{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:#8a97b0;text-align:center;line-height:1.25}
+/* 4.23.2: подпись скрыта по умолчанию; hidden должен перебивать display из .txt */
+.circle .cap[hidden]{display:none}
 .btn-up{
     border:none;border-radius:14px;padding:12px 20px;font:inherit;font-weight:800;font-size:var(--fs-14, 14px);cursor:pointer;
     background:linear-gradient(180deg,#43c97a,#25994f);color:#062b13;transition:.15s;white-space:nowrap;
@@ -872,6 +874,8 @@ nav{gap:8px;padding-top:12px}
 .circle .txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .circle .pct{font-size:clamp(15px,3vw,20px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .circle .cap{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:#8a97b0;text-align:center;line-height:1.25}
+/* 4.23.2: подпись скрыта по умолчанию; hidden должен перебивать display из .txt */
+.circle .cap[hidden]{display:none}
 .btn-up{
     border:none;border-radius:14px;padding:12px 20px;font:inherit;font-weight:800;font-size:var(--fs-14, 14px);cursor:pointer;
     background:linear-gradient(180deg,#43c97a,#25994f);color:#062b13;transition:.15s;white-space:nowrap;
@@ -5398,7 +5402,9 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
             <div class="wheel-logo" aria-hidden="true"></div>
             <div class="txt">
               <div class="pct" id="pctTxt">—</div>
-              <div class="cap" id="pctCap">шанс<br>апгрейда</div>
+              <!-- 4.23.2: подписи «шанс апгрейда» больше нет — процент говорит сам.
+                   Эта строка показывается только на время прокрутки как статус. -->
+              <div class="cap" id="pctCap" hidden></div>
             </div>
           </div>
           <button class="btn-up" id="btnUp" disabled>Апгрейд</button>
@@ -8199,7 +8205,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.23.1';
+const VERSION = '4.23.2';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -13837,7 +13843,8 @@ function spinUpgrade(isReroll){
   upPhase = 'spin';
   btn.disabled = true;
   btn.textContent = isReroll ? 'Второй шанс…' : 'Крутится…';
-  $('#pctCap').innerHTML = isReroll ? 'шанс<br>второго' : 'апгрейд<br>идёт';
+  const capEl = $('#pctCap');
+  if(capEl){ capEl.hidden = false; capEl.textContent = isReroll ? 'второй шанс' : 'идёт'; }
   $('#upLast').innerHTML = isReroll ? '🎲 Второй шанс крутится…' : 'Колесо крутится…';
   if(tip) tip.textContent = isReroll ? 'Второй шанс: шанс вдвое ниже, выигрыш вдвое меньше — кредитами' : 'Стрелка крутится сама и остановится в своём секторе';
 
@@ -13868,7 +13875,7 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
     FX.vibrate([40, 30, 60]);
     $('#upLast').innerHTML = '<b class="lose">ПРОВАЛ.</b> 🎲 <b style="color:#ffd08a">Второй шанс!</b> Крутим ещё раз: шанс вдвое ниже, выигрыш вдвое меньше и кредитами.';
     toast('Второй шанс — крутим ещё раз');
-    $('#pctCap').innerHTML = 'шанс<br>апгрейда';
+    { const c0 = $('#pctCap'); if(c0){ c0.hidden = true; c0.textContent = ''; } }
     /* даём колесу остыть, затем перезапуск с флагом реролла */
     setTimeout(()=>{
       resetWheelRotation(true);
@@ -13898,7 +13905,7 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
   modsReset();
   upRoundShield = false;
   upRoundLucky = false;
-  $('#pctCap').innerHTML = 'шанс<br>апгрейда';
+  { const c0 = $('#pctCap'); if(c0){ c0.hidden = true; c0.textContent = ''; } }
 
   questEvent('upgraded');
   try{ tutEvent(win ? 'up_win' : 'up_fail'); }catch(e){}
@@ -18726,6 +18733,10 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.23.2 · Круг без лишней подписи</b><br>
+      <b>Внутри кольца остался только процент.</b> Подпись «шанс апгрейда» убрана — она
+      повторяла то, что и так видно. На время прокрутки вместо неё на секунду появляется
+      короткое «идёт», чтобы было понятно, что колесо работает.<br>
       <b style="color:#ffd166">Что нового в 4.23.1 · Кольцо наливается плавно</b><br>
       <b>Полоса шанса больше не прыгает.</b> Она перерисовывалась мгновенно на каждое
       изменение ставки — читалось как рывок. Теперь длина ведётся покадрово с мягким
