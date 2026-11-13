@@ -2397,13 +2397,16 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 /* ---------- 3.5.0: БАРАБАН КАК В КАЗИНО ---------- */
 .sr-slot{padding:0}
 .slot-sheet{width:min(100vw,720px);height:100dvh;max-height:100dvh;border-radius:0;border:0;
-  background:linear-gradient(180deg,#141a24,#0b0f15)}
+  background:linear-gradient(180deg,#141a24,#0b0f15);overflow-y:auto;-webkit-overflow-scrolling:touch}
 
 @media(min-width:560px){.sr-slot{padding:14px}
 .slot-sheet{height:min(94dvh,860px);border-radius:20px;border:1px solid rgba(255,255,255,.12)}
 
 }.slot-head{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:10px;padding:10px 12px;
-  flex:0 0 auto;min-height:46px;border-bottom:1px solid rgba(255,255,255,.07)}
+  flex:0 0 auto;min-height:46px;border-bottom:1px solid rgba(255,255,255,.07);
+  /* 4.22.5: на телефоне содержимое автомата выше экрана, и шапка с крестиком
+     уезжала вверх — выйти из «Барабана» было нечем. Теперь шапка липкая. */
+  position:sticky;top:0;z-index:6;background:linear-gradient(180deg,#141a24,#121821)}
 .slot-head .slot-title{flex:1 1 auto}
 .slot-head .slot-spins{flex:0 0 auto;margin:0}
 .slot-head .x{position:static;margin:0;flex:0 0 auto}
@@ -4522,7 +4525,11 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rk2-icobtn:active{transform:scale(.94)}
 
 /* вкладки метрик */
-.rk2-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 2px;scrollbar-width:none}
+.rk2-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 2px;scrollbar-width:none;
+  /* 4.22.5: на узком экране вкладки упирались в край и последняя обрезалась
+     наполовину — теперь они прокручиваются и «прилипают» к краю с отступом */
+  -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.rk2-tab{scroll-snap-align:start}
 .rk2-tabs::-webkit-scrollbar{display:none}
 .rk2-tab{position:relative;flex:0 0 auto;border:1px solid rgba(255,255,255,.1);
   background:rgba(255,255,255,.045);color:#c3cde0;font:800 var(--fs-11, 11px)/1 inherit;
@@ -4601,7 +4608,10 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rk2-sech{display:flex;align-items:center;gap:8px;margin:0 2px 7px}
 .rk2-sech .t{flex:1;font-size:var(--fs-10, 10px);letter-spacing:.14em;text-transform:uppercase;
   color:var(--dim,#8b98ae);font-weight:900}
-.rk2-sech .x{font-size:var(--fs-10, 10px);color:#6f7d93;font-weight:700}
+.rk2-sech .x{font-size:var(--fs-10, 10px);color:#6f7d93;font-weight:700;
+  /* 4.22.5: «соседи сверху и снизу» ломалось в столбик по одному слову —
+     в узком блоке справа это выглядело как четыре строки каши */
+  white-space:nowrap;flex:0 0 auto;text-align:right}
 .rk2-list{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.09);
   background:rgba(255,255,255,.03)}
 .rk2-row{display:flex;align-items:center;gap:9px;padding:9px 12px;font-size:var(--fs-12, 12px);
@@ -4661,12 +4671,17 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   text-decoration:underline;padding:0}
 
 /* оверлей «Лиги» */
-.rk2-sheet{position:fixed;inset:0;z-index:120;display:none;flex-direction:column;
+.rk2-sheet{position:fixed;inset:0;z-index:2147483000;display:none;flex-direction:column;
   background:rgba(6,8,13,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
-  max-width:520px;margin:0 auto}
+  max-width:520px;margin:0 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .rk2-sheet.on{display:flex}
-.rk2-sheet .sh{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+/* 4.22.5: шапка с крестиком липнет к верху. Раньше карточка лиги уезжала вверх
+   вместе с прокруткой, и выйти из неё было нечем — крестик оставался за кадром. */
+.rk2-sheet .sh{display:flex;align-items:center;gap:9px;margin-bottom:6px;
+  position:sticky;top:0;z-index:3;padding:2px 0 6px;
+  background:linear-gradient(180deg,rgba(6,8,13,.99) 70%,rgba(6,8,13,0))}
+.rk2-sheet .sh .rk2-icobtn{background:rgba(255,255,255,.08)}
 .rk2-sheet h3{margin:0;font-size:var(--fs-16, 16px);font-weight:900;flex:1}
 .rk2-sbody{flex:1;overflow-y:auto;padding-bottom:8px}
 .rk2-leag{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;
@@ -8126,7 +8141,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.4';
+const VERSION = '4.22.5';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -11696,9 +11711,13 @@ function renderInv(reset){
     }
     el.style.setProperty('--c', R.color);
 
-    // Проверка на новинку (простая эвристика: последние 5 полученных)
-    if(x.uid >= uidSeq - 5 && state.newItems && state.newItems.includes(x.uid)) {
+    /* 4.22.5: бейдж «новые» считал 5 предметов, а метка NEW появлялась только у
+       тех, чей uid попадал в последние пять по счётчику (x.uid >= uidSeq - 5).
+       После восстановления прогресса из аккаунта uid далеко от счётчика — цифра
+       есть, а ни одной метки в сетке нет. Теперь метка ровно по списку новых. */
+    if(state.newItems && state.newItems.indexOf(x.uid) >= 0){
       el.classList.add('is-new');
+      el.title = 'Новый предмет — открой карточку, и метка снимется';
     }
 
     el.innerHTML = `
@@ -18484,9 +18503,43 @@ function bindErrLog(){
     toast(ok ? 'Журнал ошибок скопирован' : txt.slice(0, 120));
   });
 }
-/* 4.22.0: «Что нового» отдельно от профиля. В «О игре» остаётся только
-   последняя версия, остальная история — за кнопкой. Раньше двенадцать блоков
-   на полтора экрана раздували вкладку, и до кнопки звука приходилось листать. */
+/* 4.22.5: в «О игре» видно ровно ДВЕ последние версии, остальные — за кнопкой.
+   Раньше обещали «только последнюю», а в карточке лежали пять блоков подряд:
+   полтора экрана текста перед кнопками. Сворачиваем автоматически, по заголовкам
+   «Что нового» — новая версия появится сверху и правило сработает само. */
+function chlogCollapse(){
+  var body = document.getElementById('aboutBody');
+  var old  = document.getElementById('aboutChlogOld');
+  var btn  = document.getElementById('aboutChlogBtn');
+  if(!body || !old) return;
+  var card = null;
+  for(var i = 0; i < body.children.length; i++){
+    var el = body.children[i];
+    if(el.tagName === 'DIV' && /Что нового/.test(el.textContent || '')){ card = el; break; }
+  }
+  if(!card) return;
+  var nodes = Array.prototype.slice.call(card.childNodes);
+  var starts = [];
+  nodes.forEach(function(n, idx){
+    if(n.nodeType === 1 && n.tagName === 'B' && /^\s*Что нового/.test(n.textContent || '')) starts.push(idx);
+  });
+  if(starts.length <= 2) return;                 /* уже коротко — ничего не прячем */
+  var keep = starts[1];                          /* начало второй версии */
+  var cut  = starts[2];                          /* начало третьей — её и прячем */
+  var box = document.createElement('div');
+  box.id = 'aboutChlogMore';
+  box.style.marginTop = '10px';
+  nodes.slice(cut).forEach(function(n){ box.appendChild(n); });
+  old.insertBefore(box, old.firstChild);
+  /* если карточка стала пустой после переноса — не показываем пустоту */
+  if(btn){
+    var hidden = starts.length - 2;
+    btn.textContent = 'Ещё ' + hidden + ' версий ▾';
+    btn.dataset.label = btn.textContent;
+  }
+  /* разделитель между второй и скрытой частью, чтобы не слипались */
+  if(keep !== cut) card.appendChild(document.createElement('br'));
+}
 document.addEventListener('click', function(e){
   var b = e.target && e.target.closest ? e.target.closest('#aboutChlogBtn') : null;
   if(!b) return;
@@ -18494,7 +18547,7 @@ document.addEventListener('click', function(e){
   if(!box) return;
   var open = !box.hidden;
   box.hidden = open;
-  b.textContent = open ? 'Вся история версий ▾' : 'Свернуть историю ▴';
+  b.textContent = open ? (b.dataset.closed || 'Вся история версий ▾') : 'Свернуть историю ▴';
 });
 
 function renderAbout(){
@@ -18527,6 +18580,19 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.22.5 · Одно число про себя</b><br>
+      <b>Место в рейтинге сходится с таблицей.</b> Карточка считала место по локальным
+      кредитам и инвентарю, а строка в топе показывает то, что когда-то уехало в базу.
+      Раз числа разные — место съезжало: «#9» в карточке при четвёртом месте в списке.
+      Теперь для себя берутся цифры из своей строки таблицы.<br>
+      <b>Из барабана и из лиг снова есть выход.</b> На телефоне шапка с крестиком уезжала
+      вверх вместе с содержимым — выйти было нечем. Теперь шапка липнет к верху. Заодно
+      в лигах больше нет «До 💎 undefined» и капсула нижней навигации не перекрывает лист.<br>
+      <b>Метка «новое» видна.</b> Цифра на «Коллекции» считала пять новых предметов, а метки
+      NEW в сетке не было ни у одного: показывались только последние пять по счётчику.
+      Теперь метка стоит ровно на тех предметах, что в счёте, и снимается по клику.<br>
+      <b>«О игре» стало короче:</b> видно две последние версии, остальные — за кнопкой
+      «Ещё N версий».<br>
       <b style="color:#ffd166">Что нового в 4.22.4 · Вход без тупиков</b><br>
       <b>Окно вопроса больше не прячется.</b> «Сменить игрока» в профиле показывало вопрос
       ПОД карточкой профиля — его просто не было видно. Теперь он поверх всех окон.<br>
@@ -19102,6 +19168,8 @@ function renderAbout(){
     <button class="btn-ghost" id="btnReset" style="width:100%;margin-top:16px;color:#ff8f9f;border-color:rgba(255,110,130,.35)">
       Сбросить прогресс
     </button>`;
+  /* 4.22.5: в «О игре» остаются две последние версии, остальные — за кнопкой */
+  try{ chlogCollapse(); }catch(e){}
   $('#aboutModal').classList.add('on');
   bindErrLog();
   /* 4.9.0: дневник ушёл из шапки на телефоне — вход из «О игре».
@@ -28598,6 +28666,45 @@ window.__sr = {
     try{ if(window.__sr && window.__sr.rkStats) return window.__sr.rkStats(); }catch(e){}
     return { worth:0, bestDrop:0, opened:0, upOk:0 };
   }
+  /* 4.22.5: ГЛАВНАЯ причина «в карточке #9, а в таблице четвёртый».
+     Место считалось по ЛОКАЛЬНОМУ состоянию (worth = кредиты + инвентарь), а строка
+     в топе показывает СЕРВЕРНОЕ значение — то, что когда-то уехало в базу и уже
+     не уменьшается. Локальный worth часто меньше (кейсы сжигают стоимость), поэтому
+     в подсчёт «кто выше меня» попадала моя же серверная строка, и место съезжало
+     вниз ровно на столько игроков, сколько их между двумя моими числами.
+     Теперь для себя берём цифры из своей строки в таблице, а локальные — только
+     если строки в топе не видно. */
+  function myNickLower(){
+    try{
+      var a = JSON.parse(localStorage.getItem('srt_account') || 'null');
+      var n = (a && (a.name || a.nick)) || '';
+      if(!n){
+        var r = window.__sr && window.__sr.rank;
+        n = (r && r.player && r.player.nick) || '';
+      }
+      return String(n).trim().toLowerCase();
+    }catch(e){ return ''; }
+  }
+  function serverRow(){
+    var nk = myNickLower();
+    if(!nk || !S.list || !S.list.length) return null;
+    for(var i = 0; i < S.list.length; i++){
+      var r = S.list[i];
+      if(r && String(r.nick || '').trim().toLowerCase() === nk) return r;
+    }
+    return null;
+  }
+  /* цифры «как в таблице»: своя строка, если она в топе, иначе локальные */
+  function tableStats(){
+    var loc = myStats(), row = serverRow();
+    if(!row) return loc;
+    var out = {};
+    for(var k in loc) out[k] = loc[k];
+    METRICS.forEach(function(m){
+      if(row[m.k] != null && row[m.k] !== '') out[m.k] = row[m.k];
+    });
+    return out;
+  }
   function casePrice(){
     try{ var c = window.__sr && window.__sr.selCase; return (c && c.price) || 170; }catch(e){ return 170; }
   }
@@ -28683,7 +28790,7 @@ window.__sr = {
     return Promise.all(tasks).then(function(res){
       S.list = res[0]; S.total = res[1]; S.loadedAt = Date.now(); S.fromCache = false;
       cachePut(S.metric, S.list);
-      var my = myStats(); S.my = my;
+      var my = tableStats(); S.my = my;
       var mv = my[S.metric] || 0;
       if(mv > 0) return countWhere(S.metric, 'GREATER_THAN', mv).then(function(n){
         S.myPlace = n + 1; return null; });
@@ -28787,7 +28894,7 @@ window.__sr = {
   }
   /* бейджи других метрик — лениво, по одному count-запросу, а не пачкой при входе */
   function lazyBadge(){
-    var my = myStats();
+    var my = tableStats();
     METRICS.forEach(function(m){
       if(!m.on || m.k === S.metric || S.badges[m.k] != null) return;
       var v = my[m.k] || 0;
@@ -28801,7 +28908,7 @@ window.__sr = {
 
   function drawMe(){
     var box = $('rk2MeIn'); if(!box) return;
-    var my = myStats();
+    var my = tableStats();
     var letter = '?';
     try{
       var a = JSON.parse(localStorage.getItem('srt_account') || 'null');
@@ -28901,7 +29008,7 @@ window.__sr = {
   /* одно count-обращение на метрику, и только по доступным метрикам;
      результат живёт 3 минуты и пересчитывается, когда меняются мои цифры */
   function placesRefresh(force){
-    var my = myStats();
+    var my = tableStats();
     var live = METRICS.filter(function(m){ return m.on; });
     var sig = live.map(function(m){ return m.k + ':' + (my[m.k] || 0); }).join('|');
     if(!force){
@@ -28937,7 +29044,7 @@ window.__sr = {
       if(note) note.textContent = '';
       return;
     }
-    var my = myStats(), mv = my[S.metric] || 0;
+    var my = tableStats(), mv = my[S.metric] || 0;
     var max = Math.max.apply(null, S.list.map(function(r){ return r[S.metric] || 0; }).concat([mv, 1]));
     var html = '';
     var above = S.next;
@@ -28949,8 +29056,8 @@ window.__sr = {
     /* значения в своей строке подставляем руками: объект-заглушка нужна только
        для того, чтобы не дублировать верстку */
     box.innerHTML = html;
-    if(note) note.textContent = (above && below) ? 'соседи сверху и снизу'
-      : above ? 'сосед сверху' : below ? 'сосед снизу' : '';
+    if(note) note.textContent = (above && below) ? 'выше и ниже'
+      : above ? 'сосед выше' : below ? 'сосед ниже' : '';
   }
 
   function drawPod(){
@@ -29023,7 +29130,7 @@ window.__sr = {
       /* своя строка уже видна в списке или её нет — отдельный блок не нужен */
       if(!S.myPlace || S.myPlace <= S.list.length){ wrap.hidden = true; return; }
     }
-    var my = myStats();
+    var my = tableStats();
     var max = Math.max(1, (S.list[0] && S.list[0][S.metric]) || 0, my[S.metric] || 0);
     wrap.hidden = false;
     box.innerHTML = barRow({ nick:'ТЫ', upd:0 }, S.myPlace, max,
@@ -29061,7 +29168,7 @@ window.__sr = {
       '<span class="pos">' + (S.myPlace ? '#' + S.myPlace + ' из ' + S.total : 'место неизвестно') + '</span></div>' +
       '<div class="bar"><i style="width:' + (next ? Math.max(3, 100 - Math.max(0, (S.myPlace - needRank) * 100 / Math.max(1, S.total))) : 100).toFixed(0) + '%"></i></div>' +
       '<div class="txt">' + (next
-        ? 'До <b>' + next.ic + ' ' + next.nm + '</b> — попасть в <b>топ-' + next.pct + '%</b>' +
+        ? 'До <b>' + next.ic + ' ' + next.n + '</b> — попасть в <b>топ-' + next.pct + '%</b>' +
           (needRank ? ' (место не ниже <b>#' + needRank + '</b>)' : '') +
           (S.myPlace > needRank ? ', сейчас ты <b>' + (S.myPlace - needRank) + ' мест</b> ниже' : '')
         : 'Высшая лига — держись в топ-3 %.') +
@@ -29100,7 +29207,7 @@ window.__sr = {
        в браузере без него — копирование в буфер */
     var shr = $('rk2Share');
     if(shr) shr.addEventListener('click', function(){
-      var m = metricOf(S.metric), my = myStats();
+      var m = metricOf(S.metric), my = tableStats();
       var txt = S.myPlace
         ? ('Я #' + S.myPlace + (S.total ? ' из ' + S.total : '') + ' в SKIN RUSH по метрике «' +
            m.n + '» · ' + fmt(my[S.metric] || 0))
@@ -29118,6 +29225,12 @@ window.__sr = {
       var t = e.target && e.target.closest ? e.target.closest('#rk2Mine') : null;
       if(t) placesRefresh(true);
     });
+    /* 4.22.5: лист «Лиги» лежит внутри <section id="panel-rank">, а весь #app — это
+       stacking context с z-index:1. Поэтому даже z-index 2 147 483 000 не поднимал
+       лист выше нижней капсулы (она вне #app, z-index:70): крестик был под ней.
+       Переносим оверлей прямо в body — тогда его z-index считается по-настоящему. */
+    var sheetEl = $('rk2LeagueSheet');
+    if(sheetEl && sheetEl.parentNode !== document.body) document.body.appendChild(sheetEl);
     var lb = $('rk2LeagueBtn');
     if(lb) lb.addEventListener('click', function(){ var sh = $('rk2LeagueSheet'); if(sh) sh.classList.add('on'); });
     var lc = $('rk2LeagueClose');
