@@ -277,7 +277,10 @@ to{opacity:1;transform:none}
     border-bottom:3px solid var(--c);position:relative;overflow:hidden
   }
 .rl-item[data-rarity]{box-shadow:inset 0 0 0 var(--rar-w) var(--rar-line)}
-.rl-item svg{width:auto;height:auto;max-width:94px;max-height:58px;display:block}
+.rl-item svg{width:auto;height:auto;max-width:94px;max-height:52px;display:block}
+/* 4.23.0: цена под именем — по ней видно, стоит ли вообще открывать */
+.rl-item .rl-val{font-size:var(--fs-11, 11px);font-weight:800;color:#ffcf8a;line-height:1.2;
+  font-variant-numeric:tabular-nums;margin-top:1px}
 .rl-item .nm{font-size:var(--fs-11, 11px);color:#9aa7c0;text-align:center;padding:0 4px;line-height:1.15;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* 4.6.0: характер кейса виден и в оформлении ленты */
@@ -744,7 +747,10 @@ nav{gap:8px;padding-top:12px}
     border-bottom:3px solid var(--c);position:relative;overflow:hidden
   }
 .rl-item[data-rarity]{box-shadow:inset 0 0 0 var(--rar-w) var(--rar-line)}
-.rl-item svg{width:auto;height:auto;max-width:94px;max-height:58px;display:block}
+.rl-item svg{width:auto;height:auto;max-width:94px;max-height:52px;display:block}
+/* 4.23.0: цена под именем — по ней видно, стоит ли вообще открывать */
+.rl-item .rl-val{font-size:var(--fs-11, 11px);font-weight:800;color:#ffcf8a;line-height:1.2;
+  font-variant-numeric:tabular-nums;margin-top:1px}
 .rl-item .nm{font-size:var(--fs-11, 11px);color:#9aa7c0;text-align:center;padding:0 4px;line-height:1.15;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* 4.6.0: характер кейса виден и в оформлении ленты */
@@ -10976,7 +10982,7 @@ function fillTrack(finalSkin){
   }
   track.innerHTML = items.map(s=>
     `<div class="rl-item ${RAR[s.r].cls}" style="--c:${RAR[s.r].color}">
-       ${svgWeapon(s)}<div class="nm">${s.n}</div></div>`).join('');
+       ${svgWeapon(s)}<div class="nm">${s.n}</div><div class="rl-val">${Math.round(s.val).toLocaleString('ru-RU')}</div></div>`).join('');
   return 46; // индекс победителя
 }
 
@@ -21153,7 +21159,7 @@ function idleTrack(){
     const rr = list[Math.floor(Math.random()*list.length)].r;
     const sk = rollSkin(rr, selCase);
     html += `<div class="rl-item ${RAR[sk.r].cls}" style="--c:${RAR[sk.r].color}">
-       ${svgWeapon(sk)}<div class="nm">${sk.n}</div></div>`;
+       ${svgWeapon(sk)}<div class="nm">${sk.n}</div><div class="rl-val">${Math.round(sk.val).toLocaleString('ru-RU')}</div></div>`;
   }
   track.innerHTML = html;
   track.style.transition = 'none';
