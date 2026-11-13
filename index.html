@@ -364,8 +364,7 @@ to{opacity:1;transform:none}
 .circle{position:relative;width:clamp(112px,22vw,164px);height:clamp(112px,22vw,164px)}
 .circle svg{transform:rotate(-90deg);width:100%;height:100%}
 .circle .lose{fill:none;stroke-width:11;transition:stroke .3s}
-.circle .win{fill:none;stroke-width:11;stroke-linecap:butt;
-    transition:stroke-dasharray .35s ease}
+.circle .win{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke .3s}
 #wheel svg{transform:none}
 #ticks line{stroke:rgba(255,255,255,.16);stroke-width:1.2}
 #needleG{will-change:transform;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.85))}
@@ -385,7 +384,18 @@ to{opacity:1;transform:none}
 35%{filter:drop-shadow(0 0 16px rgba(67,201,122,.9)) brightness(1.3)}
 100%{filter:none}
 }.circle .plate{position:absolute;left:20%;top:20%;width:60%;height:60%;border-radius:50%;
-    background:rgba(11,14,20,.9);box-shadow:0 0 14px 9px rgba(11,14,20,.5);pointer-events:none}
+    background:rgba(11,14,20,.9);box-shadow:0 0 14px 9px rgba(11,14,20,.5);pointer-events:none;z-index:1}
+/* 4.23.0: логотип лежит внутри кольца, приглушённый — процент должен читаться первым.
+   Маска съедает квадратную рамку иконки, иначе виден резкий край картинки. */
+.circle .wheel-logo{position:absolute;left:14%;top:14%;width:72%;height:72%;z-index:2;pointer-events:none;
+  background:url('https://arsi3000.github.io/RushPWA/icon-192.png') center/cover no-repeat;
+  opacity:.10;filter:saturate(.9) blur(.3px);
+  -webkit-mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
+  mask-image:radial-gradient(closest-side,#000 58%,transparent 100%)}
+.circle .txt{z-index:3;padding:0 7%}
+.circle .cap{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:360px){.circle .cap{font-size:9px;letter-spacing:.06em}
+.circle .pct{font-size:clamp(14px,4.2vw,20px)}}
 .circle .txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .circle .pct{font-size:clamp(15px,3vw,20px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .circle .cap{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:#8a97b0;text-align:center;line-height:1.25}
@@ -821,8 +831,7 @@ nav{gap:8px;padding-top:12px}
 .circle{position:relative;width:clamp(112px,22vw,164px);height:clamp(112px,22vw,164px)}
 .circle svg{transform:rotate(-90deg);width:100%;height:100%}
 .circle .lose{fill:none;stroke-width:11;transition:stroke .3s}
-.circle .win{fill:none;stroke-width:11;stroke-linecap:butt;
-    transition:stroke-dasharray .35s ease}
+.circle .win{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke .3s}
 #wheel svg{transform:none}
 #ticks line{stroke:rgba(255,255,255,.16);stroke-width:1.2}
 #needleG{will-change:transform;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.85))}
@@ -842,7 +851,18 @@ nav{gap:8px;padding-top:12px}
 35%{filter:drop-shadow(0 0 16px rgba(67,201,122,.9)) brightness(1.3)}
 100%{filter:none}
 }.circle .plate{position:absolute;left:20%;top:20%;width:60%;height:60%;border-radius:50%;
-    background:rgba(11,14,20,.9);box-shadow:0 0 14px 9px rgba(11,14,20,.5);pointer-events:none}
+    background:rgba(11,14,20,.9);box-shadow:0 0 14px 9px rgba(11,14,20,.5);pointer-events:none;z-index:1}
+/* 4.23.0: логотип лежит внутри кольца, приглушённый — процент должен читаться первым.
+   Маска съедает квадратную рамку иконки, иначе виден резкий край картинки. */
+.circle .wheel-logo{position:absolute;left:14%;top:14%;width:72%;height:72%;z-index:2;pointer-events:none;
+  background:url('https://arsi3000.github.io/RushPWA/icon-192.png') center/cover no-repeat;
+  opacity:.10;filter:saturate(.9) blur(.3px);
+  -webkit-mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
+  mask-image:radial-gradient(closest-side,#000 58%,transparent 100%)}
+.circle .txt{z-index:3;padding:0 7%}
+.circle .cap{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:360px){.circle .cap{font-size:9px;letter-spacing:.06em}
+.circle .pct{font-size:clamp(14px,4.2vw,20px)}}
 .circle .txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .circle .pct{font-size:clamp(15px,3vw,20px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .circle .cap{font-size:var(--fs-11, 11px);letter-spacing:.1em;text-transform:uppercase;color:#8a97b0;text-align:center;line-height:1.25}
@@ -1899,12 +1919,17 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 }
 .cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 
-@media(min-width:360px){.cases{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* 4.23.0: на телефоне остаются две колонки — карточка с настоящим ящиком
+   в три колонки выходила мелкой и нечитаемой. */
+@media(min-width:520px){.cases{grid-template-columns:repeat(3,minmax(0,1fr))}
  }
-@media(min-width:560px){.cases{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(min-width:700px){.cases{grid-template-columns:repeat(4,minmax(0,1fr))}
  }
-@media(min-width:820px){.cases{grid-template-columns:repeat(5,minmax(0,1fr))}
- }.cases-next{width:100%;margin-top:10px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;
+@media(min-width:900px){.cases{grid-template-columns:repeat(5,minmax(0,1fr))}
+ }
+/* выбранный кейс подсвечен рамкой — крупной карточки-героя больше нет */
+.cases .case.sel{border-color:rgba(var(--accent-rgb),.62);background:linear-gradient(165deg,rgba(var(--accent-rgb),.12),rgba(255,255,255,.02))}
+.cases .case.sel h3{color:#ffd9a1}.cases-next{width:100%;margin-top:10px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;
   border-radius:14px;border:1px dashed rgba(255,255,255,.16);background:rgba(255,255,255,.03);
   color:#b9c5d8;font:inherit;font-size:var(--fs-12, 12px);font-weight:800;cursor:pointer;transition:.16s}
 .cases-next:hover{color:#fff;border-color:rgba(var(--accent-rgb),.55);background:rgba(var(--accent-rgb),.09)}
@@ -1951,19 +1976,40 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .cases .case .odds{height:5px}
 .cases .case .knife-tag{font-size:var(--fs-11, 11px);padding:1px 4px;right:4px;top:0;opacity:.9}
 /* ---- статистика дропа выбранного кейса ---- */
-.drop-stats{margin:16px 0 4px;padding:14px;border-radius:14px;
-  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
-.drop-stats h4{margin:0 0 10px;font-size:var(--fs-11, 11px);letter-spacing:.12em;text-transform:uppercase;color:#8b98b0}
-.ds-wrap{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:center}
-
-@media(max-width:359px){.ds-wrap{grid-template-columns:96px 1fr;gap:10px}
- }.ds-donut{width:100%;height:auto;transform:rotate(-90deg)}
-.ds-donut circle{fill:none;stroke-width:11}
-.ds-row{display:flex;align-items:center;gap:8px;font-size:var(--fs-11, 11px);padding:3px 0}
-.ds-row i{width:8px;height:8px;border-radius:99px;flex:0 0 8px}
-.ds-row span{flex:1;min-width:0;color:#c8d3e4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ds-row b{color:#dfe7f4;font-variant-numeric:tabular-nums}
-.ds-row em{color:#8b98b0;font-style:normal;font-size:var(--fs-11, 11px);min-width:52px;text-align:right}
+/* 4.23.0: блок состава кейса — свёрнутая строка, раскрывается плюсиком.
+   Внутри одна цветная полоса вместо пончика и миниатюры того, что может выпасть. */
+.drop-stats{margin:14px 0 4px;border-radius:14px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.09)}
+.drop-stats .drop-head{display:flex;align-items:center;gap:10px;width:100%;padding:13px 13px;
+  background:none;border:0;color:#e7eef9;font:inherit;text-align:left;cursor:pointer}
+.drop-stats .dh-t{flex:1;min-width:0;font-weight:800;font-size:var(--fs-12, 12px);line-height:1.25}
+.drop-stats .dh-t small{display:block;margin-top:3px;font-size:var(--fs-11, 11px);font-weight:600;color:#7f8ca5}
+.drop-stats .dh-plus{flex:0 0 auto;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(var(--accent2-rgb),.13);border:1px solid rgba(var(--accent2-rgb),.35);color:#ffcf8a;
+  font-size:15px;font-weight:900;line-height:1;transition:transform .2s ease}
+.drop-stats.open .dh-plus{transform:rotate(45deg)}
+.drop-stats .drop-body{display:none;padding:0 13px 13px}
+.drop-stats.open .drop-body{display:block}
+.drop-stats .dbar{display:flex;gap:2px;height:24px;border-radius:7px;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.drop-stats .dbar i{display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800;
+  color:rgba(8,10,14,.8)}
+.drop-stats .dlegend{margin-top:10px}
+.drop-stats .lrow{display:flex;align-items:center;gap:8px;font-size:var(--fs-11, 11px);padding:3px 0;
+  border-bottom:1px dashed rgba(255,255,255,.05)}
+.drop-stats .lrow i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.drop-stats .lrow span{flex:1;min-width:0;color:#b9c6da;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop-stats .lrow b{color:#e7eef9;font-variant-numeric:tabular-nums}
+.drop-stats .lrow em{width:74px;text-align:right;font-style:normal;color:#7f8ca5;font-variant-numeric:tabular-nums}
+.drop-stats .dthumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:12px}
+.drop-stats .dthumb{position:relative;display:flex;flex-direction:column;align-items:center;
+  border-radius:10px;padding:6px 4px 5px;background:linear-gradient(180deg,#141a25,#0a0e15);
+  border:1px solid rgba(255,255,255,.06);border-bottom:2px solid var(--rc)}
+.drop-stats .dthumb .weapon-img{max-width:100%;max-height:34px;margin-bottom:3px}
+.drop-stats .dthumb .dn{display:block;width:100%;font-size:9px;line-height:1.2;color:#9aa8bd;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drop-stats .dthumb .dv{display:block;font-size:9px;font-weight:800;color:#ffcf8a;margin-top:1px}
 /* ---- модификаторы апгрейда (4.0.0, вместо страховки) ---- */
 .up-mods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 4px}
 .mod-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -5259,22 +5305,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <button data-f="knife"><span class="cf-ic">🔪</span> Ножи</button>
         <button data-f="new"><span class="cf-ic">🆕</span> Новое</button>
       </div>
-      <div class="case-hero" id="caseHero"></div>
-      <div class="cases" id="casesList"></div>
-      <button class="cases-next" id="casesNext" hidden>
-        Дальше <span id="casesNextN"></span> <i>→</i>
-      </button>
-      <!-- 4.2.0: цель недели -->
-      <div class="week-goal" id="weekGoal">
-        <div class="wg-h">🎯 Цель недели <span id="wgNum">0 / 15</span></div>
-        <div class="wg-bar"><div class="wg-fill" id="wgFill" style="width:0%"></div></div>
-        <div class="wg-n" id="wgNote">Открой 15 платных кейсов за неделю — гарантированный легендарный скин.</div>
-      </div>
-      <div class="best-drop" id="bestDrop"></div>
-      <div class="luck" id="luckBar">
-        <div class="row"><span>До гарантированного эпика</span><b id="luckNum">0 / 30</b></div>
-        <div class="track"><div class="fill" id="luckFill"></div></div>
-      </div>
+      <!-- 4.23.0: крупной карточки кейса больше нет — её место заняла лента дропа.
+           «Цель недели» и «Лучший дроп» отсюда убраны: лучший дроп теперь витрина профиля. -->
       <div class="rl-wrap">
         <div class="roulette" id="rlFrame">
           <div class="rl-track" id="rlTrack"></div>
@@ -5291,7 +5323,14 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         </div>
         <div class="rl-spin-cap" id="rlSpinCap"></div>
       </div>
-
+      <div class="cases" id="casesList"></div>
+      <button class="cases-next" id="casesNext" hidden>
+        Дальше <span id="casesNextN"></span> <i>→</i>
+      </button>
+      <div class="luck" id="luckBar">
+        <div class="row"><span>До гарантированного эпика</span><b id="luckNum">0 / 30</b></div>
+        <div class="track"><div class="fill" id="luckFill"></div></div>
+      </div>
       <div class="drop-stats" id="dropStats"></div>
 
       <div class="hint" id="firstTip" style="margin-top:16px;line-height:1.6">
@@ -5327,10 +5366,22 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
                   <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
               </defs>
+              <!-- 4.23.0: ноль вверху (там же стрелка), полоса шанса растёт двумя
+                   дугами влево и вправо. Цвет привязан к месту на кольце: у нуля
+                   красный, к низу зелёный — маленький шаг горит красным, большой
+                   уходит в зелёный. Одна градиентная заливка на обе дуги. -->
+              <linearGradient id="wch" gradientUnits="userSpaceOnUse" x1="50" y1="8" x2="50" y2="92">
+                <stop offset="0%"   stop-color="#ff3b3b"/>
+                <stop offset="14%"  stop-color="#ff5a2a"/>
+                <stop offset="30%"  stop-color="#ff8a28"/>
+                <stop offset="46%"  stop-color="#ffc93f"/>
+                <stop offset="64%"  stop-color="#c8e34a"/>
+                <stop offset="82%"  stop-color="#4ce07a"/>
+                <stop offset="100%" stop-color="#16b45e"/>
+              </linearGradient>
               <circle class="lose" cx="50" cy="50" r="42" stroke="url(#wr)"></circle>
-              <circle class="win" id="cWin" cx="50" cy="50" r="42"
-                      transform="rotate(-90 50 50)" stroke="url(#wg)"
-                      stroke-dasharray="0 263.9"></circle>
+              <path class="win" id="cWinR" d="" stroke="url(#wch)"></path>
+              <path class="win" id="cWinL" d="" stroke="url(#wch)"></path>
               <g id="ticks"></g>
               <g id="needleG">
                 <rect class="ndlBar" x="47.3" y="1.6" width="5.4" height="12.6" rx="2.5"/>
@@ -5338,6 +5389,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
               </g>
             </svg>
             <div class="plate"></div>
+            <div class="wheel-logo" aria-hidden="true"></div>
             <div class="txt">
               <div class="pct" id="pctTxt">—</div>
               <div class="cap" id="pctCap">шанс<br>апгрейда</div>
@@ -8141,7 +8193,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.6';
+const VERSION = '4.23.0';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10508,10 +10560,13 @@ function renderCases(){
     const newHtml = newN > 0
       ? `<span class="new-badge" title="В пуле новых скинов: ${newN}">+${newN}</span>`
       : '';
+    /* 4.23.0: порядок как на макете — плашка шанса, ящик, имя, цена, полоска.
+       Раньше имя стояло НАД ящиком, и карточка читалась снизу вверх. */
+    el.classList.toggle('sel', !!(selCase && selCase.id === c.id));
     el.innerHTML = `
       ${chanceHtml}
-      <h3>${c.name}</h3>
       ${crateHtml(c, false)}
+      <h3>${c.name}</h3>
       <div class="price"><i></i>${c.price.toLocaleString('ru-RU')}${newHtml}</div>
       <div class="odds">${oddsSorted(c.odds).map(o=>
         `<span style="width:${o.p}%;background:${RAR[o.r].color}"></span>`).join('')}</div>`;
@@ -10583,9 +10638,13 @@ function renderCaseHero(){
   if(b) b.addEventListener('click', ()=>openCasePool(c.id));
 }
 
-/* ---------- статистика дропа выбранного кейса (donut + список) ----------
-   Показываем только состав и цены. ROI и «возврат процентов» не выводим:
-   это внутренняя математика, игроку она только мешает. */
+/* ---------- состав кейса: свёрнутая строка, внутри полоса и миниатюры ----------
+   4.23.0: вместо пончика (круг из дуг) — одна полоса на всю ширину, сегменты по
+   редкости. Круг занимал половину блока и требовал разглядывания: по полосе
+   шанс виден сразу, а подписи стоят прямо в сегментах. Блок по умолчанию
+   свёрнут — экран кейсов и без него длинный. */
+let dropOpen = false;
+function escT(x){ return String(x == null ? '' : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function renderDropStats(){
   const box = $('#dropStats');
   if(!box) return;
@@ -10593,20 +10652,32 @@ function renderDropStats(){
   if(!c){ box.innerHTML = ''; return; }
   const rows = oddsSorted(c.odds);
   const total = rows.reduce((s,o)=>s + o.p, 0) || 100;
-  const R = 52, C = 2 * Math.PI * R;
-  let acc = 0;
-  const arcs = rows.map(o => {
-    const len = C * (o.p / total);
-    const seg = `<circle cx="60" cy="60" r="${R}" stroke="${RAR[o.r].color}"
-      stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}"
-      stroke-dashoffset="${(-acc).toFixed(2)}" opacity=".92"/>`;
-    acc += len;
-    return seg;
-  }).join('');
   const avg = caseAvgByRarity(c);
-  /* 4.8.0: личный счёт по этому кейсу. Не «прогноз возврата», а факт:
-     сколько открыто, сколько ушло и сколько вернулось по цене скинов.
-     Это честная информация — она и есть главный аргумент доверия к витрине. */
+  const pool = casePoolOf(c) || [];
+
+  /* полоса: доля каждой редкости. Подпись ставим только там, где она влезает */
+  const bar = rows.map(o => {
+    const w = o.p / total * 100;
+    return `<i style="flex:0 0 ${w.toFixed(2)}%;background:${RAR[o.r].color}">${
+      w >= 7 ? Math.round(o.p) + '%' : ''}</i>`;
+  }).join('');
+
+  const legend = rows.map(o => `
+    <div class="lrow">
+      <i style="background:${RAR[o.r].color}"></i>
+      <span>${RAR[o.r].name}</span>
+      <b>${Math.round(o.p)} %</b>
+      <em>${avg[o.r] ? Math.round(avg[o.r]).toLocaleString('ru-RU') + ' кр.' : '—'}</em>
+    </div>`).join('');
+
+  /* миниатюры: сначала самое редкое, потом по цене. Восемь штук — два ряда по четыре */
+  const order = {myth:0, legend:1, epic:2, rare:3, uncommon:4, common:5};
+  const thumbs = pool.slice().sort((a,b) => (order[a.r] - order[b.r]) || (b.val - a.val)).slice(0, 8)
+    .map(sk => `<div class="dthumb" style="--rc:${RAR[sk.r].color}" title="${escT(sk.n)} · ${RAR[sk.r].name}">
+        ${svgWeapon(sk)}<span class="dn">${escT(sk.n)}</span><span class="dv">${Math.round(sk.val).toLocaleString('ru-RU')}</span>
+      </div>`).join('');
+
+  /* личный счёт по кейсу — он остаётся фактом, не прогнозом */
   const st = caseStatOf(c.id);
   const statHtml = st && st.n > 0
     ? `<div class="ds-stat">
@@ -10615,28 +10686,29 @@ function renderDropStats(){
          <span>вернулось <b>${Math.round(st.back).toLocaleString('ru-RU')}</b></span>
          <span class="${st.spent && st.back / st.spent >= 1 ? 'up' : ''}">по цене <b>${st.spent ? Math.round(st.back / st.spent * 100) : 0} %</b></span>
        </div>`
-    : `<div class="ds-stat" style="opacity:.65"><span>Вы ещё не открывали этот кейс — статистика появится после первого платного открытия</span></div>`;
+    : '';
+
+  box.classList.toggle('open', !!dropOpen);
   box.innerHTML = `
-    <h4>Что выпадает · ${c.name}</h4>
-    ${statHtml}
-    <div class="ds-wrap">
-      <svg class="ds-donut" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r="${R}" stroke="rgba(255,255,255,.07)"/>
-        ${arcs}
-        <text x="60" y="58" text-anchor="middle" transform="rotate(90 60 60)"
-              fill="#e7eef9" font-size="17" font-weight="800">${rows.length}</text>
-        <text x="60" y="74" text-anchor="middle" transform="rotate(90 60 60)"
-              fill="#7f8ca5" font-size="9">редкостей</text>
-      </svg>
-      <div>${rows.map(o => `
-        <div class="ds-row">
-          <i style="background:${RAR[o.r].color}"></i>
-          <span>${RAR[o.r].name}</span>
-          <b>${Math.round(o.p)} %</b>
-          <em>${avg[o.r] ? Math.round(avg[o.r]).toLocaleString('ru-RU') + ' кр.' : '—'}</em>
-        </div>`).join('')}
-      </div>
+    <button class="drop-head" id="dropToggle" type="button" aria-expanded="${dropOpen ? 'true' : 'false'}">
+      <span class="dh-t">Что может выпасть${c ? ' · ' + escT(c.name) : ''}
+        <small>${pool.length} скинов · шансы и цены</small></span>
+      <span class="dh-plus">+</span>
+    </button>
+    <div class="drop-body">
+      ${statHtml}
+      <div class="dbar">${bar}</div>
+      <div class="dlegend">${legend}</div>
+      <div class="dthumbs">${thumbs}</div>
     </div>`;
+  const t = $('#dropToggle');
+  if(t) t.addEventListener('click', ()=>{
+    dropOpen = !dropOpen;
+    box.classList.toggle('open', dropOpen);
+    t.setAttribute('aria-expanded', dropOpen ? 'true' : 'false');
+    if(SFX && SFX.click) SFX.click();
+    if(dropOpen) setTimeout(()=>{ try{ box.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} }, 60);
+  });
 }
 
 /* ---------- ленивые арты кейсов ----------
@@ -12171,7 +12243,7 @@ function tutApply(){
   tutShow($('#btnDiary'), step >= 8);
   /* --- кейсы: до 8-го шага только «Стартовый» и ни одной лишней панели --- */
   const full = step >= 8;
-  ['#caseFilter','#caseHero','#weekGoal','#bestDrop','#luckBar','#dropStats','#ticker','#casesNext']
+  ['#caseFilter','#luckBar','#dropStats','#ticker','#casesNext']
     .forEach(sel => tutShow($(sel), full));
   tutShow($('#qtyRow'), full);
   tutShow($('#questCard'), full);
@@ -13369,7 +13441,7 @@ function renderSlots(){
     tb.classList.toggle('full', f >= full);
   }
   const ch = upgradeChance();
-  const winArc = $('#cWin'), pct = $('#pctTxt'), wheel = $('#wheel');
+  const arcR = $('#cWinR'), arcL = $('#cWinL'), pct = $('#pctTxt'), wheel = $('#wheel');
   const hold = srNow() < (window.__wheelHold || 0);
   if(hold){ renderStats(); const b0 = $('#btnUp'); b0.disabled = true; return; }
   wheel.classList.toggle('idle', !(ch > 0));
@@ -13379,11 +13451,12 @@ function renderSlots(){
        читать. Округляем один раз здесь — остальные места берут уже это число. */
     pct.textContent = Math.round(ch*100) + '%';
     pct.style.color = ch > .5 ? '#6ee7a0' : ch > .25 ? '#ffd166' : '#ff8f9f';
-    winArc.style.strokeDasharray = (CIRC * ch).toFixed(2) + ' ' + CIRC.toFixed(2);
+    /* 4.23.0: полоса идёт от верхнего нуля в две стороны, по половине шанса на каждую */
+    if(arcR && arcL){ const d = wheelArcPath(ch*180); arcR.setAttribute('d', d.right); arcL.setAttribute('d', d.left); }
   } else {
     pct.textContent = '—';
     pct.style.color = '';
-    winArc.style.strokeDasharray = '0 ' + CIRC.toFixed(2);
+    if(arcR && arcL){ arcR.setAttribute('d',''); arcL.setAttribute('d',''); }
   }
   if(!spinningWheel){
     wheel.classList.remove('spinning','ok','no');
@@ -13579,27 +13652,47 @@ function resetWheelRotation(smooth){
   }
 }
 
+/* 4.23.0: путь дуги от верхней точки (50,8) вправо и влево на угол a градусов.
+   Радиус 42 — тот же, что у фонового кольца, поэтому дуги ложатся точно на него. */
+function wheelArcPath(a){
+  const R = 42, CX = 50, CY = 50;
+  const deg = Math.max(0, Math.min(179.6, a));
+  const rad = deg * Math.PI / 180;
+  const x = CX + R * Math.sin(rad), y = CY - R * Math.cos(rad);
+  const large = deg > 180 ? 1 : 0;
+  return {
+    right: `M ${CX} ${CY - R} A ${R} ${R} 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)}`,
+    left:  `M ${CX} ${CY - R} A ${R} ${R} 0 ${large} 0 ${(2*CX - x).toFixed(2)} ${y.toFixed(2)}`
+  };
+}
+
 function spinWheel(win, ch){
   return new Promise(resolve => {
     const wheel = document.getElementById('wheel');
     const g = document.getElementById('needleG');
     if(!g){ resolve(); return; }
 
-    // сектор выигрыша: от 0° (верх) по часовой до ch*360
-    const winDeg = Math.max(1.2, ch * 360);
-    const pad = Math.min(4, winDeg * 0.18);
+    /* 4.23.0: дуга теперь симметричная — по половине шанса влево и вправо от верха.
+       Поэтому у выигрыша два «зелёных» плеча: [0..half] справа и [360-half..360] слева,
+       а промах — нижняя часть кольца между ними. */
+    const half = Math.max(0.6, Math.min(179.6, ch * 180));
+    const pad = Math.min(4, half * 0.18);
     let land;
     if(win){
-      land = pad + Math.random() * Math.max(0.5, winDeg - pad * 2);
+      if(Math.random() < 0.5){
+        land = pad + Math.random() * Math.max(0.5, half - pad * 2);
+      } else {
+        land = 360 - pad - Math.random() * Math.max(0.5, half - pad * 2);
+      }
     } else {
-      const free = 360 - winDeg;
+      const free = 360 - half * 2;
       const pad2 = Math.min(4, free * 0.18);
-      land = winDeg + pad2 + Math.random() * Math.max(0.5, free - pad2 * 2);
+      land = half + pad2 + Math.random() * Math.max(0.5, free - pad2 * 2);
     }
 
     const turns = 6 + Math.floor(Math.random() * 2);
     const total = 360 * turns + land;
-    window.__lastSpin = {win: !!win, ch, land, winDeg, total};
+    window.__lastSpin = {win: !!win, ch, land, half, total};
 
     spinningWheel = true;
     wheel.classList.add('spinning');
@@ -15688,7 +15781,8 @@ function closeTutorial(){
 }
 $('#tutSkip').addEventListener('click', closeTutorial);
 
-/* витрина лучшего дропа: одна строка на вкладке кейсов */
+/* витрина лучшего дропа: с 4.23.0 живёт в профиле (vitHTML), здесь оставлено
+   на случай, если элемент вернут на страницу */
 function renderBestDrop(){
   const box = $('#bestDrop');
   if(!box) return;
@@ -18580,6 +18674,21 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.23.0 · Круг двумя полосами и чистые кейсы</b><br>
+      <b>Кольцо апгрейда переделано.</b> Ноль теперь вверху, где стрелка, а полоса шанса
+      растёт от него в две стороны — влево и вправо. Цвет привязан к месту: у нуля красный,
+      к низу зелёный. Маленький шанс горит красным, большой уходит в зелёный — видно с
+      одного взгляда, не читая цифру. Внутри круга лежит логотип игры, приглушённый,
+      чтобы процент оставался первым.<br>
+      <b>Экран кейсов стал короче и понятнее.</b> Сверху сразу лента дропа — она и была
+      главным, что хочется видеть; крупная карточка выбранного кейса с кнопкой «что внутри»
+      убрана, выбранный кейс подсвечен рамкой прямо в сетке. Сами кейсы показаны ящиками,
+      как в игре, с шансом редкого скина, ценой и числом новых предметов в пуле.<br>
+      <b>«Цель недели» и «Лучший дроп» с кейсов убраны.</b> Лучший дроп переехал в профиль,
+      в карточку «Витрина»: там видно скин-рекорд, его редкость и цену.<br>
+      <b>Состав кейса — по кнопке.</b> Внизу вместо круговой диаграммы свёрнутая строка
+      «Что может выпасть»: раскрывается плюсиком, внутри одна цветная полоса по редкостям
+      с процентами и миниатюры того, что реально может выпасть.<br>
       <b style="color:#ffd166">Что нового в 4.22.6 · Прогресс больше не пропадает</b><br>
       <b>Вход на новом устройстве не затирает облачную копию.</b> Найдена причина пропаж:
       чистая установка при входе отправляла в аккаунт свою пустую игру — пять тысяч кредитов,
@@ -26412,6 +26521,24 @@ window.__sr = {
     '.sr-bx.empty span{font-size:8.5px;color:#5a6472;font-weight:800;letter-spacing:.4em;text-transform:uppercase}'+
     '.sr-bx:active{transform:scale(.97)}'+
     '.sr-hint{font-size:10px;color:#6c7a90;margin-top:8px;position:relative}'+
+    /* ---- 4.23.0: ВИТРИНА — лучший дроп переехал сюда из экрана кейсов ---- */
+    '.sr-vit{margin-top:12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,176,46,.28);'+
+      'background:radial-gradient(90% 60% at 50% 0%,rgba(255,176,46,.14),transparent 70%),linear-gradient(180deg,#141a24,#0a0e15)}'+
+    '.sr-vit-h{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;'+
+      'font-size:10.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ffcf8a;'+
+      'border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,176,46,.05)}'+
+    '.sr-vit-h span{font-size:10px;font-weight:600;letter-spacing:0;text-transform:none;color:#8b98ad}'+
+    '.sr-vit-art{position:relative;height:126px;display:flex;align-items:center;justify-content:center}'+
+    '.sr-vit-art:after{content:"";position:absolute;left:16%;right:16%;bottom:14px;height:16px;border-radius:50%;'+
+      'background:radial-gradient(50% 50% at 50% 50%,rgba(255,176,46,.5),transparent 70%);filter:blur(6px)}'+
+    '.sr-vit-art .weapon-img{position:relative;z-index:1;max-width:76%;max-height:104px}'+
+    '.sr-vit-art svg{position:relative;z-index:1;max-width:76%;max-height:104px}'+
+    '.sr-vit-body,.sr-vit-nm,.sr-vit-mt,.sr-vit-note{position:relative}'+
+    '.sr-vit-nm{padding:0 13px;font-size:14px;font-weight:900;line-height:1.25}'+
+    '.sr-vit-mt{padding:3px 13px 0;font-size:11px;color:#8b98ad}'+
+    '.sr-vit-note{margin:10px 13px 12px;display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:10px;'+
+      'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11px;color:#b9c6da}'+
+    '.sr-vit-note b{color:#ffcf8a}'+
   '@media(max-width:380px){'+
     '.sr-art{height:86px}.sr-art svg{max-height:86px}'+
     '.sr-ovr b{font-size:34px}'+
@@ -26645,6 +26772,30 @@ window.__sr = {
     +'</div>';
   }
 
+  /* 4.23.0: «Витрина» — рекорд за всё время. Раньше блок «лучший дроп» висел на
+     экране кейсов и мешал: там он не помогал выбрать, что открывать. Здесь он
+     к месту — это часть профиля. */
+  function vitHTML(p){
+    var best=p.best||0; if(!best) return '';
+    var sk=null, diff=1e18;
+    p.inv.forEach(function(it){ var d=Math.abs(SR.itemVal(it)-best); if(d<diff){ var s2=p.byId[it.id]; if(s2){ diff=d; sk=s2; } } });
+    if(!sk || diff > best*0.02){
+      diff=1e18;
+      (SR.skins||[]).forEach(function(s2){ var d=Math.abs((s2.val||0)-best); if(d<diff){ diff=d; sk=s2; } });
+    }
+    if(!sk) return '';
+    var rc=(SR.RAR&&SR.RAR[sk.r])?SR.RAR[sk.r].color:'#5a6472';
+    var rn=(SR.RAR&&SR.RAR[sk.r])?SR.RAR[sk.r].name:'';
+    var a2=''; try{ a2=SR.svgWeapon({id:sk.id,p:sk.p,n:sk.n,w:sk.w,r:sk.r,val:sk.val}); }catch(e){ a2=''; }
+    return '<div class="sr-vit" style="--rc:'+rc+'">'
+      +'<div class="sr-vit-h">Витрина<span>за всё время</span></div>'
+      +'<div class="sr-vit-art">'+a2+'</div>'
+      +'<div class="sr-vit-nm" style="color:'+rc+'">'+sk.n+'</div>'
+      +'<div class="sr-vit-mt">'+rn+' · '+rkFmt(best)+' кр.</div>'
+      +'<div class="sr-vit-note">🏆 <span>Ваш лучший дроп — <b>'+rkFmt(best)+' кр.</b></span></div>'
+    +'</div>';
+  }
+
   function bindTilt(){
     var c=document.getElementById('srCard'); if(!c) return;
     if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){ return; }
@@ -26669,7 +26820,7 @@ window.__sr = {
     var html='';
     try{
       var p=build();
-      html=cardHTML(p);
+      html=cardHTML(p)+vitHTML(p);
     }catch(err){
       var sc=(SR.state||{}), _c=(sc.coins||0), _lvl=(sc.lvl||1), _inv=(Array.isArray(sc.inv)?sc.inv.length:0);
       html='<div class="sr-card" id="srCard" style="border-radius:14px;padding:12px;background:#0d1018;border:2px solid #5a6472">'
