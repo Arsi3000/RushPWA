@@ -8199,7 +8199,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.23.0';
+const VERSION = '4.23.1';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -13457,13 +13457,16 @@ function renderSlots(){
        читать. Округляем один раз здесь — остальные места берут уже это число. */
     pct.textContent = Math.round(ch*100) + '%';
     pct.style.color = ch > .5 ? '#6ee7a0' : ch > .25 ? '#ffd166' : '#ff8f9f';
-    /* 4.23.0: полоса идёт от верхнего нуля в две стороны, по половине шанса на каждую */
-    if(arcR && arcL){ const d = wheelArcPath(ch*180); arcR.setAttribute('d', d.right); arcL.setAttribute('d', d.left); }
+    /* 4.23.0: полоса идёт от верхнего нуля в две стороны, по половине шанса на каждую.
+       4.23.1: длина не переписывается мгновенно — угол ведёт rAF (см. animateWheelTo). */
+    /* первый показ — сразу готовой длиной, дальше плавно */
+    animateWheelTo(ch * 180, !wheelPainted);
   } else {
     pct.textContent = '—';
     pct.style.color = '';
-    if(arcR && arcL){ arcR.setAttribute('d',''); arcL.setAttribute('d',''); }
+    animateWheelTo(0, !wheelPainted);
   }
+  wheelPainted = true;
   if(!spinningWheel){
     wheel.classList.remove('spinning','ok','no');
     resetWheelRotation();
@@ -13656,6 +13659,49 @@ function resetWheelRotation(smooth){
     g.dataset.ang = '0';
     setNeedle(0);
   }
+}
+
+/* 4.23.1: заливка кольца больше не прыгает рывками. Раньше renderWheel сразу
+   переписывал d у дуг — при каждом изменении ставки полоса телепортировалась на
+   новую длину. CSS-transition на d не работает, поэтому ведём угол в rAF:
+   от показанного к целевому, с мягким замедлением. Глаз читает это как
+   «жидкость налилась» / «стекла» — ровно то, что нужно. */
+/* var, а не let: init() зовётся раньше, чем доходит очередь до этого места,
+   и let дал бы TDZ-исключение. Значения подставляем защитно. */
+var wheelAngShown = 0, wheelAngRaf = 0, wheelAngTarget = 0, wheelPainted = false;
+function paintWheelAngle(deg){
+  const arcR = $('#cWinR'), arcL = $('#cWinL');
+  if(!arcR || !arcL) return;
+  if(!(deg > 0.2)){ arcR.setAttribute('d',''); arcL.setAttribute('d',''); return; }
+  const d = wheelArcPath(deg);
+  arcR.setAttribute('d', d.right);
+  arcL.setAttribute('d', d.left);
+}
+function animateWheelTo(deg, instant){
+  if(wheelAngShown == null){ wheelAngShown = 0; wheelAngTarget = 0; wheelAngRaf = 0; }
+  deg = Math.max(0, Math.min(179.6, deg));
+  if(instant || !(wheelAngTarget >= 0)){ wheelAngTarget = deg; }
+  if(wheelAngRaf){ cancelAnimationFrame(wheelAngRaf); wheelAngRaf = 0; }
+  if(instant){ wheelAngShown = deg; wheelAngTarget = deg; paintWheelAngle(deg); return; }
+  if(Math.abs(deg - wheelAngTarget) < 0.05 && Math.abs(wheelAngShown - deg) < 0.05){
+    wheelAngTarget = deg; return;
+  }
+  wheelAngTarget = deg;
+  const from = wheelAngShown, to = deg;
+  const span = Math.abs(to - from);
+  /* короткий переход на маленькой правке и подольше на большой — так движение
+     читается как одно целое, а не как дребезг на каждый клик по ставке */
+  const dur = Math.min(700, 260 + span * 6);
+  const t0 = performance.now();
+  const step = (now)=>{
+    const p = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);          /* мягкий выбег, без отскока */
+    wheelAngShown = from + (to - from) * e;
+    paintWheelAngle(wheelAngShown);
+    if(p < 1) wheelAngRaf = requestAnimationFrame(step);
+    else { wheelAngShown = to; wheelAngRaf = 0; }
+  };
+  wheelAngRaf = requestAnimationFrame(step);
 }
 
 /* 4.23.0: путь дуги от верхней точки (50,8) вправо и влево на угол a градусов.
@@ -18680,6 +18726,11 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.23.1 · Кольцо наливается плавно</b><br>
+      <b>Полоса шанса больше не прыгает.</b> Она перерисовывалась мгновенно на каждое
+      изменение ставки — читалось как рывок. Теперь длина ведётся покадрово с мягким
+      выбегом: полоса плавно наливается и так же плавно стекает, как жидкость в трубке.
+      Чем больше разница — тем длиннее переход, но не дольше семи десятых секунды.<br>
       <b style="color:#ffd166">Что нового в 4.23.0 · Круг двумя полосами и чистые кейсы</b><br>
       <b>Кольцо апгрейда переделано.</b> Ноль теперь вверху, где стрелка, а полоса шанса
       растёт от него в две стороны — влево и вправо. Цвет привязан к месту: у нуля красный,
