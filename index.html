@@ -186,8 +186,17 @@ to{opacity:1;transform:none}
 
   }.case .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
 .case .price{display:flex;align-items:center;gap:6px;font-weight:800;font-size:var(--fs-14, 14px);color:#ffd08a;justify-content:center}
-.case .price i{width:13px;height:13px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--accent2) 55%,var(--accent-deep));display:inline-block}
+/* 4.22.3: бейдж «+N новых» — своя плашка вместо эмодзи 🆕. На Android эмодзи
+   рисовался синим прямоугольником «NEW» в полкарточки: цена с монеткой уезжала
+   к краю, а сама монетка сжималась в овал. */
+.case .price .new-badge{
+  margin-left:2px;padding:0 5px;border-radius:5px;font-size:10px;font-weight:900;line-height:15px;
+  letter-spacing:0;background:rgba(47,108,246,.22);color:#9dc0ff;
+  border:1px solid rgba(90,140,255,.45);box-shadow:none;flex:0 0 auto;
+}
+.case .price i{width:13px;height:13px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--accent2) 55%,var(--accent-deep));
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);display:inline-block}
 .case .odds{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:9px;background:rgba(0,0,0,.35)}
 .case .odds span{display:block;height:100%}
 
@@ -634,8 +643,17 @@ nav{gap:8px;padding-top:12px}
 
   }.case .art svg{width:auto;height:auto;max-width:100%;max-height:100%;display:block}
 .case .price{display:flex;align-items:center;gap:6px;font-weight:800;font-size:var(--fs-14, 14px);color:#ffd08a;justify-content:center}
-.case .price i{width:13px;height:13px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--accent2) 55%,var(--accent-deep));display:inline-block}
+/* 4.22.3: бейдж «+N новых» — своя плашка вместо эмодзи 🆕. На Android эмодзи
+   рисовался синим прямоугольником «NEW» в полкарточки: цена с монеткой уезжала
+   к краю, а сама монетка сжималась в овал. */
+.case .price .new-badge{
+  margin-left:2px;padding:0 5px;border-radius:5px;font-size:10px;font-weight:900;line-height:15px;
+  letter-spacing:0;background:rgba(47,108,246,.22);color:#9dc0ff;
+  border:1px solid rgba(90,140,255,.45);box-shadow:none;flex:0 0 auto;
+}
+.case .price i{width:13px;height:13px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--accent2) 55%,var(--accent-deep));
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);display:inline-block}
 .case .odds{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:9px;background:rgba(0,0,0,.35)}
 .case .odds span{display:block;height:100%}
 
@@ -1928,7 +1946,7 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 
 @media(min-width:560px){.case-hero .crate{height:70px}
  }.cases .case .price{font-size:var(--fs-12, 12px)}
-.cases .case .price i{width:11px;height:11px}
+.cases .case .price i{width:12px;height:12px}
 .cases .case .open-in{display:none}
 .cases .case .odds{height:5px}
 .cases .case .knife-tag{font-size:var(--fs-11, 11px);padding:1px 4px;right:4px;top:0;opacity:.9}
@@ -8108,7 +8126,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.2';
+const VERSION = '4.22.3';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -8452,6 +8470,9 @@ function saveNow(){
   }
 }
 function save(){
+  /* 4.22.3: пока идёт возврат прогресса из аккаунта, ничего не пишем —
+     иначе сохранение на pagehide затрёт только что восстановленный сейв */
+  if(typeof srRestoring !== 'undefined' && srRestoring) return;
   saveDirty = true;
   if(saveTimer) return;
   saveTimer = setTimeout(() => { saveTimer = 0; if(saveDirty) saveNow(); },
@@ -10470,7 +10491,7 @@ function renderCases(){
     /* 4.8.0: «+N новых» — сколько скинов пула у игрока ещё нет */
     const newN = caseNewCount(c, ownedNow);
     const newHtml = newN > 0
-      ? `<div class="new-badge" title="В пуле новых скинов: ${newN}">🆕${newN}</div>`
+      ? `<span class="new-badge" title="В пуле новых скинов: ${newN}">+${newN}</span>`
       : '';
     el.innerHTML = `
       ${chanceHtml}
@@ -18501,6 +18522,17 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.22.3 · Аккаунт возвращает прогресс</b><br>
+      <b>Вход возвращает всё, а не только имя.</b> Раньше в аккаунте хранились одни числа:
+      при входе на новом устройстве уровень оставался первым, а инвентарь — пустым. Теперь
+      вместе с результатом сохраняется сжатая копия прогресса, и при входе она
+      восстанавливается: кредиты, скины, коллекции, узоры, уровень. Если на устройстве уже
+      что-то наиграно, игра спросит, что оставить.<br>
+      <b>Уровень берётся по максимуму.</b> Уровень только растёт, поэтому из аккаунта и с
+      устройства выбирается больший — «двенадцатый» не превращается в первый.<br>
+      <b>Пароль — от 6 символов.</b> Firebase не принимает короче, а форма пускала с четырёх:
+      вход молча не срабатывал. Теперь правило одно и то же везде, и если старый аккаунт
+      открылся по прежнему паролю, игра честно скажет, что короткий пароль не принят.<br>
       <b style="color:#ffd166">Что нового в 4.22.2 · Вход и рейтинг</b><br>
       <b>Вход больше не говорит «ник занят».</b> Если аккаунт заводился раньше, пароль
       мог сохраниться не тем, что вы вводите. Теперь сначала пробуем введённый пароль,
@@ -20849,6 +20881,7 @@ try{ window.GLASS_BREAK = DROP_SCENE; }catch(e){}
    ========================================================= */
 function init(){
   try{ load(); }catch(e){}
+  try{ srRestoredNote(); }catch(e){}
   try{ loadTheme(); }catch(e){}
   /* 4.9.1: раздел нижней навигации — по активной вкладке */
   try{
@@ -21346,6 +21379,94 @@ function rkStats(){
   };
 }
 
+/* ---------- 4.22.3: ОБЛАЧНАЯ КОПИЯ ПРОГРЕССА ----------
+   До этого в Firebase лежали только пять чисел (worth, bestDrop, opened, upOk, lvl):
+   ни инвентаря, ни уровня как источника правды. Человек входил на новом устройстве —
+   и получал пустую игру, хотя «аккаунт на месте». Теперь вместе с числами уходит
+   сжатый код сохранения (тот же, что даёт «Экспорт прогресса»), и при входе игра
+   может вернуть всё: кредиты, инвентарь, уровень, коллекции.
+   Поле называется save — правила Firestore его не запрещают: create проверяет
+   hasAll по обязательным полям, update — монотонность чисел, лишние ключи проходят. */
+const CLOUD_NOTE_KEY = 'sr_restored';
+
+/* пустая ли игра на этом устройстве: тогда возврат из облака — не вопрос, а спасение */
+function srLocalFresh(){
+  try{
+    return (state.opened|0) === 0 && ((state.inv||[]).length === 0) &&
+           (state.coins|0) <= 2000 && (state.lvl|0) <= 1 && !(state.bestDrop|0);
+  }catch(e){ return false; }
+}
+function srLocalWorth(){
+  try{
+    let inv = 0;
+    (state.inv||[]).forEach(it => { inv += itemVal(it) || 0; });
+    return Math.round((state.coins||0) + inv);
+  }catch(e){ return 0; }
+}
+/* сколько в облаке: считаем по распакованному коду, а не по числу worth */
+function srCloudInfo(d){
+  if(!d) return null;
+  let inv = 0;
+  (d.inv||[]).forEach(it => { inv += itemVal(it) || 0; });
+  return { coins: Math.round(d.coins||0), invN: (d.inv||[]).length,
+           lvl: Math.round(d.lvl||1), opened: Math.round(d.opened||0),
+           worth: Math.round((d.coins||0) + inv) };
+}
+/* уровень — только вверх: перерождение его сбрасывает, но облачный максимум
+   всегда больше или равен; награды за уже пройденные ступени не платим повторно */
+function rkAdoptLevel(lv){
+  lv = Math.min(LIM.lvl || 1000, Math.max(1, Math.round(lv||0)));
+  if(lv <= (state.lvl|0)) return false;
+  state.lvl = lv;
+  state.lvlRew = state.lvlRew || [];
+  for(let l = 2; l <= lv; l++) if(state.lvlRew.indexOf(l) < 0) state.lvlRew.push(l);
+  state.lvlTok = state.lvlTok || [];
+  for(let l = 5; l <= lv; l += 5) if(state.lvlTok.indexOf(l) < 0) state.lvlTok.push(l);
+  try{ save(); renderLevel(); achCheck(); }catch(e){}
+  return true;
+}
+/* заменить прогресс облачным и перезапустить игру — так пересоберётся всё.
+   4.22.3: ГРАБЛИ. Просто записать сейв в localStorage и позвать reload мало:
+   перед перезагрузкой срабатывает pagehide, а он сохраняет ТЕКУЩЕЕ (пустое)
+   состояние — и затирает только что восстановленное. Поэтому заодно подменяем
+   состояние в памяти: тогда любое сохранение на выходе пишет уже возвращённое. */
+let srRestoring = false;
+async function rkRestoreCloud(d){
+  if(!d) return false;
+  try{
+    saveBak(true);
+    d.tg = 0; d.tr = 0; d.tp = 0; d.tseen = 0;
+    srRestoring = true;
+    const norm = normalizeState(JSON.parse(JSON.stringify(d)));
+    if(norm) state = norm;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(d));
+    const inf = srCloudInfo(d) || {};
+    localStorage.setItem(CLOUD_NOTE_KEY, JSON.stringify(inf));
+  }catch(e){ srRestoring = false; return false; }
+  setTimeout(function(){ try{ location.reload(); }catch(e){} }, 350);
+  return true;
+}
+
+/* после возврата прогресса страница перезагружается — рассказать, что вернулось */
+function srRestoredNote(){
+  /* 4.22.3: ключ берём строкой, а не константой CLOUD_NOTE_KEY: init() зовётся
+     выше по файлу, чем объявлена константа, и обращение к ней падало в TDZ —
+     человек возвращал прогресс, но объяснения не видел. */
+  const KEY = 'sr_restored';
+  let inf = null;
+  try{ inf = JSON.parse(localStorage.getItem(KEY) || 'null'); }catch(e){}
+  if(!inf) return;
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  setTimeout(function(){
+    try{
+      const t = 'Прогресс восстановлен из аккаунта: уровень ' + (inf.lvl || 1) +
+        ', скинов — ' + (inf.invN || 0) +
+        ', кредитов — ' + (inf.coins || 0).toLocaleString('ru-RU');
+      if(window.__sr && window.__sr.toast) window.__sr.toast(t);
+    }catch(e){}
+  }, 1800);
+}
+
 /* 4.8.0: сколько worth игрок физически мог заработать за время игры.
    Сток 6 600 кр/сутки (барабан + час + дневной), коэффициент 2 — запас на
    продажи, апгрейды и босса; плюс лучший дроп и стартовая подушка. */
@@ -21378,7 +21499,7 @@ function fbParse(doc){
   const s = x => (x && x.stringValue) || '';
   return { nick:s(f.nick), nickKey:s(f.nickKey), worth:fbNum(f.worth),
            bestDrop:fbNum(f.bestDrop), opened:fbNum(f.opened), upOk:fbNum(f.upOk),
-           lvl:fbNum(f.lvl) };
+           lvl:fbNum(f.lvl), save:s(f.save) };
 }
 
 /* ---------- вход ---------- */
@@ -21489,6 +21610,10 @@ async function fbMailAuth(email, pass, legacyPass, noSignUp){
       if(up.data && up.data.idToken){
         a.token = up.data.idToken;
         if(up.data.refreshToken) a.refresh = up.data.refreshToken;
+      } else if(msgOf(up).indexOf('WEAK_PASSWORD') >= 0){
+        /* пароль короче 6 символов Firebase не примет — вход уже состоялся,
+           остаёмся на прежнем, но говорим об этом прямо */
+        a.weak = true;
       }
       a.legacy = true;
       return a;
@@ -21527,7 +21652,9 @@ async function rkAttach(nick, pass){
   let pw = m.pass;
   if(!legacyOnly){
     const p = String(pass);
-    if(p.length < 4) return { ok:false, err:'Пароль — минимум 4 символа' };
+    /* 4.22.3: Firebase не принимает пароль короче 6 символов, а игра пускала с 4 —
+       человек вводил «5656», получал WEAK_PASSWORD и не понимал, что не так. */
+    if(p.length < 6) return { ok:false, err:'Пароль — минимум 6 символов (так требует вход Firebase)' };
     if(p.length > 64) return { ok:false, err:'Пароль слишком длинный' };
     pw = p;
   }
@@ -21556,6 +21683,64 @@ async function rkAttach(nick, pass){
   let back = false;
   if(me.status === 200 && me.data && me.data.fields) back = true;
 
+  /* -------- 4.22.3: вернуть прогресс из аккаунта --------
+     Порядок такой:
+     1) в строке есть код сохранения — распаковываем и считаем, что там;
+     2) игра на этом устройстве пустая — возвращаем молча, без вопросов;
+     3) игра не пустая — спрашиваем своим окном, что важнее: местное или аккаунт;
+     4) кода нет (старая запись) — поднимаем хотя бы уровень, если в облаке он выше. */
+  let cloudData = null, cloudInfo = null;
+  try{
+    const cp = me.status === 200 && me.data && me.data.fields ? fbParse(me.data) : null;
+    if(cp && cp.save){
+      const d = await saveUnpack(cp.save);
+      if(d && Array.isArray(d.inv)){ cloudData = d; cloudInfo = srCloudInfo(d); }
+    }
+    if(!cloudInfo && cp){
+      cloudInfo = { coins: cp.worth, invN: 0, lvl: cp.lvl|0 || 1,
+                    opened: cp.opened|0, worth: cp.worth|0, onlyNumbers: true };
+    }
+  }catch(e){ cloudData = null; cloudInfo = null; }
+
+  if(back && cloudData && srLocalFresh()){
+    /* имя в localStorage — до перезагрузки: иначе после возврата прогресса
+       форма входа спросит ник заново */
+    try{
+      localStorage.setItem('srt_account', JSON.stringify({
+        name: nick, nick: nick, uid: a.uid, mail: m.email, at: srNow() }));
+    }catch(e){}
+    await rkRestoreCloud(cloudData);
+    return { ok:true, back:true, nick, uid:a.uid, restored:true,
+             lvl: cloudInfo.lvl, invN: cloudInfo.invN, coins: cloudInfo.coins };
+  }
+  if(back && cloudInfo){
+    const mine = srLocalWorth();
+    const better = cloudInfo.worth > Math.max(mine * 1.2, mine + 5000);
+    if(better){
+      let yes = false;
+      try{
+        yes = await srAsk(
+          'В аккаунте «' + nick + '» сохранён прогресс:\n' +
+          'уровень ' + (cloudInfo.lvl||1) + ', скинов — ' + (cloudInfo.invN||0) +
+          ', кредитов — ' + (cloudInfo.coins||0).toLocaleString('ru-RU') + '.\n\n' +
+          'На этом устройстве: уровень ' + (state.lvl|0||1) + ', скинов — ' + ((state.inv||[]).length) +
+          ', кредитов — ' + (state.coins|0).toLocaleString('ru-RU') + '.\n\n' +
+          'Вернуть прогресс из аккаунта? Местный уйдёт в резервную копию.',
+          { title:'Прогресс в аккаунте', ok:'Вернуть', cancel:'Оставить местный' });
+      }catch(e){ yes = false; }
+      if(yes){
+        if(cloudData){ await rkRestoreCloud(cloudData); return { ok:true, back:true, nick, uid:a.uid,
+          restored:true, lvl: cloudInfo.lvl, invN: cloudInfo.invN, coins: cloudInfo.coins }; }
+      }
+    }
+    /* уровень — всегда максимум из двух: он только растёт и ничего не отнимает.
+       Даже если человек оставил местный прогресс, «12-й уровень» не должен
+       превращаться в первый из-за нового устройства. */
+    if(cloudInfo.lvl > (state.lvl|0)) rkAdoptLevel(cloudInfo.lvl);
+    rk.cloud = cloudInfo;
+    try{ rkStore(); }catch(e){}
+  }
+
   /* 4.4.8: раньше здесь был один batch-commit на две записи (nicks + players).
      Правила Firestore его режут: commit приходит как замена документа целиком, без
      маски полей, и проверка «набор полей не сузился» валит его с PERMISSION_DENIED.
@@ -21570,7 +21755,9 @@ async function rkAttach(nick, pass){
   if(nk.data && nk.data.error) nkErr = (nk.data.error.status || '') + ' ' + fbErr(nk.data);
 
   if(!back){
-    const mask = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','updatedAt']
+    let packFirst = '';
+    try{ packFirst = await savePack(); }catch(e){ packFirst = ''; }
+    const mask = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','save','updatedAt']
       .map(x => 'updateMask.fieldPaths=' + x).join('&');
     const body = { fields: {
       nick: { stringValue: nick }, nickKey: { stringValue: key },
@@ -21586,6 +21773,7 @@ async function rkAttach(nick, pass){
          не было вовсе, и «Уровень» был вечной вкладкой «скоро» */
       lvl: fbInt(Math.min(LIM.lvl, Math.max(1, rkStats().lvl|0))),
       updatedAt: fbInt(srNow()) } };
+    if(packFirst) body.fields.save = { stringValue: packFirst };
     const c = await fbFetch(`${FB_ROOT}/players/${a.uid}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
     if(c.status === 0) return { ok:false, net:false, err:'Нет связи с Firebase' };
     if(c.data && c.data.error){
@@ -21607,7 +21795,7 @@ async function rkAttach(nick, pass){
     }));
   }catch(e){}
   if(typeof window.SRT_ACC_CHANGED === 'function'){ try{ window.SRT_ACC_CHANGED(nick); }catch(e){} }
-  return { ok:true, back, nick, uid: a.uid, made: madeNew, legacy: wasLegacy };
+  return { ok:true, back, nick, uid: a.uid, made: madeNew, legacy: wasLegacy, weak: !!a.weak };
 }
 
 /* место в таблице, даже если игрок не попал в топ-100:
@@ -21694,7 +21882,9 @@ async function fbSend(s){
   if(cur.status === 404){
     const nk = (rk.player && rk.player.nick) || '';
     if(nk){
-      const maskNew = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','updatedAt']
+      let packNew = '';
+      try{ packNew = await savePack(); }catch(e){ packNew = ''; }
+      const maskNew = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','save','updatedAt']
         .map(x => 'updateMask.fieldPaths=' + x).join('&');
       const bodyNew = { fields: {
         nick:      { stringValue: nk },
@@ -21705,6 +21895,7 @@ async function fbSend(s){
         upOk:      fbInt(Math.min(LIM.upOk, Math.max(0, s.upOk|0))),
         lvl:       fbInt(Math.min(LIM.lvl, Math.max(1, s.lvl|0))),
         updatedAt: fbInt(srNow()) } };
+      if(packNew) bodyNew.fields.save = { stringValue: packNew };
       const cr = await fbFetch(`${url}?${maskNew}`, { method:'PATCH', headers:H, body: JSON.stringify(bodyNew) });
       if(cr.status === 0) return { net:false };
       if(cr.data && cr.data.error) return { status:cr.status, err:fbErr(cr.data) };
@@ -21724,11 +21915,15 @@ async function fbSend(s){
   next.worth = Math.min(next.worth, LIM.worth);
 
   const lvlNow = Math.min(LIM.lvl, Math.max(1, s.lvl|0));
+  /* 4.22.3: вместе с числами отправляем сжатый код сохранения — это и есть
+     резервная копия: инвентарь, коллекции, узоры, прогресс режимов. */
+  let packCode = '';
+  try{ packCode = await savePack(); }catch(e){ packCode = ''; }
   if(next.worth === c.worth && next.bestDrop === c.bestDrop
      && next.opened === c.opened && next.upOk === c.upOk
-     && lvlNow === (c.lvl|0)) return { status:200, skip:true };
+     && lvlNow === (c.lvl|0) && packCode === (c.save||'')) return { status:200, skip:true };
 
-  const mask = ['worth','bestDrop','opened','upOk','lvl','updatedAt']
+  const mask = ['worth','bestDrop','opened','upOk','lvl','save','updatedAt']
     .map(p => 'updateMask.fieldPaths=' + p).join('&');
   const body = { fields: {
     worth:     fbInt(next.worth),
@@ -21737,6 +21932,7 @@ async function fbSend(s){
     upOk:      fbInt(next.upOk),
     lvl:       fbInt(Math.min(LIM.lvl, Math.max(1, s.lvl|0))),
     updatedAt: fbInt(srNow()) } };
+  if(packCode) body.fields.save = { stringValue: packCode };
 
   const w = await fbFetch(`${url}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
   if(w.status === 0) return { net:false };
@@ -22846,6 +23042,8 @@ window.__sr = {
   tirSetView, tirFireScope, tirPanBy, tirMiniRender, get tirState(){ return tirS; },
   /* 4.4.6 перенос прогресса */
   savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
+  /* 4.22.3: облачный возврат прогресса — наружу для стендов */
+  srLocalFresh, srLocalWorth, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
   openCraft, craftDo, renderCraft, renderMiniModes,
   /* 3.11.0 забег */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
@@ -25907,7 +26105,7 @@ window.__sr = {
       if(!n){ srtMsg('Придумай ник — или нажми 🎲', '#ffd27a'); nick.focus(); return; }
       if(n.length < 2){ srtMsg('Ник короче двух символов не бывает', '#ffd27a'); return; }
       if(n.length > 16){ srtMsg('Ник длиннее 16 символов не бывает', '#ffd27a'); return; }
-      if((p || '').length < 4){ srtMsg('Пароль — минимум 4 символа', '#ffd27a'); pass.focus(); return; }
+      if((p || '').length < 6){ srtMsg('Пароль — минимум 6 символов', '#ffd27a'); pass.focus(); return; }
       if(go.busy) return;
       go.busy = true;
       srtMsg(mode === 'register' ? 'Создаю аккаунт…' : 'Вхожу…', '#ffb02e');
@@ -25916,6 +26114,7 @@ window.__sr = {
         if(r && r.ok){
           var note;
           if(r.made) note = 'Аккаунт «' + n + '» создан — вы в таблице';
+          else if(r.legacy && r.weak) note = 'Вход выполнен, но пароль короче 6 символов Firebase не принимает — оставил прежний. Поставьте пароль от 6 символов.';
           else if(r.legacy) note = 'Пароль обновлён на введённый — теперь входите им';
           else if(r.back) note = 'С возвращением, ' + n + '!';
           else note = 'Вы вошли как ' + n;
