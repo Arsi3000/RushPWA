@@ -8141,7 +8141,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.5';
+const VERSION = '4.22.6';
 const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -18580,6 +18580,18 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.22.6 · Прогресс больше не пропадает</b><br>
+      <b>Вход на новом устройстве не затирает облачную копию.</b> Найдена причина пропаж:
+      чистая установка при входе отправляла в аккаунт свою пустую игру — пять тысяч кредитов,
+      ни одного скина, первый уровень — поверх настоящего прогресса. Теперь пустая игра копию
+      не трогает, а бедная не заменяет богатую: игра сравнивает вес двух кодов и оставляет
+      тот, где больше скинов, кредитов и открытий.<br>
+      <b>Уровень в таблице не понижается.</b> Строка игрока показывала «1» после входа с
+      чужого устройства. Теперь берётся больший из двух.<br>
+      <b>Подсказка под целью не повторяет число.</b> Было «осталось 984» и сразу «До #5 — 984»:
+      два одинаковых числа подряд читались как ошибка. Теперь вторая строка говорит только
+      дело — сколько кейсов до следующего места.<br>
+      <b>Восстановлен прогресс аккаунта Boss:</b> 21 скин, уровень 2, 4 630 кредитов.<br>
       <b style="color:#ffd166">Что нового в 4.22.5 · Одно число про себя</b><br>
       <b>Место в рейтинге сходится с таблицей.</b> Карточка считала место по локальным
       кредитам и инвентарю, а строка в топе показывает то, что когда-то уехало в базу.
@@ -21473,9 +21485,14 @@ const CLOUD_NOTE_KEY = 'sr_restored';
 
 /* пустая ли игра на этом устройстве: тогда возврат из облака — не вопрос, а спасение */
 function srLocalFresh(){
+  /* 4.22.6: порог кредитов был 2000, а новая игра начинается с 5000 — поэтому
+     чистая установка НЕ считалась чистой, и «свежая» копия уезжала в облако
+     поверх настоящей. Признаки чистоты: ноль открытий, пустой инвентарь,
+     первый уровень и баланс не больше стартового. */
   try{
+    const START_COINS = 5000;
     return (state.opened|0) === 0 && ((state.inv||[]).length === 0) &&
-           (state.coins|0) <= 2000 && (state.lvl|0) <= 1 && !(state.bestDrop|0);
+           (state.coins|0) <= START_COINS + 1000 && (state.lvl|0) <= 1 && !(state.bestDrop|0);
   }catch(e){ return false; }
 }
 function srLocalWorth(){
@@ -21527,6 +21544,34 @@ async function rkRestoreCloud(d){
   }catch(e){ srRestoring = false; return false; }
   setTimeout(function(){ try{ location.reload(); }catch(e){} }, 350);
   return true;
+}
+
+/* 4.22.6: сколько «весит» код сохранения. Нужно, чтобы не затирать полную
+   облачную копию пустой или бедной: именно так у Boss и Pap в базе оказался
+   код с 1 скином и уровнем 1 поверх настоящего прогресса.
+   Считаем по содержимому кода, а не по числам строки: строка хранит МАКСИМУМЫ
+   за всё время, а код — то, что реально лежит в игре сейчас. */
+async function srPackInfo(code){
+  if(!code) return null;
+  try{
+    const d = await saveUnpack(code);
+    let invVal = 0;
+    (d.inv || []).forEach(it => { try{ invVal += itemVal(it) || 0; }catch(e){} });
+    const coins = Math.round(d.coins || 0);
+    return { coins, invN: (d.inv || []).length, invVal: Math.round(invVal),
+             lvl: Math.round(d.lvl || 1), opened: Math.round(d.opened || 0),
+             worth: coins + Math.round(invVal) };
+  }catch(e){ return null; }
+}
+/* «хуже» — строго по делу: меньше предметов и меньше стоимость одновременно.
+   Один только меньший баланс — норма (кейсы сжигают кредиты), это не повод
+   отказываться от свежей копии. */
+function srPackWorse(mine, cloud){
+  if(!mine || !cloud) return false;
+  const mineScore = mine.invN * 1000 + mine.worth + mine.opened * 500 + mine.lvl * 3000;
+  const cloudScore = cloud.invN * 1000 + cloud.worth + cloud.opened * 500 + cloud.lvl * 3000;
+  if(mine.invN >= cloud.invN && mine.worth >= cloud.worth * 0.5) return false;
+  return mineScore < cloudScore * 0.95;
 }
 
 /* после возврата прогресса страница перезагружается — рассказать, что вернулось */
@@ -21996,11 +22041,26 @@ async function fbSend(s){
   };
   next.worth = Math.min(next.worth, LIM.worth);
 
-  const lvlNow = Math.min(LIM.lvl, Math.max(1, s.lvl|0));
+  /* 4.22.6: уровень в строке тоже не понижаем. Вход на чистой установке
+     отправлял сюда «1» поверх девятого уровня — и в таблице игрок падал. */
+  const lvlNow = Math.min(LIM.lvl, Math.max(1, s.lvl|0, c.lvl|0));
   /* 4.22.3: вместе с числами отправляем сжатый код сохранения — это и есть
-     резервная копия: инвентарь, коллекции, узоры, прогресс режимов. */
+     резервная копия: инвентарь, коллекции, узоры, прогресс режимов.
+     4.22.6: и НЕ отправляем, если она беднее той, что уже лежит в облаке.
+     Раньше вход на чистом устройстве записывал поверх настоящей копии пустую
+     (5000 кредитов, 0 скинов, уровень 1) — и прогресс было уже не вернуть. */
   let packCode = '';
   try{ packCode = await savePack(); }catch(e){ packCode = ''; }
+  if(packCode && c.save){
+    const [mineInf, cloudInf] = await Promise.all([srPackInfo(packCode), srPackInfo(c.save)]);
+    /* пустая игра не имеет права трогать непустую облачную копию — вообще */
+    if(srLocalFresh() && cloudInf && !(cloudInf.opened === 0 && cloudInf.invN === 0)){
+      packCode = c.save; rk.keptCloud = true;
+    } else if(srPackWorse(mineInf, cloudInf)){
+      packCode = c.save;                    /* оставляем облачную копию как есть */
+      rk.keptCloud = true;
+    } else rk.keptCloud = false;
+  }
   if(next.worth === c.worth && next.bestDrop === c.bestDrop
      && next.opened === c.opened && next.upOk === c.upOk
      && lvlNow === (c.lvl|0) && packCode === (c.save||'')) return { status:200, skip:true };
@@ -22012,7 +22072,7 @@ async function fbSend(s){
     bestDrop:  fbInt(next.bestDrop),
     opened:    fbInt(next.opened),
     upOk:      fbInt(next.upOk),
-    lvl:       fbInt(Math.min(LIM.lvl, Math.max(1, s.lvl|0))),
+    lvl:       fbInt(lvlNow),
     updatedAt: fbInt(srNow()) } };
   if(packCode) body.fields.save = { stringValue: packCode };
 
@@ -23127,7 +23187,7 @@ window.__sr = {
   /* 4.4.6 перенос прогресса */
   savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
   /* 4.22.3: облачный возврат прогресса — наружу для стендов */
-  srLocalFresh, srLocalWorth, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
+  srLocalFresh, srLocalWorth, srPackInfo, srPackWorse, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
   openCraft, craftDo, renderCraft, renderMiniModes,
   /* 3.11.0 забег */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
@@ -23143,6 +23203,7 @@ window.__sr = {
   renderSlots, renderInv, switchTab, rollSkin,
   forceRoll(r){ /* для тестов */ return r; },
   get rank(){ return { player: rk.player, top: rk.top, rank: rk.rank, total: rk.total, msg: rk.msg, net: rk.net }; },
+  fbSend, rkSend, srLocalFresh,
   /* 4.4.7: тестовая ручка — «как будто игрок уже вошёл», без похода в Firebase */
   rkFakePlayer(v){ rk.player = v; rk.busy = false; },
   rkOnOpen, rkSend, rkLoadTop, rkCreate, rkStats, renderRank, rkAttach, fbMyPlace, nickToMail,
@@ -28953,9 +29014,11 @@ window.__sr = {
       if(S.metric === 'worth' && gap2 > 0 && price > 0){
         var opens = Math.max(1, Math.ceil(gap2 / (price * 0.9)));
         if(opens <= 5){
-          near = '<div class="rk2-near">⚡ До #' + (place - 1) + ' — <b>' + fmt(gap2) +
-            '</b>. Это примерно <b>' + opens + ' ' + (opens === 1 ? 'открытие' :
-            (opens < 5 ? 'открытия' : 'открытий')) + '</b> кейса за ' + fmt(price) + '.</div>';
+          /* 4.22.6: раньше здесь снова писали «До #5 — 984», хотя строкой выше уже
+             «осталось 984». Два одинаковых числа подряд читались как ошибка. */
+          near = '<div class="rk2-near">⚡ Это <b>' + opens + ' ' +
+            (opens === 1 ? 'кейс' : (opens < 5 ? 'кейса' : 'кейсов')) +
+            '</b> за ' + fmt(price) + ' — и ты выше.</div>';
         }
       }
     }
