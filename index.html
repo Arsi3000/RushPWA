@@ -1455,7 +1455,10 @@ body[data-tut="1"] #mainNav, body[data-tut="1"] .hud, body[data-tut="1"] #casesL
    кнопка «В игру». Смысл: человек видит, как будет выглядеть в игре.
    ========================================================= */
 #srtEntry{
-  position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;
+  /* 4.22.2: было z-index:95 — форма входа уходила ПОД карточку профиля
+     (у неё z-index 2147483600), и человек видел её сквозь тёмную подложку:
+     поля не нажать, текст серый. Теперь форма выше всех окон игры. */
+  position:fixed;inset:0;z-index:2147483700;display:flex;align-items:center;justify-content:center;
   padding:max(14px, env(safe-area-inset-top,0px)) 14px max(14px, env(safe-area-inset-bottom,0px));
   background:
     radial-gradient(900px 620px at 50% 118%, rgba(255,138,40,.20), transparent 62%),
@@ -1475,6 +1478,10 @@ body[data-tut="1"] #mainNav, body[data-tut="1"] .hud, body[data-tut="1"] #casesL
   border:1px solid rgba(255,176,46,.26);
   box-shadow:0 26px 70px -22px #000, inset 0 1px 0 rgba(255,255,255,.06);
   text-align:center}
+.srL-close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#8b98b0;
+  font:900 var(--fs-14, 14px)/1 inherit;cursor:pointer;z-index:2}
+.srL-close:active{transform:scale(.94)}
 .srL-badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:var(--fs-11, 11px);font-weight:900;
   letter-spacing:.18em;text-transform:uppercase;color:#ffc46a;
   background:rgba(255,176,46,.12);border:1px solid rgba(255,176,46,.34)}
@@ -1517,6 +1524,7 @@ body[data-tut="1"] #mainNav, body[data-tut="1"] .hud, body[data-tut="1"] #casesL
   font:inherit;font-size:var(--fs-12, 12px);font-weight:800;color:#e5eefc;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);transition:.15s}
 .srL-second:active{background:rgba(255,255,255,.1)}
+.srL-note{font-size:var(--fs-10, 10px);line-height:1.45;color:#6f7d93;margin:9px 2px 0;text-align:left}
 .srL-guest{display:block;width:100%;margin-top:10px;padding:7px;border:0;background:transparent;
   cursor:pointer;font:inherit;font-size:var(--fs-11, 11px);font-weight:700;color:#6f7d93;text-decoration:underline;
   text-decoration-color:rgba(111,125,147,.4)}
@@ -4547,6 +4555,21 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   background:rgba(255,215,106,.1);border:1px solid rgba(255,215,106,.32);
   font-size:var(--fs-11, 11px);color:#ffe9ae;line-height:1.4}
 .rk2-near b{color:#fff}
+.rk2-lvl{font-style:normal;margin-left:7px;padding:2px 7px;border-radius:999px;
+  background:rgba(255,176,46,.2);border:1px solid rgba(255,176,46,.38);
+  color:#ffd08a;font-size:var(--fs-10, 10px);font-weight:900;letter-spacing:.02em;
+  vertical-align:middle}
+/* 4.22.2: «Мои места» — не кнопка, а капсула: компактные места по доступным
+   метрикам, как на макете. Тап по ней обновляет цифры. */
+.rk2-mine{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;padding:7px 9px;border-radius:12px;
+  background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09);cursor:pointer}
+.rk2-mine:active{transform:scale(.995)}
+.rk2-mp{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;
+  background:rgba(255,255,255,.06);font-size:var(--fs-11, 11px);font-weight:900;color:#eaf0fb;
+  font-variant-numeric:tabular-nums}
+.rk2-mp i{font-style:normal;font-size:var(--fs-11, 11px);opacity:.9}
+.rk2-mp.mute{background:none;font-weight:700;color:var(--dim,#8b98ae);padding:2px 2px}
+.rk2-mp.busy{opacity:.6}
 .rk2-acts{display:flex;gap:8px;margin-top:11px}
 .rk2-btn{flex:1;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.18);
   background:rgba(255,255,255,.06);color:#eaf0fb;cursor:pointer;
@@ -4895,6 +4918,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .col-empty-b{padding:9px 16px;border-radius:10px;border:none;cursor:pointer;font:inherit;
   font-size:12px;font-weight:800;background:linear-gradient(180deg,#ffa04a,#f07417);color:#20120a}
 .col-hint{margin-top:10px;font-size:11px;color:#8b98b0;text-align:center;line-height:1.4}
+</style>
 <style id="storyCSS">
 /* ===== 4.4.0 · карточка главы карьеры (нарратив) ===== */
 .st-card{padding:14px 15px;border-radius:14px;margin-bottom:14px;
@@ -5735,7 +5759,11 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   <div class="rk2-hd">
     <div class="t"><b>Рейтинг</b><span id="rk2Sub">Загружаем таблицу…</span></div>
     <button class="rk2-league" id="rk2LeagueBtn" type="button">🥉 Бронза</button>
-    <button class="rk2-icobtn" id="rk2Refresh" type="button" title="Обновить">
+    <button class="rk2-icobtn" id="rk2Share" type="button" title="Поделиться" aria-label="Поделиться">
+      <!-- 4.22.2: значок «поделиться» — стандартная стрелка из коробки, как в приложениях -->
+      <svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M6 12H5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-1"/></svg>
+    </button>
+    <button class="rk2-icobtn" id="rk2Refresh" type="button" title="Обновить" aria-label="Обновить">
       <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
     </button>
   </div>
@@ -8080,8 +8108,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.22.1';
-const BUILD   = '2026-11-12';
+const VERSION = '4.22.2';
+const BUILD   = '2026-11-13';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -11766,7 +11794,15 @@ function introPlay(){
     try{ if(typeof welcomeThenQuest === 'function'){ welcomeThenQuest(); return; } }catch(e){}
     try{ questStart(); }catch(e){}
   };
-  state.introDone = 1; save();
+  /* 4.22.2: полная заставка — первые ТРИ запуска, дальше тихая (логотип на треть
+     секунды). Счётчик introShows вместо флага introDone: флаг не давал показать
+     заставку второй раз, и человек, поставив приложение, видел её ровно один раз.
+     У тех, кто играл раньше (introDone уже стоял), считаем три показа пройденными. */
+  var introShows = (typeof state.introShows === 'number') ? state.introShows
+                 : (state.introDone ? 3 : 0);
+  state.introShows = introShows + 1;
+  state.introDone = 1;
+  save();
   /* Сцена заставки живёт отдельным <script> в конце файла. На медленном
      телефоне разбор ядра заканчивается позже, чем сработает этот таймер,
      поэтому ждём её появления до 4 с, а не обрываем заставку молча. */
@@ -11784,9 +11820,7 @@ function introPlay(){
     setTimeout(function(){ try{ box.remove(); }catch(e){} }, 620);
     setTimeout(cb, 340);
   }
-  var seenBefore = false;
-  try{ seenBefore = !!state.introDone; }catch(e){}
-  if(seenBefore){ quietSplash(next); return; }
+  if(introShows >= 3){ quietSplash(next); return; }
   var tryStart = function(){
     var left = 40;
     var step = function(){
@@ -18467,6 +18501,17 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.22.2 · Вход и рейтинг</b><br>
+      <b>Вход больше не говорит «ник занят».</b> Если аккаунт заводился раньше, пароль
+      мог сохраниться не тем, что вы вводите. Теперь сначала пробуем введённый пароль,
+      потом прежний — и молча меняем на новый: вход проходит, а не упирается в «ник занят».<br>
+      <b>Форма входа — поверх всего.</b> Окно профиля больше не остаётся тёмной подложкой,
+      а после входа профиль открывается обратно уже с вашим местом.<br>
+      <b>Рейтинг показывает уровень</b> — «Ур. N» в карточке игрока, и появилась вкладка
+      «Уровень». В «Моих местах» — компактная капсула с местом по каждой метрике:
+      тап по ней пересчитывает. Медаль лиги больше не пишет «undefined».<br>
+      <b>Обновление чаще:</b> рейтинг перезапрашивается раз в 90 секунд вместо пяти минут,
+      и подписан, когда обновлялся.<br>
       <b style="color:#ffd166">Что нового в 4.22.1 · Проценты и целостность</b><br>
       <b>Проценты — целыми.</b> Шанс апгрейда, бонус уровня, прогресс коллекций и статистика
       больше не показывают сотые: «69%» вместо «69.42%». Считается по-прежнему точно —
@@ -21270,7 +21315,7 @@ const RANK_KEY = 'sr_player_v1';
 const NICK_OK = /^[A-Za-zА-Яа-яЁё0-9 _.\-]{3,16}$/;
 
 /* потолки — те же, что в правилах Firestore */
-const LIM = { worth: 5000000000, bestDrop: 32900, opened: 2000000, upOk: 500000, jump: 5000000 };
+const LIM = { worth: 5000000000, bestDrop: 32900, opened: 2000000, upOk: 500000, lvl: 1000, jump: 5000000 };
 
 let rk = { player:null, top:[], rank:0, total:0, busy:false, err:'', msg:'', net:true, sentAt:0, loadedAt:0, myRow:null };
 let fbauth = null;   /* токен живёт только в памяти */
@@ -21296,7 +21341,8 @@ function rkStats(){
     worth: Math.round((state.coins||0) + inv),
     bestDrop: Math.round(state.bestDrop||0),
     opened: state.opened||0,
-    upOk: state.upOk||0
+    upOk: state.upOk||0,
+    lvl: Math.round(state.lvl||1)
   };
 }
 
@@ -21331,7 +21377,8 @@ function fbParse(doc){
   const f = (doc && doc.fields) || {};
   const s = x => (x && x.stringValue) || '';
   return { nick:s(f.nick), nickKey:s(f.nickKey), worth:fbNum(f.worth),
-           bestDrop:fbNum(f.bestDrop), opened:fbNum(f.opened), upOk:fbNum(f.upOk) };
+           bestDrop:fbNum(f.bestDrop), opened:fbNum(f.opened), upOk:fbNum(f.upOk),
+           lvl:fbNum(f.lvl) };
 }
 
 /* ---------- вход ---------- */
@@ -21408,8 +21455,18 @@ function nickToMail(nick){
   };
 }
 
-/* вход по почте; если не вышло — регистрация. Возвращает auth-объект как у fbSignIn */
-async function fbMailAuth(email, pass){
+/* вход по почте; если не вышло — регистрация. Возвращает auth-объект как у fbSignIn.
+
+   4.22.2: ГЛАВНОЕ, ЧТО МЕШАЛО ВОЙТИ С ПЕРВОЙ ПОПЫТКИ.
+   Аккаунты, созданные старым «Создать игрока» (rkCreate), заводились ПАРОЛЕМ,
+   ВЫВЕДЕННЫМ ИЗ НИКА: тот код пароля не спрашивал вовсе (rkAttach(nick) без
+   второго аргумента). В итоге у человека с ником «Pap» в Firebase лежал пароль
+   sR-xxxx-pap-K9665, а не тот, который он вводил. Вход не проходил, регистрация
+   упиралась в EMAIL_EXISTS — и он видел «этот ник занят», хотя ник его.
+   Теперь: сначала вход введённым паролем; не вышло — пробуем «наследный» пароль
+   из ника и, если он подошёл, СРАЗУ меняем пароль на введённый (accounts:update).
+   Так старые аккаунты открываются один раз и дальше живут с настоящим паролем. */
+async function fbMailAuth(email, pass, legacyPass, noSignUp){
   const H = { 'Content-Type':'application/json' };
   const base = 'https://identitytoolkit.googleapis.com/v1/accounts:';
   const pack = d => ({ net:true, uid:d.localId, token:d.idToken, refresh:d.refreshToken,
@@ -21418,25 +21475,41 @@ async function fbMailAuth(email, pass){
     { method:'POST', headers:H, body: JSON.stringify(body) });
   const msgOf = r => (r.data && r.data.error && r.data.error.message) || '';
 
-  /* сначала вход: Firebase на неверный пароль и на несуществующую почту отвечает
-     одинаково (INVALID_LOGIN_CREDENTIALS), поэтому «не пустил» — ещё не приговор */
+  /* 1. вход с паролем, который человек ввёл */
   let r = await call('signInWithPassword', { email, password: pass, returnSecureToken: true });
   if(r.status === 0) return { net:false };
   if(r.data && r.data.idToken) return pack(r.data);
 
-  /* не пустил — значит либо новый ник, либо почта занята другим паролем */
+  /* 2. старый аккаунт с паролем из ника — пускаем и сразу меняем пароль */
+  if(legacyPass && legacyPass !== pass){
+    const rl = await call('signInWithPassword', { email, password: legacyPass, returnSecureToken: true });
+    if(rl.data && rl.data.idToken){
+      const a = pack(rl.data);
+      const up = await call('update', { idToken: a.token, password: pass, returnSecureToken: true });
+      if(up.data && up.data.idToken){
+        a.token = up.data.idToken;
+        if(up.data.refreshToken) a.refresh = up.data.refreshToken;
+      }
+      a.legacy = true;
+      return a;
+    }
+  }
+
+  /* 3. такого аккаунта нет — заводим с введённым паролем */
+  if(noSignUp) return { net:true, dead:true, bad:'NO_ACC', err:'Такого аккаунта нет' };
   let r2 = await call('signUp', { email, password: pass, returnSecureToken: true });
   if(r2.status === 0) return { net:false };
-  if(r2.data && r2.data.idToken) return pack(r2.data);
+  if(r2.data && r2.data.idToken){ const a = pack(r2.data); a.made = true; return a; }
 
   if(msgOf(r2).indexOf('EMAIL_EXISTS') >= 0){
-    /* почта есть, но пароль не подошёл — пробуем вход ещё раз, вдруг это была сеть */
-    const r3 = await call('signInWithPassword', { email, password: pass, returnSecureToken: true });
-    if(r3.data && r3.data.idToken) return pack(r3.data);
-    return { net:true, dead:true, err:'Этот ник занят. Если он ваш — откройте игру заново или выберите другой.' };
+    /* аккаунт есть, пароль не подошёл. Раньше здесь писали «ник занят» и человек
+       шёл менять ник — самый вредный совет из возможных. */
+    return { net:true, dead:true, bad:'PASS', err:'Неверный пароль' };
   }
   const m2 = msgOf(r2);
-  if(m2.indexOf('PASSWORD') >= 0) return { net:true, dead:true, err:'Слишком простой пароль ника (внутренняя ошибка)' };
+  if(m2.indexOf('PASSWORD') >= 0) return { net:true, dead:true, bad:'PASS_WEAK', err:'Пароль не принят' };
+  if(m2.indexOf('OPERATION_NOT_ALLOWED') >= 0)
+    return { net:true, dead:true, err:'В проекте Firebase выключен вход по почте и паролю' };
   return { net:true, dead:true, err: m2 || msgOf(r) || 'Firebase отказал' };
 }
 
@@ -21445,18 +21518,30 @@ async function rkAttach(nick, pass){
   nick = String(nick||'').trim().replace(/\s+/g,' ');
   if(!NICK_OK.test(nick)) return { ok:false, err:'Ник: 3–16 символов — буквы, цифры, пробел, точка, дефис, подчёркивание.' };
   const m = nickToMail(nick);
-  /* 3.5.0: пароль, который человек ввёл, теперь настоящий — раньше он игнорировался,
-     а учётка открывалась по паролю, выведенному из ника (то есть по сути без пароля) */
+  /* 4.22.2: без пароля аккаунт больше НЕ создаётся.
+     Раньше rkAttach(nick) без второго аргумента молча заводил учётку паролем,
+     выведенным из ника: именно так «Pap» получил чужой пароль, а введённый
+     123456 не подошёл. Теперь без пароля можно только войти в уже существующий
+     аккаунт по этому «наследному» паролю — и он тут же будет заменён. */
+  const legacyOnly = (pass == null);
   let pw = m.pass;
-  if(pass != null){
+  if(!legacyOnly){
     const p = String(pass);
     if(p.length < 4) return { ok:false, err:'Пароль — минимум 4 символа' };
     if(p.length > 64) return { ok:false, err:'Пароль слишком длинный' };
     pw = p;
   }
-  const a = await fbMailAuth(m.email, pw);
+  const a = await fbMailAuth(m.email, pw, legacyOnly ? null : m.pass, legacyOnly);
   if(a.net === false) return { ok:false, net:false, err:'Нет связи с Firebase' };
-  if(!a.uid) return { ok:false, net:true, err:a.err || 'Не удалось войти' };
+  if(!a.uid){
+    if(a.bad === 'PASS') return { ok:false, net:true, bad:'PASS',
+      err:'Неверный пароль для ника «' + nick + '». Если ник ваш — вспомните пароль; ' +
+          'если забыли, выберите другой ник или войдите на том устройстве, где играли.' };
+    if(a.bad === 'NO_ACC') return { ok:false, net:true, needPass:true,
+      err:'Аккаунта «' + nick + '» нет — введите пароль и нажмите «Создать аккаунт»' };
+    return { ok:false, net:true, err:a.err || 'Не удалось войти' };
+  }
+  const madeNew = !!a.made, wasLegacy = !!a.legacy;
 
   rk.player = { uid: a.uid, refresh: a.refresh, nick };
   fbauth = a;
@@ -21485,7 +21570,7 @@ async function rkAttach(nick, pass){
   if(nk.data && nk.data.error) nkErr = (nk.data.error.status || '') + ' ' + fbErr(nk.data);
 
   if(!back){
-    const mask = ['nick','nickKey','worth','bestDrop','opened','upOk','updatedAt']
+    const mask = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','updatedAt']
       .map(x => 'updateMask.fieldPaths=' + x).join('&');
     const body = { fields: {
       nick: { stringValue: nick }, nickKey: { stringValue: key },
@@ -21497,6 +21582,9 @@ async function rkAttach(nick, pass){
       worth: fbInt(Math.max(0, rkStats().worth)),
       bestDrop: fbInt(Math.min(LIM.bestDrop, Math.max(0, rkStats().bestDrop))),
       opened: fbInt(rkStats().opened|0), upOk: fbInt(rkStats().upOk|0),
+      /* 4.22.2: уровень теперь уходит в таблицу — раньше в строке игрока его
+         не было вовсе, и «Уровень» был вечной вкладкой «скоро» */
+      lvl: fbInt(Math.min(LIM.lvl, Math.max(1, rkStats().lvl|0))),
       updatedAt: fbInt(srNow()) } };
     const c = await fbFetch(`${FB_ROOT}/players/${a.uid}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
     if(c.status === 0) return { ok:false, net:false, err:'Нет связи с Firebase' };
@@ -21519,7 +21607,7 @@ async function rkAttach(nick, pass){
     }));
   }catch(e){}
   if(typeof window.SRT_ACC_CHANGED === 'function'){ try{ window.SRT_ACC_CHANGED(nick); }catch(e){} }
-  return { ok:true, back, nick, uid: a.uid };
+  return { ok:true, back, nick, uid: a.uid, made: madeNew, legacy: wasLegacy };
 }
 
 /* место в таблице, даже если игрок не попал в топ-100:
@@ -21606,7 +21694,7 @@ async function fbSend(s){
   if(cur.status === 404){
     const nk = (rk.player && rk.player.nick) || '';
     if(nk){
-      const maskNew = ['nick','nickKey','worth','bestDrop','opened','upOk','updatedAt']
+      const maskNew = ['nick','nickKey','worth','bestDrop','opened','upOk','lvl','updatedAt']
         .map(x => 'updateMask.fieldPaths=' + x).join('&');
       const bodyNew = { fields: {
         nick:      { stringValue: nk },
@@ -21615,6 +21703,7 @@ async function fbSend(s){
         bestDrop:  fbInt(Math.min(LIM.bestDrop, Math.max(0, Math.round(s.bestDrop)||0))),
         opened:    fbInt(Math.min(LIM.opened, Math.max(0, s.opened|0))),
         upOk:      fbInt(Math.min(LIM.upOk, Math.max(0, s.upOk|0))),
+        lvl:       fbInt(Math.min(LIM.lvl, Math.max(1, s.lvl|0))),
         updatedAt: fbInt(srNow()) } };
       const cr = await fbFetch(`${url}?${maskNew}`, { method:'PATCH', headers:H, body: JSON.stringify(bodyNew) });
       if(cr.status === 0) return { net:false };
@@ -21634,16 +21723,19 @@ async function fbSend(s){
   };
   next.worth = Math.min(next.worth, LIM.worth);
 
+  const lvlNow = Math.min(LIM.lvl, Math.max(1, s.lvl|0));
   if(next.worth === c.worth && next.bestDrop === c.bestDrop
-     && next.opened === c.opened && next.upOk === c.upOk) return { status:200, skip:true };
+     && next.opened === c.opened && next.upOk === c.upOk
+     && lvlNow === (c.lvl|0)) return { status:200, skip:true };
 
-  const mask = ['worth','bestDrop','opened','upOk','updatedAt']
+  const mask = ['worth','bestDrop','opened','upOk','lvl','updatedAt']
     .map(p => 'updateMask.fieldPaths=' + p).join('&');
   const body = { fields: {
     worth:     fbInt(next.worth),
     bestDrop:  fbInt(next.bestDrop),
     opened:    fbInt(next.opened),
     upOk:      fbInt(next.upOk),
+    lvl:       fbInt(Math.min(LIM.lvl, Math.max(1, s.lvl|0))),
     updatedAt: fbInt(srNow()) } };
 
   const w = await fbFetch(`${url}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
@@ -21685,6 +21777,10 @@ async function fbCount(){
 
 /* ---------- то, чем пользуется интерфейс ---------- */
 async function rkCreate(){
+  /* 4.22.2: кнопки «Создать игрока» в интерфейсе больше нет, а этот путь создавал
+     аккаунт паролем из ника — пароль, который человек вводил, в Firebase не попадал.
+     Поэтому любой «создать» ведёт в одну форму, где есть и ник, и пароль. */
+  if(typeof window.SRT_LOGIN === 'function'){ try{ window.SRT_LOGIN(); return; }catch(e){} }
   if(rk.busy) return;
   const el = $('#rkNick');
   const nick = (el && el.value ? el.value : '').trim().replace(/\s+/g,' ');
@@ -21837,9 +21933,9 @@ function renderRankHero(){
         <div class="rk-av ${cosFrameCls()}">${letter}</div>
         <div class="rk-me">
           <b>${nm}</b>
-          <span>Рейтинг синхронизируется с аккаунтом…</span>
+          <span>Чтобы отправлять результат, войдите паролем от этого ника.</span>
         </div>
-        <button class="btn-ghost" id="rkOut2" style="font-size:12px;padding:8px 12px">Выйти из аккаунта</button>
+        <button class="btn-primary" id="rkLogin2" style="font-size:12px;padding:8px 12px">Войти</button>
       </div>
       <div class="rk-nums">
         <div>Состояние<b>${rkFmt(s.worth)}</b></div>
@@ -21851,6 +21947,8 @@ function renderRankHero(){
         <span class="rk-state">${stateTxt}</span>
       </div>
       <div class="rk-err">${rk.err || ''}</div>`;
+    const lg2 = $('#rkLogin2');
+    if(lg2) lg2.addEventListener('click', ()=>{ if(window.SRT_LOGIN) window.SRT_LOGIN(); });
     const out2 = $('#rkOut2');
     if(out2) out2.addEventListener('click', async ()=>{
       if(!await srAsk('Выйти из аккаунта на этом устройстве? Прогресс останется, но вернуться к нему можно будет по коду сохранения.',
@@ -21942,12 +22040,9 @@ function renderRank(){
 /* при открытии вкладки: подтянуть игрока, таблицу и, если давно не отправляли, отправить */
 function rkOnOpen(){
   if(!rk.player) rkRestore();
-  /* вошли, но асинхронный синк ещё летит, либо открыли до него — дотягиваем с сохранённого имени */
-  if(!rk.player){
-    let ac = null; try{ ac = JSON.parse(localStorage.getItem('srt_account')||'null'); }catch(e){ ac=null; }
-    const nm = ac && (ac.name||ac.nick);
-    if(nm && typeof window.SRT_RANK === 'function'){ window.SRT_RANK(nm); }
-  }
+  /* 4.22.2: здесь был тихий вход «по сохранённому имени» без пароля — именно он
+     заводил аккаунты паролем из ника. Если сессии нет (refresh-токена нет), молча
+     ничего не делаем: карточка покажет кнопку «Войти», и человек введёт пароль. */
   renderRank();
   rkLoadTop();
   /* автоотправка результата при входе в профиль + обновление таблицы */
@@ -25599,6 +25694,7 @@ window.__sr = {
   // ================= БРИДЖ: без рамки =================
   // Инфо о мосте + вход по нику и паролю — в окне «О игре» (#aboutBody).
   var SRT_ACC_KEY = 'srt_account';
+  var srtReopenProfile = false;   /* форма входа открыта из карточки профиля */
   function srtAcc(){ try{ return JSON.parse((typeof localStorage!=='undefined'?localStorage:null).getItem(SRT_ACC_KEY)||'null'); }catch(e){ return null; } }
   function srtSetAcc(a){ try{ (typeof localStorage!=='undefined'?localStorage:null).setItem(SRT_ACC_KEY, JSON.stringify(a||null)); }catch(e){} }
   function srtBridgeInfo(){
@@ -25701,6 +25797,7 @@ window.__sr = {
        выглядеть в игре. Пароль — вторым шагом, кнопка одна главная. */
     return '<div id="srtEntry">'
       + '<div class="srL-card">'
+      + '<button class="srL-close" id="srtClose" type="button" aria-label="Закрыть">✕</button>'
       + '<div class="srL-badge">Позывной</div>'
       + '<div class="srL-logo">SKIN&nbsp;RUSH</div>'
       + '<div class="srL-sub">Это твоё имя в рейтинге и в профиле. Придумай такое, '
@@ -25723,6 +25820,8 @@ window.__sr = {
       + '</div>'
       + '<button class="srL-primary" id="srtLogin" type="button">В игру</button>'
       + '<button class="srL-second" id="srtRegister" type="button">Создать аккаунт</button>'
+      + '<div class="srL-note">Вход и регистрация — одна кнопка «В игру»: если ника ещё нет, '
+      + 'аккаунт создастся сам. Пароль запомните — по нему вы войдёте на другом телефоне.</div>'
       + '<button class="srL-guest" id="srtGuest" type="button">Играть без аккаунта</button>'
       + '<div id="srtMsg"></div>'
       + '</div></div>';
@@ -25780,47 +25879,61 @@ window.__sr = {
       var nm=(u && u.name) ? u.name : nick.value.trim();
       srtSetAcc({name:nm});
       srtSetNick(nm);
-      srtSyncRank(nm, pass && pass.value);
       try{ window.dispatchEvent(new Event('sr:login')); }catch(e){}
       closeEntry();
+      /* 4.22.2: раньше здесь ЕЩЁ РАЗ вызывался srtSyncRank — уже после входа.
+         Лишний запрос, а при пустом пароле он заводил аккаунт паролем из ника. */
+      if(u && u.note){
+        try{ if(window.__sr && window.__sr.toast) window.__sr.toast(u.note); }catch(e){}
+      }
+      if(srtReopenProfile){
+        srtReopenProfile = false;
+        setTimeout(function(){ try{ if(window.SRT_PROFILE) window.SRT_PROFILE(); }catch(e){} }, 260);
+      }
       try{ if(window.__sr && window.__sr.save) window.__sr.save(); }catch(e){}
       // обновить имя на кнопке профиля, если она есть
       try{ var pn=document.getElementById('profName'); if(pn){ pn.textContent=profLetter(nm); pn.classList.remove('guest'); pn.title=nm; } }catch(e){}
     }
+    /* 4.22.2: ОДИН путь входа вместо двух.
+       Было: «В игру» шло в локальную «сеть» SR-TS, которая живёт в памяти страницы
+       (OfflineAdapter): она всегда отвечает «получилось», но никуда не пишет. Пароль
+       в Firebase не уходил, а аккаунт там уже существовал от старого «Создать игрока»
+       с паролем из ника — отсюда «этот ник занят» на своём же нике.
+       Стало: всегда Firebase по нику. Вход → (для старых аккаунтов) вход по
+       «наследному» паролю с заменой на введённый → регистрация. Одна кнопка делает
+       всё, вторая не нужна, но оставлена и ведёт туда же. */
     function go(mode){
-      var n=nick.value.trim(), p=pass.value;
-      if(!n){ srtMsg('Придумай ник — или нажми 🎲','#ffd27a'); nick.focus(); return; }
-      if(n.length < 2){ srtMsg('Ник короче двух символов не бывает','#ffd27a'); return; }
-      if((p || '').length < 4 && mode === 'register'){ srtMsg('Пароль минимум 4 символа','#ffd27a'); return; }
-      srtMsg('Проверяю…','#ffb02e');
-      var pr = mode==='register' ? SRTS.net.register(n,p) : SRTS.net.login(n,p);
-      pr.then(ok).catch(function(err){
-        var m=(err&&err.message)||String(err);
-        /* 3.12.0: «ника нет в локальной сети» больше не тупик. Настоящий аккаунт
-           живёт в Firebase — сразу пробуем войти по нику там, а если и там нет,
-           подсказываем кнопку «Регистрация» вместо сухого текста ошибки. */
-        if(/не зарегистр|NO_USER|not found/i.test(m)){
-          srtMsg('Аккаунта нет — пробую войти по нику в рейтинге…','#7fb4ff');
-          Promise.resolve(srtSyncRank(n,p)).then(function(r){
-            if(r && r.ok){ ok({name:n}); }
-            else if(r && r.err){
-              /* 4.4.8: показываем настоящую причину. Раньше любая беда с записью
-                 в Firebase выглядела как «такого ника нет» — и человек менял ник,
-                 пароль и устройство там, где дело было в правилах базы. */
-              srtMsg(r.err,'#ff8080');
-            }
-            else { srtMsg('Такого аккаунта нет. Проверьте ник или нажмите «Регистрация».','#ffd27a'); }
-          }).catch(function(e){
-            srtMsg('Не удалось войти: '+((e&&e.message)||e),'#ff8080');
-          });
+      var n = nick.value.trim(), p = pass.value;
+      if(!n){ srtMsg('Придумай ник — или нажми 🎲', '#ffd27a'); nick.focus(); return; }
+      if(n.length < 2){ srtMsg('Ник короче двух символов не бывает', '#ffd27a'); return; }
+      if(n.length > 16){ srtMsg('Ник длиннее 16 символов не бывает', '#ffd27a'); return; }
+      if((p || '').length < 4){ srtMsg('Пароль — минимум 4 символа', '#ffd27a'); pass.focus(); return; }
+      if(go.busy) return;
+      go.busy = true;
+      srtMsg(mode === 'register' ? 'Создаю аккаунт…' : 'Вхожу…', '#ffb02e');
+      Promise.resolve(srtSyncRank(n, p)).then(function(r){
+        go.busy = false;
+        if(r && r.ok){
+          var note;
+          if(r.made) note = 'Аккаунт «' + n + '» создан — вы в таблице';
+          else if(r.legacy) note = 'Пароль обновлён на введённый — теперь входите им';
+          else if(r.back) note = 'С возвращением, ' + n + '!';
+          else note = 'Вы вошли как ' + n;
+          ok({ name: n, note: note });
           return;
         }
-        srtMsg(m,'#ff8080');
+        if(r && r.err){ srtMsg(r.err, '#ff8080'); return; }
+        srtMsg('Не удалось войти. Проверьте интернет и попробуйте ещё раз', '#ff8080');
+      }).catch(function(e){
+        go.busy = false;
+        srtMsg('Не удалось войти: ' + ((e && e.message) || e), '#ff8080');
       });
     }
     ln.addEventListener('click',function(){ go('login'); });
     rg.addEventListener('click',function(){ go('register'); });
     if(gs) gs.addEventListener('click',function(){ closeEntry(); srtMsg(''); });
+    var cl = document.getElementById('srtClose');
+    if(cl) cl.addEventListener('click', function(){ closeEntry(); });
     // Enter в полях
     nick.addEventListener('keydown',function(e){ if(e.key==='Enter') go('login'); });
     pass.addEventListener('keydown',function(e){ if(e.key==='Enter') go('login'); });
@@ -25834,6 +25947,15 @@ window.__sr = {
   function srtOpenLogin(){
     if(srtCurrentName()) return;
     if(document.getElementById('srtEntry')) return;
+    /* 4.22.2: форма входа открывается поверх любого окна. Карточку профиля
+       прячем — иначе она остаётся подложкой и её тёмный слой виден сквозь форму.
+       После успешного входа вернём её на место, чтобы человек увидел своё место. */
+    try{
+      var pm = document.getElementById('srProfModal');
+      if(pm && pm.classList.contains('on')){ srtReopenProfile = true; pm.classList.remove('on'); }
+      var pk = document.getElementById('srPicker');
+      if(pk && pk.classList.contains('on')) pk.classList.remove('on');
+    }catch(e){}
     var html=srtEntryHTML();
     if(!html) return;
     var m=document.createElement('div'); m.innerHTML=html; var node=m.firstChild;
@@ -25844,7 +25966,13 @@ window.__sr = {
       var ab=document.getElementById('aboutBody');
       if(ab && typeof MutationObserver!=='undefined') new MutationObserver(function(){ srtInjectAbout(); }).observe(ab,{childList:true,subtree:true});
       var acc=srtAcc();
-      if(acc && (acc.name||acc.nick)){ srtSetNick(acc.name||acc.nick); srtSyncRank(acc.name||acc.nick); }
+      if(acc && (acc.name||acc.nick)){
+        srtSetNick(acc.name||acc.nick);
+        /* 4.22.2: здесь был srtSyncRank(имя) — вход без пароля. Аккаунт, созданный
+           этим вызовом, получал пароль, выведенный из ника, и настоящий пароль
+           потом не подходил. Сессия и так поднимается по refresh-токену, а если
+           её нет — человек войдёт паролем через форму. */
+      }
       /* 4.7.0: форма входа больше не выскакивает при загрузке.
          Её зовёт заставка (introPlay), когда доиграет, — или кнопка профиля. */
       srtInjectAbout();
@@ -26643,6 +26771,7 @@ window.__sr = {
   #panel-diary .dtab span{display:none}
   #panel-diary .dtab{padding:10px 2px}
 }
+</style>
 <style>
 /* 4.8.0: витрина кейсов — бейдж «есть что собрать», личная статистика, отметки в составе */
 .case{position:relative}
@@ -26679,12 +26808,6 @@ window.__sr = {
   max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 }
 .hero-guns b{color:#cfdaea;font-weight:700}
-/* 4.14.0: пульсация рамки кадра в сцене выпадения */
-@keyframes srFramePulse{
-  0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
-  100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
-}
-</style>
 /* 4.14.0: пульсация рамки кадра в сцене выпадения */
 @keyframes srFramePulse{
   0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
@@ -28158,7 +28281,10 @@ window.__sr = {
   'use strict';
   var PROJ = 'skin-rush-rank';
   var ROOT = 'https://firestore.googleapis.com/v1/projects/' + PROJ + '/databases/(default)/documents';
-  var CACHE_KEY = 'sr_rk2_cache', DAY_KEY = 'sr_rk2_day', TTL = 5 * 60 * 1000;
+  var CACHE_KEY = 'sr_rk2_cache', DAY_KEY = 'sr_rk2_day', TTL = 90 * 1000;
+  /* 4.22.2: кэш таблицы жил 5 минут — человек жал «обновить» и видел то же самое.
+     Теперь 90 секунд, а при открытии экрана свежее сразу перезапрашивается. */
+  var PLACES_KEY = 'sr_rk2_places', PLACES_TTL = 3 * 60 * 1000;
   var TOP_N = 24, PAGE = 20;
 
   /* 4.22.0: вкладка метрики показывается, только если поле реально есть в базе.
@@ -28189,6 +28315,9 @@ window.__sr = {
 
   /* какие дополнительные поля есть в базе — узнаём один раз в сутки */
   function fieldsProbe(){
+    /* 4.22.2: сюда попадают только те поля, которых нет в базе. «Уровень» теперь
+       пишется, поэтому вкладка включится сама, как только его пришлёт первая
+       обновлённая версия игры — без правки экрана. */
     var cached = null;
     try{ cached = JSON.parse(localStorage.getItem(FIELDS_KEY) || 'null'); }catch(e){}
     if(cached && cached.at && Date.now() - cached.at < FIELDS_TTL){
@@ -28206,13 +28335,19 @@ window.__sr = {
     });
   }
   function applyFields(f){
-    METRICS.forEach(function(m){ if(!m.on && f[m.k]) m.on = true; });
+    METRICS.forEach(function(m){
+      if(m.k === 'worth' || m.k === 'bestDrop' || m.k === 'opened' || m.k === 'upOk') return;
+      /* поля нет в базе — вкладки нет; появилось — включаем */
+      if(f[m.k]) m.on = true; else if(m.on && !f[m.k]) m.on = false;
+    });
+    /* выбранная метрика могла стать недоступной — возвращаемся к состоянию */
+    if(!metricOf(S.metric).on){ S.metric = 'worth'; }
   }
 
   var S = {
     metric:'worth', chip:'all', list:[], total:0, myPlace:0, my:null,
     next:null, err:'', busy:false, show:PAGE, loadedAt:0, fromCache:false,
-    badges:{}, prev:0
+    badges:{}, prev:0, places:[], placesBusy:false
   };
 
   function $(id){ return document.getElementById(id); }
@@ -28223,7 +28358,7 @@ window.__sr = {
   function parseDoc(d){
     var f = (d && d.fields) || {}, g = function(x){ return (x && x.stringValue) || ''; };
     return { nick:g(f.nick), worth:num(f.worth), bestDrop:num(f.bestDrop),
-             opened:num(f.opened), upOk:num(f.upOk), upd:num(f.updatedAt) };
+             opened:num(f.opened), upOk:num(f.upOk), lvl:num(f.lvl), upd:num(f.updatedAt) };
   }
   function metricOf(k){ for(var i=0;i<METRICS.length;i++) if(METRICS[i].k===k) return METRICS[i]; return METRICS[0]; }
   function myStats(){
@@ -28324,6 +28459,7 @@ window.__sr = {
       return placeNext();
     }).then(function(){
       S.busy = false; render(); stampDay();
+      placesRefresh(true);
     }).catch(function(e){
       S.busy = false;
       if(!S.list.length) S.err = 'Таблица не загрузилась: ' + (e && e.message || 'нет связи');
@@ -28396,13 +28532,16 @@ window.__sr = {
 
   function drawTabs(){
     var box = $('rk2Tabs'); if(!box) return;
-    box.innerHTML = METRICS.map(function(m){
+    /* 4.22.2: вкладок «скоро» больше нет — как и договаривались, метрики без данных
+       просто не показываем. Поле появилось в базе — вкладка возникнет сама
+       (проверка полей идёт раз в сутки в fieldsProbe). */
+    var live = METRICS.filter(function(m){ return m.on; });
+    box.innerHTML = live.map(function(m){
       var on = m.k === S.metric;
       var b = '';
-      if(!m.on) b = '<span class="b">⏳</span>';
-      else if(m.k === S.metric && S.myPlace) b = '<span class="b">#' + S.myPlace + '</span>';
+      if(m.k === S.metric && S.myPlace) b = '<span class="b">#' + S.myPlace + '</span>';
       else if(S.badges[m.k]) b = '<span class="b">#' + S.badges[m.k] + '</span>';
-      return '<button class="rk2-tab' + (on ? ' on' : '') + (m.on ? '' : ' soon') +
+      return '<button class="rk2-tab' + (on ? ' on' : '') +
         '" data-k="' + m.k + '" type="button">' + m.ic + ' ' + m.n + b + '</button>';
     }).join('');
     Array.prototype.forEach.call(box.querySelectorAll('.rk2-tab'), function(btn){
@@ -28487,45 +28626,70 @@ window.__sr = {
         '<div class="rk2-mid">' +
           '<div class="rk2-rank"><b class="' + (delta > 0 ? 'gain' : '') + '">' +
             (place ? '#' + place : '—') + '</b><span>' + (S.total ? '/ ' + S.total : '') + '</span></div>' +
-          '<div class="rk2-name">' + esc(nick) + '</div>' +
+          '<div class="rk2-name">' + esc(nick) +
+            '<i class="rk2-lvl" title="Твой уровень">Ур. ' + myLevel() + '</i></div>' +
         '</div>' +
         '<div class="rk2-delta">' + pill + '<div class="rk2-dsub">' + dsub + '</div></div>' +
       '</div>' +
       '<div class="rk2-goal">' + goal + '</div>' + near +
-      '<div class="rk2-acts">' +
-        '<button class="rk2-btn primary" id="rk2Share" type="button">📤 Поделиться</button>' +
-        '<button class="rk2-btn" id="rk2Mine" type="button">🏆 Мои места</button>' +
-      '</div>';
+      '<div class="rk2-mine" id="rk2Mine" role="button" tabindex="0" ' +
+        'aria-label="Мои места по метрикам" title="Мои места по метрикам — нажми, чтобы обновить">' +
+        placesHTML() + '</div>';
 
     var av = $('rk2Av');
     if(av) av.addEventListener('click', function(){
       if(window.SRT_PROFILE) window.SRT_PROFILE();
       else if(window.__sr && window.__sr.switchTab) window.__sr.switchTab('cases');
     });
-    var sh = $('rk2Share');
-    if(sh) sh.addEventListener('click', function(){
-      var txt = place ? ('Я #' + place + ' в SKIN RUSH по метрике «' + m.n + '» · ' +
-        fmt(cur) + ' 🎯') : 'SKIN RUSH — рейтинг игроков';
-      if(navigator.share){ navigator.share({ title:'SKIN RUSH', text:txt }).catch(function(){}); }
-      else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ toast2('Скопировано'); }); }
-      else toast2(txt);
+    /* «Поделиться» и «Мои места» навешиваются один раз в bind() — карточка
+       перерисовывается часто, а кнопка «поделиться» живёт в шапке экрана. */
+  }
+  /* ---------- места по метрикам (капсула) ---------- */
+  function myLevel(){
+    try{ var st = window.__sr && window.__sr.state; return (st && (st.lvl|0)) || 1; }catch(e){ return 1; }
+  }
+  function placesCacheGet(){
+    try{
+      var d = JSON.parse(localStorage.getItem(PLACES_KEY) || 'null');
+      if(!d || !d.at || (Date.now() - d.at) > PLACES_TTL) return null;
+      return d;
+    }catch(e){ return null; }
+  }
+  function placesHTML(){
+    var p = S.places || [];
+    if(!p.length){
+      return '<span class="rk2-mp mute">' +
+        (S.placesBusy ? 'Считаю места…' : 'Мои места появятся после первой отправки') + '</span>';
+    }
+    return p.map(function(x){
+      return '<span class="rk2-mp" title="' + esc(x.n) + '"><i>' + x.ic + '</i>#' + x.place + '</span>';
+    }).join('');
+  }
+  /* одно count-обращение на метрику, и только по доступным метрикам;
+     результат живёт 3 минуты и пересчитывается, когда меняются мои цифры */
+  function placesRefresh(force){
+    var my = myStats();
+    var live = METRICS.filter(function(m){ return m.on; });
+    var sig = live.map(function(m){ return m.k + ':' + (my[m.k] || 0); }).join('|');
+    if(!force){
+      var c = placesCacheGet();
+      if(c && c.sig === sig){ S.places = c.places || []; return Promise.resolve(); }
+    }
+    if(S.placesBusy) return Promise.resolve();
+    S.placesBusy = true; drawMe();
+    var jobs = live.map(function(m){
+      var v = my[m.k] || 0;
+      if(!(v > 0)) return Promise.resolve(null);
+      return countWhere(m.k, 'GREATER_THAN', v)
+        .then(function(n){ return { k:m.k, ic:m.ic, n:m.n, place:(n|0) + 1 }; })
+        .catch(function(){ return null; });
     });
-    var mine = $('rk2Mine');
-    if(mine) mine.addEventListener('click', function(){
-      var parts = [];
-      var my2 = myStats();
-      mine.disabled = true;
-      Promise.all(METRICS.filter(function(x){ return x.on; }).map(function(x){
-        var v = my2[x.k] || 0;
-        if(!(v > 0)) return Promise.resolve(null);
-        return countWhere(x.k, 'GREATER_THAN', v).then(function(n){ return x.ic + ' #' + (n + 1); })
-          .catch(function(){ return null; });
-      })).then(function(arr){
-        mine.disabled = false;
-        arr.forEach(function(x){ if(x) parts.push(x); });
-        toast2(parts.length ? 'Твои места: ' + parts.join(' · ') : 'Пока нет отправленных результатов');
-      });
-    });
+    return Promise.all(jobs).then(function(arr){
+      S.placesBusy = false;
+      S.places = arr.filter(Boolean);
+      try{ localStorage.setItem(PLACES_KEY, JSON.stringify({ at: Date.now(), sig: sig, places: S.places })); }catch(e){}
+      drawMe();
+    }).catch(function(){ S.placesBusy = false; drawMe(); });
   }
   function toast2(txt){
     try{ if(window.__sr && window.__sr.toast) return window.__sr.toast(txt); }catch(e){}
@@ -28552,7 +28716,8 @@ window.__sr = {
     /* значения в своей строке подставляем руками: объект-заглушка нужна только
        для того, чтобы не дублировать верстку */
     box.innerHTML = html;
-    if(note) note.textContent = (above ? '1' : '0') + '+' + (below ? '1' : '0') + ' сосед';
+    if(note) note.textContent = (above && below) ? 'соседи сверху и снизу'
+      : above ? 'сосед сверху' : below ? 'сосед снизу' : '';
   }
 
   function drawPod(){
@@ -28635,11 +28800,17 @@ window.__sr = {
   function drawLeaguePill(){
     var b = $('rk2LeagueBtn');
     var lg = league();
-    if(b) b.textContent = lg.ic + ' ' + lg.nm;
+    if(b) b.textContent = lg.ic + ' ' + lg.n;   /* было lg.nm — отсюда «undefined» в капсуле лиги */
     var sub = $('rk2Sub');
     if(sub){
       var m = metricOf(S.metric);
-      sub.textContent = S.total ? (m.n + ' · игроков в базе: ' + S.total) : 'Загружаем таблицу…';
+      var ago = '';
+      if(S.loadedAt){
+        var min = Math.floor((Date.now() - S.loadedAt) / 60000);
+        ago = ' · обновлено ' + (min < 1 ? 'только что' : (min + ' мин назад'));
+      }
+      sub.textContent = S.total ? (m.n + ' · игроков в базе: ' + S.total + ago)
+                                : 'Загружаем таблицу…';
     }
   }
 
@@ -28653,7 +28824,7 @@ window.__sr = {
     var pct = S.myPlace && S.total ? Math.round(S.myPlace / S.total * 100) : 0;
     head.innerHTML = '<div class="rk2-lhead" style="margin:0;padding:11px 13px;border-radius:12px">' +
       '<div class="row"><span class="ic">' + lg.ic + '</span>' +
-      '<span class="nm">' + lg.nm + ' · ты здесь</span>' +
+      '<span class="nm">' + lg.n + ' · ты здесь</span>' +
       '<span class="pos">' + (S.myPlace ? '#' + S.myPlace + ' из ' + S.total : 'место неизвестно') + '</span></div>' +
       '<div class="bar"><i style="width:' + (next ? Math.max(3, 100 - Math.max(0, (S.myPlace - needRank) * 100 / Math.max(1, S.total))) : 100).toFixed(0) + '%"></i></div>' +
       '<div class="txt">' + (next
@@ -28692,6 +28863,28 @@ window.__sr = {
     if(more) more.addEventListener('click', function(){ S.show += PAGE; drawList(); drawMeBottom(); });
     var rf = $('rk2Refresh');
     if(rf) rf.addEventListener('click', function(){ load(true); });
+    /* поделиться: свой текст с местом и метрикой; на телефоне — системное окно,
+       в браузере без него — копирование в буфер */
+    var shr = $('rk2Share');
+    if(shr) shr.addEventListener('click', function(){
+      var m = metricOf(S.metric), my = myStats();
+      var txt = S.myPlace
+        ? ('Я #' + S.myPlace + (S.total ? ' из ' + S.total : '') + ' в SKIN RUSH по метрике «' +
+           m.n + '» · ' + fmt(my[S.metric] || 0))
+        : ('SKIN RUSH — кейсы и апгрейд скинов. Мой рейтинг: https://arsi3000.github.io/RushPWA/');
+      txt += ' — https://arsi3000.github.io/RushPWA/';
+      if(navigator.share){ navigator.share({ title:'SKIN RUSH', text:txt }).catch(function(){}); }
+      else if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ toast2('Скопировано — вставьте в чат'); })
+          .catch(function(){ toast2(txt); });
+      } else toast2(txt);
+    });
+    /* капсула «Мои места» перерисовывается вместе с карточкой — слушаем контейнер */
+    var meBox = $('rk2Me');
+    if(meBox) meBox.addEventListener('click', function(e){
+      var t = e.target && e.target.closest ? e.target.closest('#rk2Mine') : null;
+      if(t) placesRefresh(true);
+    });
     var lb = $('rk2LeagueBtn');
     if(lb) lb.addEventListener('click', function(){ var sh = $('rk2LeagueSheet'); if(sh) sh.classList.add('on'); });
     var lc = $('rk2LeagueClose');
@@ -28709,7 +28902,10 @@ window.__sr = {
         fieldsProbe().then(function(){ render(); });
       }
       render();
-      load(false);
+      /* 4.22.2: открыли экран — если данные старше 90 с, тянем заново, а не
+         показываем пятиминутный кэш */
+      load(!S.loadedAt || (Date.now() - S.loadedAt) > TTL);
+      placesRefresh(false);
     },
     reload: function(){ load(true); },
     state: function(){ return { metric:S.metric, list:S.list, myPlace:S.myPlace,
