@@ -4607,6 +4607,10 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rk2-icobtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
 .rk2-icobtn:active{transform:scale(.94)}
+/* 4.26.0: пока идёт отправка и перечитывание таблицы — иконка вращается */
+.rk2-icobtn.spin svg{animation:rkSpin .8s linear infinite}
+@keyframes rkSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.rk2-icobtn.spin svg{animation:none;opacity:.5}}
 
 /* вкладки метрик */
 .rk2-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 2px;scrollbar-width:none;
@@ -8238,7 +8242,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.25.0';
+const VERSION = '4.26.0';
 const BUILD   = '2026-11-14';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -8586,6 +8590,9 @@ function save(){
      иначе сохранение на pagehide затрёт только что восстановленный сейв */
   if(typeof srRestoring !== 'undefined' && srRestoring) return;
   saveDirty = true;
+  /* 4.26.0: прогресс изменился — поставим его в очередь на отправку в рейтинг.
+     Один хук на все события сразу: кейсы, апгрейды, продажи, награды. */
+  try{ if(typeof rkTouch === 'function') rkTouch(); }catch(e){}
   if(saveTimer) return;
   saveTimer = setTimeout(() => { saveTimer = 0; if(saveDirty) saveNow(); },
                          (SR_CONFIG.save && SR_CONFIG.save.throttleMs) || 400);
@@ -13452,6 +13459,10 @@ function renderStats(){
 function pickTargetNear(aim){
   const stakeIds = upStake.map(uid => { const it = itemByUid(uid); return it ? it.id : null; }).filter(Boolean);
   const a = stakeValue();
+  /* 4.26.0: если просимая цель дороже самого дорогого предмета в игре, «ближайший
+     скин» — это обман: при ставке 15 500 и ×10 подставлялся «Призрак» за 18 000,
+     то есть ×1,16 под наклейкой ×10. В таком случае честнее сразу выкуп. */
+  if(aim > maxSkinVal() * 1.02){ upBot = marketTarget(); return upBot ? upBot.id : null; }
   let best = null, bd = Infinity;
   SKINS.forEach(s => {
     if(s.val <= a || stakeIds.indexOf(s.id) >= 0) return;
@@ -13470,9 +13481,16 @@ function renderWant(){
   UP_MULTS.forEach(m=>{
     const b = document.createElement('button');
     b.className = 'want-chip mult' + (upMult === m ? ' on' : '');
-    b.textContent = '×' + m;
+    /* 4.26.0: честная наклейка. Если цели такой цены в каталоге нет, множитель
+       закрывается денежным выкупом — так и пишем, вместо обещания «×10», которое
+       на деле давало ×1,16. */
+    const cash = !!a && (a * m) > maxSkinVal() * 1.02;
+    b.textContent = '×' + m + (cash ? ' 💰' : '');
     b.disabled = !a;
-    b.title = a ? 'цель примерно за ' + Math.round(a * m).toLocaleString('ru-RU') : 'сначала выберите скин';
+    b.title = !a ? 'сначала выберите скин'
+      : cash ? ('цель дороже ' + maxSkinVal().toLocaleString('ru-RU') + ' — рынок выкупит ставку за '
+                + Math.round(a * m).toLocaleString('ru-RU') + ' кр., шанс ' + Math.round(100 / m) + '%')
+      : ('цель примерно за ' + Math.round(a * m).toLocaleString('ru-RU'));
     b.addEventListener('click', ()=>{
       upMult = (upMult === m) ? 0 : m;
       if(upMult && a){
@@ -13512,8 +13530,13 @@ function renderWant(){
     hint.textContent = 'Цель под ' + upWant + '%: около ' + Math.round(targetForPct(upWant)).toLocaleString('ru-RU')
       + ' — список целей отфильтрован, нажмите на цель, чтобы уточнить';
   } else if(upMult){
-    hint.textContent = 'Множитель ×' + upMult + ': цель около ' + Math.round(a * upMult).toLocaleString('ru-RU')
-      + ' — нажмите на цель в списке, чтобы уточнить';
+    const isCash = (a * upMult) > maxSkinVal() * 1.02;
+    hint.textContent = isCash
+      ? 'Множитель ×' + upMult + ': цели такой цены в каталоге нет (' + maxSkinVal().toLocaleString('ru-RU')
+        + ' — максимум). Рынок выкупит ставку за ' + Math.round(a * upMult).toLocaleString('ru-RU')
+        + ' кр. наличными, шанс ' + Math.round(100 / upMult) + '%'
+      : 'Множитель ×' + upMult + ': цель около ' + Math.round(a * upMult).toLocaleString('ru-RU')
+        + ' — нажмите на цель в списке, чтобы уточнить';
   } else {
     hint.textContent = 'Шанс считается сам: стоимость ставки ÷ цена цели. Чипы выше подбирают цель под нужный процент';
   }
@@ -13633,7 +13656,17 @@ function renderSlots(){
     sA.innerHTML = `<div class="plus">+</div><div class="cap">Ваши скины</div>`;
   }
 
-  if(b){
+  if(b && b.id === 'MRKT'){
+    /* 4.26.0: цель-выкуп. Раньше это рисовалось как мифический нож «Топ-позиция
+       рынка», и игрок думал, что получит предмет. На деле приходят кредиты. */
+    const R = RAR.myth;
+    sB.className = 'slot filled ' + R.cls;
+    sB.dataset.rarity = 'myth';
+    sB.style.setProperty('--c', R.color);
+    sB.innerHTML = `<div class="nm" style="font-size:13px">Рынок выкупит ставку</div>
+      <div class="rt slot-rt">наличными</div>
+      <div class="val">${b.val.toLocaleString('ru-RU')}</div>`;
+  } else if(b){
     const R = RAR[b.r];
     sB.className = 'slot filled ' + R.cls;
     sB.dataset.rarity = b.r;                 /* 3.12.0 */
@@ -13748,6 +13781,15 @@ let upBot = null;                 /* синтетическая цель «ры�
 /* Рынок всегда отвечает: если реальной цели дороже ставки нет,
    подбираем «Топ-позицию рынка» — цель чуть выше ставки (или по множителю).
    При выигрыше выкупается наличными, чтобы не ломать пул реальных скинов. */
+/* 4.26.0: самый дорогой предмет каталога. Дальше множителя «×N» настоящей цели
+   нет — там только денежный выкуп, и игрок должен видеть это до спина. */
+var MAX_SKIN_VAL = 0;
+function maxSkinVal(){
+  if(!MAX_SKIN_VAL){
+    SKINS.forEach(s => { if(s.val > MAX_SKIN_VAL) MAX_SKIN_VAL = s.val; });
+  }
+  return MAX_SKIN_VAL;
+}
 function marketTarget(){
   const a = stakeValue();
   if(!a) return null;
@@ -18973,6 +19015,18 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.26.0 · Рейтинг снова растёт</b><br>
+      <b>Результат уходит в таблицу сам.</b> Открыли кейс, прошли апгрейд — и через
+      двадцать секунд число в рейтинге уже новое. Раньше отправка жила на старом
+      экране и после переделки рейтинга не вызывалась вовсе: у живых игроков кейсы,
+      апгрейды и лучший дроп стояли на месте. Теперь отправка идёт и при уходе из игры.<br>
+      <b>Кнопка-стрелка у лиги работает.</b> Она отправляет ваш результат и перечитывает
+      таблицу: иконка крутится, внизу появляется «Отправлено · таблица обновлена».<br>
+      <b>Лучший дроп больше не обрезается.</b> Потолок был 32 900 — ниже самого дорогого
+      предмета в игре. Теперь 250 000, и витрина с таблицей показывают одно число.<br>
+      <b>Честные множители апгрейда.</b> Самая дорогая цель каталога — 18 000 кр. Если
+      множитель выше, чем позволяет каталог, чип помечается 💰 и сразу говорит, что рынок
+      выкупит ставку наличными и какой там шанс.<br>
       <b style="color:#ffd166">Что нового в 4.25.0 · Вибрация и офлайн</b><br>
       <b>Вибрация стала настраиваемой.</b> Дропы, апгрейд и тир отзывались в руке
       и раньше; теперь это можно выключить тумблером в «О игре» — рядом со звуком.
@@ -21924,7 +21978,12 @@ const RANK_KEY = 'sr_player_v1';
 const NICK_OK = /^[A-Za-zА-Яа-яЁё0-9 _.\-]{3,16}$/;
 
 /* потолки — те же, что в правилах Firestore */
-const LIM = { worth: 5000000000, bestDrop: 32900, opened: 2000000, upOk: 500000, lvl: 1000, jump: 5000000 };
+/* 4.26.0: потолок лучшего дропа поднят с 32 900 до 250 000. Прежний был ниже самого
+   дорогого предмета каталога (18 000) плюс запас на апгрейд ×10 — и всё, что дороже,
+   молча сжималось при отправке. Теперь витрина и таблица показывают одно число.
+   bestDropOld — потолок старых правил Firestore: если запись отклонят, повторяем
+   с ним, чтобы открытые кейсы и апгрейды всё равно уехали. */
+const LIM = { worth: 5000000000, bestDrop: 250000, bestDropOld: 32900, opened: 2000000, upOk: 500000, lvl: 1000, jump: 5000000 };
 
 let rk = { player:null, top:[], rank:0, total:0, busy:false, err:'', msg:'', net:true, sentAt:0, loadedAt:0, myRow:null };
 let fbauth = null;   /* токен живёт только в памяти */
@@ -22560,7 +22619,21 @@ async function fbSend(s){
 
   const w = await fbFetch(`${url}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body) });
   if(w.status === 0) return { net:false };
-  if(w.data.error) return { status:w.status, err:fbErr(w.data) };
+  if(w.data.error){
+    /* 4.26.0: правила Firestore могут быть ещё старыми (потолок 32 900). Тогда
+       отклоняется ВСЯ запись — и открытые кейсы, и апгрейды тоже. Повторяем
+       один раз с прежним потолком: числа растут, а лучший дроп доедет, когда
+       правила обновят. Без этого одна неподходящая цифра замораживала всю строку. */
+    if(body.fields.bestDrop && next.bestDrop > LIM.bestDropOld){
+      const body2 = JSON.parse(JSON.stringify(body));
+      body2.fields.bestDrop = fbInt(LIM.bestDropOld);
+      const w2 = await fbFetch(`${url}?${mask}`, { method:'PATCH', headers:H, body: JSON.stringify(body2) });
+      if(w2.status === 0) return { net:false };
+      if(!w2.data.error) return { status:200, ok:true, rulesOld:true,
+        capped: next.worth < Math.round(s.worth)||0 };
+    }
+    return { status:w.status, err:fbErr(w.data) };
+  }
   return { status:200, ok:true, capped: next.worth < Math.round(s.worth)||0 };
 }
 
@@ -22633,6 +22706,52 @@ async function rkCreate(){
   renderRank();
 }
 
+/* =========================================================
+   4.26.0: АВТООТПРАВКА РЕЗУЛЬТАТА
+   Почему это появилось. В 4.22.5 рейтинг переехал на новый экран (RK2), и вызов
+   автоотправки остался в старом rkOnOpen(), который больше никто не зовёт. С тех
+   пор результат уезжал в базу только при создании игрока: у живого игрока кейсы,
+   апгрейды и лучший дроп стояли на месте месяцами — в базе висело то, что попало
+   туда много версий назад.
+   Как теперь: любое сохранение игры (save()) помечает результат «грязным», а
+   очередь отправляет его не чаще раза в 20 секунд. Обрыв сети — повтор через
+   30 секунд, максимум 5 попыток, чтобы не долбить Firebase вечно.
+   ========================================================= */
+let rkDirty = false, rkAutoTimer = 0, rkAutoRetry = 0, rkAutoTries = 0;
+const RK_AUTO_GAP = 20000, RK_AUTO_RETRY = 30000, RK_AUTO_MAX_TRY = 5;
+
+/* позвать после любого изменения прогресса; сама решит, когда отправлять */
+function rkTouch(){
+  try{
+    if(!rk.player) return;
+    rkDirty = true;
+    if(rkAutoTimer) return;
+    const since = srNow() - (state.rkLast || 0);
+    const wait = Math.max(1200, RK_AUTO_GAP - since);
+    rkAutoTimer = setTimeout(function(){ rkAutoTimer = 0; rkAuto(); }, wait);
+  }catch(e){}
+}
+/* force=true — прислать немедленно (кнопка «обновить», выход из игры) */
+function rkAuto(force){
+  try{
+    if(!rk.player || rk.busy){ if(force) rk.msg = 'Игрок не привязан к этому телефону'; return Promise.resolve(); }
+    if(!rkDirty && !force) return Promise.resolve();
+    /* защита от долбёжки: кнопкой и открытием вкладки можно звать часто */
+    if(!rkDirty && rk.lastAutoAt && srNow() - rk.lastAutoAt < 5000) return Promise.resolve();
+    rkDirty = false;
+    state.rkLast = 0;                    /* свой троттлинг у rkSend здесь не нужен */
+    clearTimeout(rkAutoRetry); rkAutoRetry = 0;
+    return rkSend(true).then(function(){
+      rk.lastAutoAt = srNow();
+      if(rk.net === false && rkAutoTries < RK_AUTO_MAX_TRY){
+        rkAutoTries++;
+        rkDirty = true;
+        rkAutoRetry = setTimeout(function(){ rkAutoRetry = 0; rkAuto(true); }, RK_AUTO_RETRY);
+      } else if(rk.net !== false){ rkAutoTries = 0; }
+    }).catch(function(){});
+  }catch(e){ return Promise.resolve(); }
+}
+
 async function rkSend(quiet){
   if(!rk.player || rk.busy) return;
   const s = rkStats();
@@ -22684,7 +22803,9 @@ async function rkSend(quiet){
     rk.msg = 'Нет связи — результат уйдёт позже';
   } else if(r.ok){
     rk.net = true; rk.sentAt = srNow(); rk.err = '';
-    rk.msg = 'Результат отправлен · ' + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+    rk.msg = r.rulesOld
+      ? 'Отправлено, но лучший дроп сервер пока режет до 32 900 — обновите правила Firestore'
+      : 'Результат отправлен · ' + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
   } else if(r.skip){
     rk.net = true; rk.sentAt = srNow();
     rk.msg = 'Результат уже в таблице';
@@ -22868,9 +22989,15 @@ function rkOnOpen(){
   renderRank();
   rkLoadTop();
   /* автоотправка результата при входе в профиль + обновление таблицы */
-  if(rk.player){ rkSend(true); }
-  else { setTimeout(()=>{ if(rk.player) rkSend(true); else rkLoadTop(); }, 900); }
+  if(rk.player){ rkAuto(true); }
+  else { setTimeout(()=>{ if(rk.player) rkAuto(true); else rkLoadTop(); }, 900); }
 }
+/* 4.26.0: уход из игры — последний шанс отправить. pagehide срабатывает и при
+   сворачивании, и при закрытии; отправка идёт fetch-ом и обычно успевает. */
+window.addEventListener('pagehide', function(){ try{ if(rk.player && rkDirty) rkAuto(true); }catch(e){} });
+document.addEventListener('visibilitychange', function(){
+  try{ if(document.visibilityState === 'hidden' && rk.player && rkDirty) rkAuto(true); }catch(e){}
+});
 
 /* =============================================================
    4.3.6 · АЛЬБОМ «КОЛЛЕКЦИЯ» — главная цель игрока
@@ -23690,6 +23817,7 @@ window.__sr = {
   /* 4.4.7: тестовая ручка — «как будто игрок уже вошёл», без похода в Firebase */
   rkFakePlayer(v){ rk.player = v; rk.busy = false; },
   rkOnOpen, rkSend, rkLoadTop, rkCreate, rkStats, renderRank, rkAttach, fbMyPlace, nickToMail,
+  rkTouch, rkAuto, LIM,
   SFX, sfxMute, sfxIsMuted, FX, RAR, crateGunOf, crateSvg, casePoolOf, caseHasKnife, showWin
 };
 })();
@@ -29865,7 +29993,28 @@ window.__sr = {
     var more = $('rk2More');
     if(more) more.addEventListener('click', function(){ S.show += PAGE; drawList(); drawMeBottom(); });
     var rf = $('rk2Refresh');
-    if(rf) rf.addEventListener('click', function(){ load(true); });
+    if(rf) rf.addEventListener('click', function(){
+      /* 4.26.0: кнопка раньше только читала базу — снаружи казалось, что она
+         «ведёт в никуда»: числа не менялись, отклика не было. Теперь она
+         отправляет свой результат и перечитывает таблицу, с вращением и тостом. */
+      if(rf.dataset.busy) return;
+      rf.dataset.busy = '1';
+      rf.classList.add('spin');
+      var done = function(txt){
+        rf.dataset.busy = ''; rf.classList.remove('spin');
+        if(txt) toast2(txt);
+      };
+      var send = Promise.resolve();
+      try{ if(window.__sr && window.__sr.rkAuto) send = window.__sr.rkAuto(true) || send; }catch(e){}
+      send.then(function(){ return load(true); }).then(function(){
+        var rk = null; try{ rk = window.__sr && window.__sr.rank; }catch(e){}
+        done(rk && rk.net === false ? 'Нет сети — таблица из кэша, результат уйдёт позже'
+                                    : 'Отправлено · таблица обновлена');
+      }).catch(function(){
+        done('Не удалось обновить — проверьте связь');
+      });
+      setTimeout(function(){ if(rf.dataset.busy) done('Таблица обновлена'); }, 8000);
+    });
     /* поделиться: свой текст с местом и метрикой; на телефоне — системное окно,
        в браузере без него — копирование в буфер */
     var shr = $('rk2Share');
@@ -29911,10 +30060,17 @@ window.__sr = {
         fieldsProbe().then(function(){ render(); });
       }
       render();
-      /* 4.22.2: открыли экран — если данные старше 90 с, тянем заново, а не
-         показываем пятиминутный кэш */
-      load(!S.loadedAt || (Date.now() - S.loadedAt) > TTL);
-      placesRefresh(false);
+      /* 4.26.0: сначала отдать свой результат, потом читать таблицу.
+         Раньше экран только читал — и открытие рейтинга ничего не отправляло. */
+      var ready = Promise.resolve();
+      try{
+        if(window.__sr && window.__sr.rkAuto) ready = window.__sr.rkAuto(true) || ready;
+      }catch(e){}
+      ready.then(function(){
+        /* 4.22.2: открыли экран — если данные старше 90 с, тянем заново, а не
+           показываем пятиминутный кэш */
+        return load(!S.loadedAt || (Date.now() - S.loadedAt) > TTL);
+      }).then(function(){ placesRefresh(false); });
     },
     reload: function(){ load(true); },
     state: function(){ return { metric:S.metric, list:S.list, myPlace:S.myPlace,
