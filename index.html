@@ -8205,8 +8205,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.23.2';
-const BUILD   = '2026-11-13';
+const VERSION = '4.24.0';
+const BUILD   = '2026-11-14';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -9436,6 +9436,139 @@ const SFX = {
 
 /* старые имена, чтобы не править десятки вызовов */
 function sfxWin(r){ SFX.reveal(r); }
+/* 4.24.0: игрок вернулся из фона тапом по уведомлению — payload может появиться
+   позже загрузки, поэтому заглядываем ещё и на возвращении */
+document.addEventListener('visibilitychange', () => {
+  try{
+    if(document.hidden || !SR_NOTIFY || !SR_NOTIFY.native()) return;
+    setTimeout(()=>{ try{ SR_NOTIFY.handleDeepLink(); }catch(e){} }, 400);
+  }catch(e){}
+});
+
+/* =========================================================
+   4.24.0: PUSH-УВЕДОМЛЕНИЯ (только внутри APK)
+   В браузере моста window.SkinRushAndroid нет — все вызовы молча
+   ничего не делают, и игра работает как раньше.
+   Правила RuStore: уведомления включаются только явным переключателем,
+   поэтому по умолчанию всё выключено, пока игрок сам не включит.
+   ========================================================= */
+const SR_NOTIFY = {
+  KEY: 'sr_notify',
+  /* по умолчанию ВЫКЛ: разрешение спрашиваем только по кнопке */
+  enabled(){
+    try{ return localStorage.getItem(this.KEY) === '1'; }catch(e){ return false; }
+  },
+  everAsked(){
+    try{ return localStorage.getItem(this.KEY + '_asked') === '1'; }catch(e){ return false; }
+  },
+  set(on){
+    try{
+      localStorage.setItem(this.KEY, on ? '1' : '0');
+      if(on) localStorage.setItem(this.KEY + '_asked', '1');
+    }catch(e){}
+    if(on){ this.requestPerm(); this.syncAll(); }
+    else this.cancelAll();
+  },
+  bridge(){
+    try{ return (typeof window !== 'undefined' && window.SkinRushAndroid) || null; }catch(e){ return null; }
+  },
+  native(){ return !!this.bridge(); },
+  requestPerm(){
+    const b = this.bridge();
+    if(b && b.requestNotificationPermission) { try{ b.requestNotificationPermission(); }catch(e){} }
+  },
+  /* --- три таймера игры --- */
+  drum(min){
+    const b = this.bridge();
+    if(b && this.enabled() && b.scheduleDrum) { try{ b.scheduleDrum(Math.max(1, Math.round(min||15))); }catch(e){} }
+  },
+  trials(h){
+    const b = this.bridge();
+    if(b && this.enabled() && b.scheduleTrials) { try{ b.scheduleTrials(Math.max(1, Math.round(h||24))); }catch(e){} }
+  },
+  daily(day){
+    const b = this.bridge();
+    if(b && this.enabled() && b.scheduleDailyReward) { try{ b.scheduleDailyReward(Math.max(1, day|0)); }catch(e){} }
+  },
+  /* «Кейс часа» — не из инструкции, но таймер есть, и напоминание к месту */
+  hour(min){
+    const b = this.bridge();
+    if(b && this.enabled() && b.scheduleReward) { try{ b.scheduleReward('hour', Math.max(1, Math.round(min||60))); }catch(e){} }
+  },
+  cancelAll(){
+    const b = this.bridge();
+    if(b && b.cancelAllNotifications) { try{ b.cancelAllNotifications(); }catch(e){} }
+  },
+
+  /* --- планирование по текущему состоянию сейва ---
+     Вызывается при включении тумблера и при запуске: если игрок включил
+     уведомления, а потом просто закрыл игру, напоминания должны быть
+     расставлены заново — система их не помнит после перезагрузки. */
+  syncAll(){
+    if(!this.native() || !this.enabled()) return;
+    try{
+      const now = srNow();
+      const leftOf = (key, ms)=>{
+        const last = (state.cd && state.cd[key]) || 0;
+        if(rewDayUsed(key) >= REW_DAY_CAP[key]) return ms;      /* сегодня всё, ждём сутки */
+        if(last > now) return Math.max(1000, last - now);        /* ещё идёт ожидание */
+        return ms - (now - last);                                /* отсчёт уже пошёл */
+      };
+      const dLeft = leftOf('drum', REW_MS.drum);
+      const hLeft = leftOf('hour', REW_MS.hour);
+      const dayLeft = leftOf('day', REW_MS.day);
+      if(dLeft > 60000) this.drum(Math.round(dLeft/60000));
+      if(hLeft > 60000) this.hour(Math.round(hLeft/60000));
+      if(dayLeft > 60000 && b_dayLeftEnough(dayLeft)) this.daily(1);
+      this.trialsNextReset();
+    }catch(e){}
+  },
+  /* «Испытания» обновляются в полночь — напоминаем за этим моментом */
+  trialsNextReset(){
+    if(!this.native() || !this.enabled()) return;
+    try{
+      const now = new Date();
+      const mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 5, 0);
+      const h = Math.max(1, Math.round((mid.getTime() - now.getTime()) / 3600000));
+      this.trials(h);
+    }catch(e){}
+  },
+
+  /* --- переход из уведомления в нужный экран ---
+     APK кладёт строку payload в SharedPreferences и отдаёт её один раз.
+     Ждём загрузки приложения: экраны открываются только после init(). */
+  pending(){
+    const b = this.bridge();
+    if(!b || !b.getPendingPayload) return '';
+    try{ return b.getPendingPayload() || ''; }catch(e){ return ''; }
+  },
+  handleDeepLink(){
+    const p = this.pending();
+    if(!p) return;
+    const go = ()=>{
+      try{
+        if(p === 'drum_ready'){
+          if(typeof openDrum === 'function') openDrum();
+          else if(typeof openDrumGame === 'function') openDrumGame();
+        } else if(p === 'hour_ready'){
+          if(typeof switchTab === 'function') switchTab('rewards');
+          toast('Кейс часа готов');
+        } else if(p === 'trials_open'){
+          if(typeof switchTab === 'function') switchTab('trials');
+          toast('Испытания обновились');
+        } else if(p.indexOf('daily_reward') === 0){
+          if(typeof switchTab === 'function') switchTab('rewards');
+          toast('Дневной кейс готов');
+        }
+      }catch(e){}
+    };
+    /* при первом запуске init() ещё не доехал — повторяем через полсекунды */
+    if(window.__sr && window.__sr.state) setTimeout(go, 120);
+    else setTimeout(go, 1500);
+  }
+};
+/* редкий случай: сейва нет вовсе — не пытаемся ставить «дневное» напоминание */
+function b_dayLeftEnough(ms){ return ms > 60 * 60 * 1000; }
 
 /* =========================================================
    4b. ЭФФЕКТЫ: фон, конфетти, вспышка, вибрация
@@ -14915,7 +15048,16 @@ function fmtLeft(ms){
   if(hh > 0) return hh + ':' + String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
   return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
 }
-function rewMark(key){ state.cd = state.cd || {}; state.cd[key] = srNow(); rewDayAdd(key); save(); }
+function rewMark(key){
+  state.cd = state.cd || {}; state.cd[key] = srNow(); rewDayAdd(key); save();
+  /* 4.24.0: награда забрана — ставим напоминание на момент, когда откроется снова.
+     Один хук на все три таймера: барабан (15 мин), кейс часа (час), дневной (сутки). */
+  try{
+    if(key === 'drum') SR_NOTIFY.drum(Math.round(REW_MS.drum / 60000));
+    else if(key === 'hour') SR_NOTIFY.hour(Math.round(REW_MS.hour / 60000));
+    else if(key === 'day') SR_NOTIFY.daily(1);
+  }catch(e){}
+}
 function addTokens(n){
   state.tokens = Math.max(0, (state.tokens|0) + n);
   save(); renderTokens();
@@ -15182,6 +15324,9 @@ function addCharge(n){
     if(left > DRUM_MIN_LEFT){
       const cut = Math.min(5 * 60 * 1000, left - DRUM_MIN_LEFT);
       state.cd.drum = (state.cd.drum || 0) - cut;
+      /* 4.24.0: ожидание стало короче — напоминание переставляем, иначе оно
+         придёт позже, чем барабан реально откроется */
+      try{ const lf = rewLeft('drum'); if(lf > 60000) SR_NOTIFY.drum(Math.round(lf/60000)); }catch(e){}
       toast(`Заряд полон: барабан откроется на ${Math.round(cut/60000)} мин раньше`);
       SFX.bonus();
     } else {
@@ -16601,6 +16746,9 @@ function dayTakeOnce(key){
   if(!state[key] || state[key].date !== t) state[key] = {date: t, n: 0};
   state[key].n = (state[key].n | 0) + 1;
   save();
+  /* 4.24.0: попытки на сегодня тратятся — поставим напоминание на полночь,
+     когда испытания обновятся */
+  try{ SR_NOTIFY.trialsNextReset(); }catch(e){}
 }
 const SNIP_TRIES = 3, SNIP_CASE_MAX = 300;
 /* 3.8.0: баттл вместо дуэли. 10 боёв в час — счётчик по часовому ключу,
@@ -18733,6 +18881,14 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.24.0 · Напоминания о наградах</b><br>
+      <b>Приложение умеет напоминать.</b> Когда барабан, кейс часа или дневной кейс
+      будут готовы, придёт уведомление — даже если игра закрыта. Тап по нему открывает
+      нужный экран. Работает только в версии для RuStore; в браузере игры ничего не
+      меняется.<br>
+      <b>Включается вручную.</b> Тумблер лежит в «О игре». По умолчанию выключено:
+      уведомления нельзя навязывать, это требование магазина. Выключили — все
+      запланированные напоминания снимаются.<br>
       <b style="color:#ffd166">Что нового в 4.23.2 · Круг без лишней подписи</b><br>
       <b>Внутри кольца остался только процент.</b> Подпись «шанс апгрейда» убрана — она
       повторяла то, что и так видно. На время прокрутки вместо неё на секунду появляется
@@ -19011,6 +19167,14 @@ function renderAbout(){
       <span style="font-size:12.5px;color:#93a0b8">Дневник игрока</span>
       <button class="snd" id="btnDiaryAbout" type="button" title="Открыть дневник">📓</button>
     </div>
+    <!-- 4.24.0: push-уведомления. По правилам RuStore включаются только вручную,
+         поэтому по умолчанию выключено; в браузере строки нет — там моста нет. -->
+    ${SR_NOTIFY.native() ? `<div class="about-snd" style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 0;gap:10px">
+      <span style="font-size:12.5px;color:#93a0b8;line-height:1.35">Напоминать о наградах<br>
+        <i style="font-style:normal;font-size:11px;color:#6f7d93">барабан, кейс часа и дневной кейс</i></span>
+      <button class="snd" id="btnNotifyAbout" type="button"
+        title="Уведомления вкл/выкл">${SR_NOTIFY.enabled() ? '🔔' : '🔕'}</button>
+    </div>` : ''}
     <div style="margin-top:14px;font-size:12.5px;color:#93a0b8;line-height:1.5">
       Кейсы со шансами, инвентарь и апгрейд. Шанс апгрейда = стоимость ставки ÷ цена цели;
       при промахе ставка сгорает, но каждая неудача повышает шанс. Баланс, инвентарь, миссии
@@ -19371,6 +19535,18 @@ function renderAbout(){
       $('#aboutModal').classList.remove('on');
       const real = $('#btnDiary');
       if(real) real.click();
+    });
+  }
+  /* 4.24.0: переключатель push-уведомлений. Кнопка живёт в перерисованном
+     innerHTML, поэтому обработчик вешаем здесь, при каждом открытии окна. */
+  const bn = $('#btnNotifyAbout');
+  if(bn){
+    bn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const on = !SR_NOTIFY.enabled();
+      SR_NOTIFY.set(on);
+      bn.textContent = on ? '🔔' : '🔕';
+      toast(on ? 'Напомним, когда награда будет готова' : 'Уведомления выключены');
     });
   }
   const sbnd = $('#btnSndAbout');
@@ -21210,6 +21386,17 @@ function init(){
      Возвращающемуся игроку показываем тихий кадр на 350 мс: он закрывает подгрузку
      шрифтов и не даёт вёрстке прыгнуть. */
   setTimeout(() => { try{ introPlay(); }catch(e){ try{ questStart(); }catch(_){} } }, 400);
+
+  /* 4.24.0: уведомления (только в APK).
+     1) расставить напоминания по текущим таймерам — система их не помнит после
+        перезапуска, поэтому планируем при каждом старте, если включено;
+     2) если игру открыли тапом по уведомлению — перейти на нужный экран. */
+  try{
+    if(SR_NOTIFY.native()){
+      SR_NOTIFY.syncAll();
+      setTimeout(()=>{ try{ SR_NOTIFY.handleDeepLink(); }catch(e){} }, 2200);
+    }
+  }catch(e){}
 }
 
 
@@ -23365,6 +23552,7 @@ window.__sr = {
   savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
   /* 4.22.3: облачный возврат прогресса — наружу для стендов */
   srLocalFresh, srLocalWorth, srPackInfo, srPackWorse, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
+  SR_NOTIFY, rewMark, rewLeft, REW_MS,
   openCraft, craftDo, renderCraft, renderMiniModes,
   /* 3.11.0 забег */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
