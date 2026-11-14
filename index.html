@@ -412,6 +412,20 @@ to{opacity:1;transform:none}
 .btn-up:hover:not(:disabled){filter:brightness(1.08)}
 .btn-up:disabled{opacity:.45;cursor:default;box-shadow:none;filter:none;background:linear-gradient(180deg,#5a6570,#3d454e);color:#c3ccd8}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:18px}
+/* 4.25.0: плашка офлайна. Висит сверху по центру, не мешает навигации,
+   тап по ней закрывает до следующего обрыва. */
+#offlineChip{position:fixed;left:50%;bottom:calc(86px + var(--sab,0px));transform:translateX(-50%);z-index:2147483640;
+  display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+  background:rgba(12,16,22,.92);border:1px solid rgba(255,176,46,.42);color:#ffd08a;
+  font-size:11.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap;
+  box-shadow:0 10px 24px -14px #000;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  cursor:pointer;transition:opacity .2s ease,transform .2s ease}
+#offlineChip[hidden]{display:none}
+#offlineChip i{width:7px;height:7px;border-radius:50%;background:#ff8a28;
+  box-shadow:0 0 8px rgba(255,138,40,.9);animation:offPulse 1.6s infinite}
+@keyframes offPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){#offlineChip i{animation:none}}
+
 /* 4.11.0: журнал ошибок в «О игре» */
 .erl-row{display:flex;gap:8px;font-size:var(--fs-11, 11px);line-height:1.35;color:#e2c7cd;padding:3px 0;border-top:1px solid rgba(255,255,255,.06)}
 .erl-row:first-child{border-top:none}
@@ -884,6 +898,20 @@ nav{gap:8px;padding-top:12px}
 .btn-up:hover:not(:disabled){filter:brightness(1.08)}
 .btn-up:disabled{opacity:.45;cursor:default;box-shadow:none;filter:none;background:linear-gradient(180deg,#5a6570,#3d454e);color:#c3ccd8}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:18px}
+/* 4.25.0: плашка офлайна. Висит сверху по центру, не мешает навигации,
+   тап по ней закрывает до следующего обрыва. */
+#offlineChip{position:fixed;left:50%;bottom:calc(86px + var(--sab,0px));transform:translateX(-50%);z-index:2147483640;
+  display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+  background:rgba(12,16,22,.92);border:1px solid rgba(255,176,46,.42);color:#ffd08a;
+  font-size:11.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap;
+  box-shadow:0 10px 24px -14px #000;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  cursor:pointer;transition:opacity .2s ease,transform .2s ease}
+#offlineChip[hidden]{display:none}
+#offlineChip i{width:7px;height:7px;border-radius:50%;background:#ff8a28;
+  box-shadow:0 0 8px rgba(255,138,40,.9);animation:offPulse 1.6s infinite}
+@keyframes offPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){#offlineChip i{animation:none}}
+
 /* 4.11.0: журнал ошибок в «О игре» */
 .erl-row{display:flex;gap:8px;font-size:var(--fs-11, 11px);line-height:1.35;color:#e2c7cd;padding:3px 0;border-top:1px solid rgba(255,255,255,.06)}
 .erl-row:first-child{border-top:none}
@@ -5063,6 +5091,11 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 <!-- 4.7.2: пока заставка не начала играть, экран закрыт этой шторкой.
      Без неё на холодном старте на 0,1–0,4 с проглядывало меню игры. -->
 <div id="bootCover" style="position:fixed;inset:0;z-index:99999;pointer-events:none;opacity:1;transition:opacity .28s ease;background:radial-gradient(circle at 50% 45%,#1a1206 0%,#04060a 65%)"></div>
+<!-- 4.25.0: плашка «нет сети». В APK и в PWA игра и так работает офлайн —
+     это честная подсказка, почему не грузится рейтинг и не идут сохранения в облако. -->
+<div id="offlineChip" hidden aria-live="polite">
+  <i></i><span>Нет сети — играем локально</span>
+</div>
 <canvas id="bgfx"></canvas>
 <canvas id="confetti"></canvas>
 <div id="flash"></div>
@@ -8205,7 +8238,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.24.0';
+const VERSION = '4.25.0';
 const BUILD   = '2026-11-14';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -9571,6 +9604,60 @@ const SR_NOTIFY = {
 function b_dayLeftEnough(ms){ return ms > 60 * 60 * 1000; }
 
 /* =========================================================
+   4.25.0: ВИБРАЦИЯ
+   В игре вибрация уже была — по редкости дропа, в апгрейде, в тире.
+   Не хватало двух вещей: выключателя (у части людей вибрация в играх
+   раздражает) и нативного вызова в APK. Здесь и то и другое.
+   Паттерны подобраны так, чтобы редкость чувствовалась рукой:
+   обычный — один короткий тик, мифический — длинная пульсация.
+   ========================================================= */
+const SR_VIBRATE = {
+  KEY: 'sr_vibrate',
+  /* по умолчанию ВКЛ: вибрация — часть ощущения от дропа, а не навязчивая реклама */
+  enabled(){
+    try{ return localStorage.getItem(this.KEY) !== '0'; }catch(e){ return true; }
+  },
+  set(on){
+    try{ localStorage.setItem(this.KEY, on ? '1' : '0'); }catch(e){}
+    if(on) this.play([18, 40, 18]);            /* сразу дать почувствовать, что включилось */
+    else this.stop();
+  },
+  bridge(){
+    try{ return (typeof window !== 'undefined' && window.SkinRushAndroid) || null; }catch(e){ return null; }
+  },
+  /* паттерны в миллисекундах: [жужжать, пауза, жужжать, ...] */
+  patterns: {
+    common:   [12],
+    uncommon: [22],
+    rare:     [22, 30, 22],
+    epic:     [35],
+    legend:   [24, 40, 24, 40, 60],
+    myth:     [30, 40, 30, 40, 80]
+  },
+  play(pattern){
+    if(!this.enabled()) return;
+    if(pattern == null) return;
+    const arr = Array.isArray(pattern) ? pattern : [pattern];
+    const b = this.bridge();
+    if(b && b.vibratePattern){
+      /* в APK зовём нативно: navigator.vibrate в WebView зависит от настроек
+         системы и молчит, если вибрация выключена в самом Android */
+      try{ b.vibratePattern(JSON.stringify(arr)); return; }catch(e){}
+    }
+    try{ if(navigator.vibrate) navigator.vibrate(arr); }catch(e){}
+  },
+  stop(){
+    const b = this.bridge();
+    if(b && b.vibratePattern){ try{ b.vibratePattern('[]'); return; }catch(e){} }
+    try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+  },
+  /* дроп по редкости игры: common / uncommon / rare / epic / legend / myth */
+  drop(r){
+    this.play(this.patterns[r] || this.patterns.common);
+  }
+};
+
+/* =========================================================
    4b. ЭФФЕКТЫ: фон, конфетти, вспышка, вибрация
    ========================================================= */
 const FX = (function(){
@@ -9729,7 +9816,12 @@ const FX = (function(){
     f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
   }
   function vibrate(pattern){
-    try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
+    /* 4.25.0: все вызовы вибрации идут через SR_VIBRATE — иначе выключатель
+       в «О игре» не действовал бы на дропы, апгрейд и тир */
+    try{
+      if(typeof SR_VIBRATE !== 'undefined'){ SR_VIBRATE.play(pattern); return; }
+      if(navigator.vibrate) navigator.vibrate(pattern);
+    }catch(e){}
   }
   /* тряска экрана: сила 0..1, затухает за ~0.4 с */
   let shakeRaf = 0;
@@ -18881,6 +18973,15 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.25.0 · Вибрация и офлайн</b><br>
+      <b>Вибрация стала настраиваемой.</b> Дропы, апгрейд и тир отзывались в руке
+      и раньше; теперь это можно выключить тумблером в «О игре» — рядом со звуком.
+      В приложении вибрация идёт через Android напрямую, поэтому работает даже там,
+      где браузерная молчит.<br>
+      <b>Понятно, когда пропала сеть.</b> Сверху появляется плашка «Нет сети — играем
+      локально», а когда связь возвращается, прогресс догоняет облако и рейтинг сам,
+      без перезапуска. Сама игра без сети работала и работает: страница и картинки
+      лежат в кэше.<br>
       <b style="color:#ffd166">Что нового в 4.24.0 · Напоминания о наградах</b><br>
       <b>Приложение умеет напоминать.</b> Когда барабан, кейс часа или дневной кейс
       будут готовы, придёт уведомление — даже если игра закрыта. Тап по нему открывает
@@ -19169,6 +19270,12 @@ function renderAbout(){
     </div>
     <!-- 4.24.0: push-уведомления. По правилам RuStore включаются только вручную,
          поэтому по умолчанию выключено; в браузере строки нет — там моста нет. -->
+    <!-- 4.25.0: вибрация. Строка есть всегда — она работает и в браузере, и в APK. -->
+    <div class="about-snd" style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 0">
+      <span style="font-size:12.5px;color:#93a0b8">Вибрация</span>
+      <button class="snd" id="btnVibrateAbout" type="button"
+        title="Вибрация вкл/выкл">${SR_VIBRATE.enabled() ? '📳' : '📴'}</button>
+    </div>
     ${SR_NOTIFY.native() ? `<div class="about-snd" style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 0;gap:10px">
       <span style="font-size:12.5px;color:#93a0b8;line-height:1.35">Напоминать о наградах<br>
         <i style="font-style:normal;font-size:11px;color:#6f7d93">барабан, кейс часа и дневной кейс</i></span>
@@ -19535,6 +19642,17 @@ function renderAbout(){
       $('#aboutModal').classList.remove('on');
       const real = $('#btnDiary');
       if(real) real.click();
+    });
+  }
+  /* 4.25.0: переключатель вибрации */
+  const bv = $('#btnVibrateAbout');
+  if(bv){
+    bv.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const on = !SR_VIBRATE.enabled();
+      SR_VIBRATE.set(on);
+      bv.textContent = on ? '📳' : '📴';
+      toast(on ? 'Вибрация включена' : 'Вибрация выключена');
     });
   }
   /* 4.24.0: переключатель push-уведомлений. Кнопка живёт в перерисованном
@@ -23552,7 +23670,7 @@ window.__sr = {
   savePack, saveUnpack, saveApply, sxBind, saveBak, loadBak, BK_KEY, get SAVE_KEY(){ return SAVE_KEY; },
   /* 4.22.3: облачный возврат прогресса — наружу для стендов */
   srLocalFresh, srLocalWorth, srPackInfo, srPackWorse, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
-  SR_NOTIFY, rewMark, rewLeft, REW_MS,
+  SR_NOTIFY, rewMark, rewLeft, REW_MS, SR_VIBRATE, FX,
   openCraft, craftDo, renderCraft, renderMiniModes,
   /* 3.11.0 забег */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
@@ -28330,6 +28448,81 @@ window.__sr = {
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   });
+})();
+</script>
+
+<script>
+/* ===== 4.25.0: ОФЛАЙН-СОСТОЯНИЕ =====
+   Игра и так переживает обрыв: HTML и картинки лежат в кэше (sw.js), а прогресс
+   хранится в localStorage и уходит в облако, когда сеть есть. Не хватало одного —
+   человек не понимал, почему застыл рейтинг и почему не пришло «сохранено».
+   Здесь: плашка «нет сети», а при возврате сети — догоняющая отправка прогресса.
+   Никакого IndexedDB: состояние игры уже целиком лежит в localStorage одним
+   пакетом, второй кэш только разошёлся бы с ним и дал двойной источник правды. */
+(function(){
+  'use strict';
+  if(typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  var chip = null, hiddenByUser = false, wasOff = false;
+
+  function el(){ return chip || (chip = document.getElementById('offlineChip')); }
+
+  function show(on){
+    var c = el();
+    if(!c) return;
+    if(on){
+      hiddenByUser = false;
+      c.hidden = false;
+    } else {
+      c.hidden = true;
+    }
+  }
+
+  function check(){
+    var off = false;
+    try{ off = (navigator.onLine === false); }catch(e){}
+    show(off);
+    return off;
+  }
+
+  /* при возврате сети догоняем: рейтинг и облачная копия не ушли, пока связи не было */
+  function resync(){
+    /* rkSend/fbSend живут внутри большой IIFE — снаружи они видны через __sr */
+    try{
+      var s2 = window.__sr || {};
+      /* state живёт внутри замыкания игры — снаружи только через __sr */
+      if(s2.state) s2.state.rkLast = 0;      /* снять троттлинг: отправка была пропущена */
+      if(s2.rkSend) s2.rkSend({quiet:true});
+    }catch(e){}
+    try{ var s3 = window.__sr || {}; if(s3.fbSend) s3.fbSend(); }catch(e){}
+    try{ if(typeof SR_NOTIFY !== 'undefined' && SR_NOTIFY.syncAll) SR_NOTIFY.syncAll(); }catch(e){}
+  }
+
+  function bind(){
+    var c = el();
+    if(c){
+      c.addEventListener('click', function(){ hiddenByUser = true; c.hidden = true; });
+    }
+    window.addEventListener('offline', function(){
+      wasOff = true;
+      setTimeout(check, 30);
+    });
+    window.addEventListener('online', function(){
+      var off = check();
+      if(wasOff && !off){
+        wasOff = false;
+        resync();
+        try{ if(typeof toast === 'function') toast('Снова в сети — прогресс сохраняется'); }catch(e){}
+      }
+    });
+    check();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+
+  /* отдаём наружу для проверок */
+  window.SR_OFFLINE = { check: check, resync: resync, chip: el };
 })();
 </script>
 <script>
