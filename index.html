@@ -7813,20 +7813,25 @@ const SKINS = [
   {n:'Балисонг | Янтарный клинок',   w:'butterfly',r:'myth',    p:'amber',     pat:'marble'},
 
   /* ---------- 4.27.0: ближний бой (GTA + PUBG) ----------
-     Стволы новые, расцветки — из готовых палитр и узоров, поэтому ни одного
-     нового ассета не нужно. id получат s141…s152 по порядку. */
-  {n:'Бейсбол',            w:'bat',     r:'rare',     p:'desert',    pat:'camo'},
-  {n:'Дубовая',            w:'bat',     r:'legend',   p:'amber',     pat:'ragged'},
-  {n:'Восход',             w:'katana',  r:'epic',     p:'sunset',    pat:'marble'},
-  {n:'Катана | Сталь',     w:'katana',  r:'myth',     p:'chrome',    pat:'fade'},
-  {n:'Мясорубка',          w:'chainsaw',r:'epic',     p:'blood',     pat:'splatter'},
-  {n:'Кровосток',          w:'chainsaw',r:'legend',   p:'crimson',   pat:'ragged'},
-  {n:'Чугун',              w:'pan',     r:'rare',     p:'graphite',  pat:'dots'},
-  {n:'Сковорода | Ад',     w:'pan',     r:'myth',     p:'ember',     pat:'marble'},
-  {n:'Тростник',           w:'machete', r:'rare',     p:'jungle',    pat:'camo'},
-  {n:'Мачете | Ночь',      w:'machete', r:'epic',     p:'void',      pat:'circuit'},
-  {n:'Ржавый',             w:'crowbar', r:'rare',     p:'rust',      pat:'ragged'},
-  {n:'Лом | Титан',        w:'crowbar', r:'epic',     p:'steel2',    pat:'stripes'}
+     Стволы новые, расцветки — из готовых палитр и узоров.
+     4.27.1: id ПРОСТАВЛЕНЫ РУКАМИ. Автоматический id = 's' + номер в массиве,
+     а «Призрак» добавляется отдельным push с жёстким id 's140' — он и был
+     последним в каталоге. Из-за этого двенадцать новых скинов получали
+     s140…s151, первый из них совпадал по id с «Призраком», и арт s141.png
+     показывался у соседа: бита уезжала на «Катану», катана — на «Мясорубку».
+     Файлы на сайте названы по этим id, поэтому id теперь закреплены. */
+  {id:'s141', n:'Бейсбол',            w:'bat',     r:'rare',     p:'desert',    pat:'camo'},
+  {id:'s142', n:'Дубовая',            w:'bat',     r:'legend',   p:'amber',     pat:'ragged'},
+  {id:'s143', n:'Восход',             w:'katana',  r:'epic',     p:'sunset',    pat:'marble'},
+  {id:'s144', n:'Катана | Сталь',     w:'katana',  r:'myth',     p:'chrome',    pat:'fade'},
+  {id:'s145', n:'Мясорубка',          w:'chainsaw',r:'epic',     p:'blood',     pat:'splatter'},
+  {id:'s146', n:'Кровосток',          w:'chainsaw',r:'legend',   p:'crimson',   pat:'ragged'},
+  {id:'s147', n:'Чугун',              w:'pan',     r:'rare',     p:'graphite',  pat:'dots'},
+  {id:'s148', n:'Сковорода | Ад',     w:'pan',     r:'myth',     p:'ember',     pat:'marble'},
+  {id:'s149', n:'Тростник',           w:'machete', r:'rare',     p:'jungle',    pat:'camo'},
+  {id:'s150', n:'Мачете | Ночь',      w:'machete', r:'epic',     p:'void',      pat:'circuit'},
+  {id:'s151', n:'Ржавый',             w:'crowbar', r:'rare',     p:'rust',      pat:'ragged'},
+  {id:'s152', n:'Лом | Титан',        w:'crowbar', r:'epic',     p:'steel2',    pat:'stripes'}
 ].map((sk,i)=>{
   const rv = RAR[sk.r].base;
   /* цена внутри редкости разбросана очень широко (×7), но в среднем равна базе —
@@ -7870,6 +7875,15 @@ SKINS.forEach(s => { if(VFIX[s.n]) s.val = VFIX[s.n]; });
    ключ цены фиксирован, иначе пересчёт редкости сдвинул бы среднюю цену мифа. */
 SKINS.push({ id:'s140', n:'Призрак', w:'ak47', r:'myth', p:'void', pat:'marble',
              excl:true, uniq:true, val:18000 });
+/* 4.27.1: страховка от повторного граблей. Два скина с одинаковым id — это
+   чужой арт на карточке и общий узор, а искать причину глазами долго.
+   В обычной игре молчим, при ?dev=1 — ругаемся в консоль. */
+(function checkSkinIds(){
+  const seen = Object.create(null), dup = [];
+  SKINS.forEach(s => { if(seen[s.id]) dup.push(s.id + ' (' + s.n + ')'); seen[s.id] = 1; });
+  if(!dup.length) return;
+  if(typeof SR_DEV !== 'undefined' && SR_DEV) console.warn('SKIN RUSH: повторяются id скинов —', dup.join(', '));
+})();
 function uniqueSkin(){ return SKINS.filter(s => s.uniq)[0] || null; }
 RAR_ORDER.forEach(r => {
   const pool = SKINS.filter(s => s.r === r && !s.excl);
@@ -8386,7 +8400,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.27.0';
+const VERSION = '4.27.1';
 const BUILD   = '2026-11-15';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -10572,6 +10586,39 @@ function itemVal(it){
      один раз: предмет потом продаётся по этой цене, поэтому вход забега и посчитан
      с запасом ×1,30 (замер 21 кейса — возврат 88–91 %). */
   return Math.max(1, Math.round(sk.val * floatMult(it.fl) * (it.st ? 1.8 : 1) * patMultOf(it) * (it.bn || 1)));
+}
+/* 4.27.1: перенос сейвов после сдвига номеров.
+   В 4.27.0 двенадцать скинов ближнего боя получили номера на единицу меньше
+   нужного (s140…s151), и первый из них совпал по номеру с «Призраком».
+   Предмет в сейве помнит только номер, поэтому уже выпавшие вещи надо сдвинуть —
+   иначе «Бейсбол» назавтра превратится в «Призрака» за 18 000.
+   Единственный неоднозначный номер — s140: под ним мог лежать «Призрак»
+   (у него стоит отметка uniq, он выдаётся за весь набор АК). Если отметки нет —
+   это «Бейсбол» из 4.27.0, сдвигаем. */
+function migrate4271(){
+  if(state.fix4271) return;
+  state.fix4271 = 1;
+  let moved = 0;
+  const shift = n => (n >= 141 && n <= 151) ? n + 1 : n;
+  (state.inv || []).forEach(it => {
+    const n = parseInt(String(it.id || '').slice(1), 10);
+    if(!isFinite(n)) return;
+    if(n >= 141 && n <= 151){ it.id = 's' + (n + 1); moved++; }
+    else if(n === 140 && !it.uniq){ it.id = 's141'; moved++; }
+  });
+  /* альбом и найденные узоры тоже помнят номера */
+  ['albSeen', 'albStar', 'patSeen'].forEach(k => {
+    const m = state[k];
+    if(!m || typeof m !== 'object') return;
+    const out = {};
+    Object.keys(m).forEach(key => {
+      const n = parseInt(String(key).slice(1), 10);
+      if(isFinite(n) && n >= 140 && n <= 151 && !(n === 140 && k === 'patSeen')) out['s' + shift(n)] = m[key];
+      else out[key] = m[key];
+    });
+    state[k] = out;
+  });
+  if(moved) save();
 }
 function makeItem(skin, opts){
   opts = opts || {};
@@ -19159,6 +19206,13 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.27.1 · Арты встали на свои места</b><br>
+      <b>Картинки больше не путаются.</b> Бита показывала «Призрака», катана — дубовую биту,
+      бензопила — катану: у новых скинов совпали номера. Первый из двенадцати получил
+      номер «Призрака», а дальше каждый показывал арт предыдущего. Номера закреплены
+      и больше не зависят от того, где скин стоит в каталоге.<br>
+      <b>Проверка от повторения.</b> При запуске с <b>?dev=1</b> игра теперь сама пишет
+      в консоль, если два скина получили одинаковый номер.<br>
       <b style="color:#ffd166">Что нового в 4.27.0 · Два арсенала и ближний бой</b><br>
       <b>Два новых кейса.</b> «Вайс-Сити» — пистолеты, револьвер, ПП и дробовики плюс бита,
       катана, бензопила, мачете и лом. «Эрангель» — автоматы и снайперки плюс сковорода,
@@ -21658,6 +21712,7 @@ try{ window.GLASS_BREAK = DROP_SCENE; }catch(e){}
    ========================================================= */
 function init(){
   try{ load(); }catch(e){}
+  try{ migrate4271(); }catch(e){}
   try{ srRestoredNote(); }catch(e){}
   try{ loadTheme(); }catch(e){}
   /* 4.9.1: раздел нижней навигации — по активной вкладке */
