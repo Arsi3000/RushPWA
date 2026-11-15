@@ -5507,7 +5507,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
             <span class="inv-nav-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             </span>
-            <span class="inv-nav-label">Ножи</span>
+            <span class="inv-nav-label">Ближний бой</span>
             <span class="nav-badge" id="invBadgeKnife" hidden>0</span>
           </button>
 
@@ -6324,6 +6324,9 @@ const FB_NAME = `projects/${FIREBASE.projectId}/databases/(default)/documents`;
 
 /* стволы-ножи: нужны уже при подсчёте пула и цены кейса, поэтому объявлены здесь */
 const KNIVES = ['knife','karambit','butterfly','flip','talon'];
+/* 4.27.0: всё холодное и ударное. KNIVES остаётся «только ножи» — на нём держится
+   Ножевой кейс, а MELEE — это то, что игрок видит во вкладке «Ножи» и на метке дропа. */
+const MELEE = KNIVES.concat(['bat','katana','chainsaw','pan','machete','crowbar']);
 
 /* палитры: [основной, второй, узор] */
 /* ---------- палитры скинов: [основной, тень, акцент] ---------- */
@@ -6627,6 +6630,98 @@ window.guard = function(x1,x2,y,drop){
 };
 /* светлая верхняя плоскость: полоса вдоль верха корпуса */
 window.TOP = function(x0,x1,y,h,d){ return {d:poly([[x0,y],[x1,y],[x1+(d||3),y+(h||4)],[x0+(d||3),y+(h||4)]]), m:'hi', dep:0, noedge:1}; };
+})();
+
+
+/* ---------- БЛИЖНИЙ БОЙ: бита, катана, бензопила, сковорода, мачете, лом (4.27.0) ----------
+   Те же примитивы, что у ножей: SK — красящаяся поверхность (её берёт расцветка),
+   S — грань своим материалом, L — штрих (блик, шов, зубья). Габарит как у стволов. */
+(function(){
+'use strict';
+const {rr,poly,ell,n} = window.G3.util;
+
+/* БЕЙСБОЛЬНАЯ БИТА: рукоять слева, бочка справа, торец закруглён */
+M('bat', [
+  SK('M22 38 a7 7 0 0 1 7 -7 h50 c11 0 14 -8 25 -8 h70 a22 15 0 0 1 0 30 h-70 c-11 0 -14 8 -25 8 h-50 a7 7 0 0 1 -7 -7 Z', 1.8),
+  /* обмотка рукояти */
+  L(serr(30,32.4,10,5,11.2),'#05070a',1.6,.55),
+  L('M26 34.6 h52','#ffffff',.9,.2),
+  /* блики по бочке */
+  L('M104 25.6 c9 0 13 4 13 9','#ffffff',1.4,.24),
+  L('M104 50.4 c9 0 13 -4 13 -9','#000000',1.4,.2),
+  /* клеймо у торца */
+  L('M172 24.8 v26','#05070a',1,.3),
+  L('M177 29 q5 9 0 17','#000000',1.2,.22)
+], -1.0);
+
+/* КАТАНА: рукоять, цуба, слегка изогнутый клинок с хамоном */
+M('katana', [
+  SK('M78 33.6 C120 30.6 158 27.4 190 25.6 C199 25.1 204.6 26.8 205.6 28.8 C204 31.2 198.6 32.8 190 33.4 C156 36 116 39 80 41.6 Z', 1.2),
+  L('M82 36.4 C120 33.6 158 30.4 196 28.4','#ffffff',1.2,.34),      /* хамон */
+  L('M86 33.8 C124 31 160 27.8 194 26.4','#000000',.9,.22),          /* дол */
+  S('M68 21.4 h7 a3.6 3.6 0 0 1 3.6 3.6 v26 a3.6 3.6 0 0 1 -3.6 3.6 h-7 a3.6 3.6 0 0 1 -3.6 -3.6 v-26 a3.6 3.6 0 0 1 3.6 -3.6 Z','brass',1.4),
+  L('M66 25.4 h14 M66 50.6 h14','#000000',.85,.35),
+  SK(rr(18,32,50,12,4.5), 1.6),
+  L('M24 33.4 l7 9.4 M34 33.4 l7 9.4 M44 33.4 l7 9.4 M54 33.4 l7 9.4','#05070a',1.2,.5),
+  L('M22 33.6 h46','#ffffff',.7,.16),
+  S(rr(14,31,6.5,14,2.6),'steel2',1.2)
+], -1.0);
+
+/* БЕНЗОПИЛА: корпус с ручками слева, шина с зубьями справа */
+M('chainsaw', [
+  /* шина */
+  S('M88 31 h96 a9 9 0 0 1 9 9 v0 a9 9 0 0 1 -9 9 h-96 Z','steel2',1.4),
+  L('M94 35 h96','#0a0d11',1.1,.32),
+  /* зубья сверху и снизу */
+  L('M94 30.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2','#e6edf7',1.5,.5),
+  L('M94 49.8 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2 l3 -3.2 l3 3.2','#e6edf7',1.5,.5),
+  L('M100 40 h84','#7c8797',.9,.25),
+  /* корпус */
+  SK('M22 31 h56 a15 15 0 0 1 15 15 v5 a15 15 0 0 1 -15 15 h-28 a11 11 0 0 1 -11 -11 v-1 h-17 a7 7 0 0 1 -7 -7 v-9 a7 7 0 0 1 7 -7 Z', 2),
+  /* верхняя ручка-дуга */
+  S('M32 31 v-5 a11 11 0 0 1 11 -11 h22 a10 10 0 0 1 10 10 v6 h-9 v-6 a2.4 2.4 0 0 0 -2.4 -2.4 h-20 a4 4 0 0 0 -4 4 v4.4 Z','poly',1.6),
+  /* крышка, винты, выхлоп */
+  S(rr(84,24,17,7,2.4),'dark',1),
+  L('M28 36 v14 M34 33 v18','#05070a',1,.3),
+  S(rr(66,45,17,8,2.4),'dark',0.8),
+  L('M44 38 h18','#ffffff',1.3,.18),
+  L('M96 34 h10 M96 46 h10','#05070a',1.2,.4)
+], -1.0);
+
+/* СКОВОРОДА: диск слева, литая ручка вправо */
+M('pan', [
+  SK('M88 33.4 h98 a6 6 0 0 1 0 12 h-98 Z', 1.5),
+  L('M94 34.2 h88','#ffffff',1,.18),
+  L('M92 44.2 h90','#000000',1,.25),
+  S('M188 39.4 a3.6 3.6 0 1 0 .1 0 Z','dark',0),
+  SK('M96 40 a40 34 0 1 0 -80 0 a40 34 0 1 0 80 0 Z', 2),
+  L('M56 6.6 a40 34 0 1 0 .1 0 Z','#000000',1.2,.24),
+  S('M90 40 a34 28.6 0 1 0 -68 0 a34 28.6 0 1 0 68 0 Z','poly2',0,{noedge:1}),
+  L('M30 21 a27 22 0 0 1 18 6','#ffffff',1.8,.2),
+  L('M84 32.6 v14.8','#05070a',1.2,.32)
+], -1.0);
+
+/* МАЧЕТЕ: широкий клинок с брюхом и обухом, рукоять слева */
+M('machete', [
+  SK('M72 31.6 C112 29 152 27 188 25.4 C197 25 202.6 27 203.6 30.8 C204.4 35.6 199 43.4 189 47.4 C152 55 112 49 74 44.8 Z', 1.5),
+  L('M78 36.4 C116 33.4 154 30.4 194 28.2','#ffffff',1.5,.34),   /* спуск */
+  L('M76 41.2 C114 45 152 49.4 184 46.6','#000000',1.2,.26),      /* кромка */
+  L('M80 33.4 C116 30.8 152 28.6 186 26.8','#000000',.9,.2),      /* дол */
+  SK(rr(18,32,54,12.6,4), 1.7),
+  L('M26 33.2 v10.8 M36 33.2 v10.8 M46 33.2 v10.8 M56 33.2 v10.8','#05070a',1.3,.45),
+  S(rr(13,30.6,8.5,15,2.8),'dark',1.2),
+  L('M20 33.4 h45','#ffffff',.75,.16)
+], -1.0);
+
+/* ЛОМ: лопатка слева, стержень, загнутый гвоздодёр справа */
+M('crowbar', [
+  SK('M22 36.8 L148 30.6 C161 29.8 171 25.4 176 18.4 L181.5 13 L189 21 L182.5 28.4 C174.6 37.4 160.6 42.6 147 43.4 L22 48.4 Z', 1.8),
+  S('M176 18.4 L181.5 13 L189 21 L184.5 25.2 L179.6 20.6 L175.4 23.6 Z','steel2',1.4),
+  S('M22 34.4 L12 33 L7.6 38.8 L12 44.6 L22 44 Z','steel2',1.4),
+  L('M26 38.4 L148 32.4','#ffffff',1.4,.22),
+  L('M26 44.6 L147 40.6','#000000',1.4,.3),
+  L(serr(44,37,12,7.4,4.6),'#05070a',1,.28)
+], -1.0);
 })();
 
 /* ---------- ПИСТОЛЕТЫ ---------- */
@@ -7715,7 +7810,23 @@ const SKINS = [
   {n:'Гейша',              w:'deagle',  r:'legend',   p:'sakura',    pat:'scales'},
   {n:'Звёздная пыль',   w:'m4a4',    r:'legend',   p:'cosmic',    pat:'dots'},
   /* мифические */
-  {n:'Балисонг | Янтарный клинок',   w:'butterfly',r:'myth',    p:'amber',     pat:'marble'}
+  {n:'Балисонг | Янтарный клинок',   w:'butterfly',r:'myth',    p:'amber',     pat:'marble'},
+
+  /* ---------- 4.27.0: ближний бой (GTA + PUBG) ----------
+     Стволы новые, расцветки — из готовых палитр и узоров, поэтому ни одного
+     нового ассета не нужно. id получат s141…s152 по порядку. */
+  {n:'Бейсбол',            w:'bat',     r:'rare',     p:'desert',    pat:'camo'},
+  {n:'Дубовая',            w:'bat',     r:'legend',   p:'amber',     pat:'ragged'},
+  {n:'Восход',             w:'katana',  r:'epic',     p:'sunset',    pat:'marble'},
+  {n:'Катана | Сталь',     w:'katana',  r:'myth',     p:'chrome',    pat:'fade'},
+  {n:'Мясорубка',          w:'chainsaw',r:'epic',     p:'blood',     pat:'splatter'},
+  {n:'Кровосток',          w:'chainsaw',r:'legend',   p:'crimson',   pat:'ragged'},
+  {n:'Чугун',              w:'pan',     r:'rare',     p:'graphite',  pat:'dots'},
+  {n:'Сковорода | Ад',     w:'pan',     r:'myth',     p:'ember',     pat:'marble'},
+  {n:'Тростник',           w:'machete', r:'rare',     p:'jungle',    pat:'camo'},
+  {n:'Мачете | Ночь',      w:'machete', r:'epic',     p:'void',      pat:'circuit'},
+  {n:'Ржавый',             w:'crowbar', r:'rare',     p:'rust',      pat:'ragged'},
+  {n:'Лом | Титан',        w:'crowbar', r:'epic',     p:'steel2',    pat:'stripes'}
 ].map((sk,i)=>{
   const rv = RAR[sk.r].base;
   /* цена внутри редкости разбросана очень широко (×7), но в среднем равна базе —
@@ -7730,6 +7841,21 @@ const SKINS = [
    как выходило по общей формуле. Остальные скины редкости подравниваем так, чтобы
    среднее по редкости осталось равным базе — отдача кейсов не меняется. */
 const VFIX = {
+  /* 4.27.0: ближний бой. Цены заданы руками, чтобы топовые предметы остались
+     топовыми: нормализация иначе подтянула бы их к средней по редкости.
+     Средняя по редкости от этого не едет — её держит пересчёт остальных скинов. */
+  'Бейсбол':                       350,
+  'Дубовая':                      3400,
+  'Восход':                       1200,
+  'Катана | Сталь':              10000,
+  'Мясорубка':                    1300,
+  'Кровосток':                    3600,
+  'Чугун':                         300,
+  'Сковорода | Ад':              10500,
+  'Тростник':                      320,
+  'Мачете | Ночь':                1000,
+  'Ржавый':                        280,
+  'Лом | Титан':                   950,
   'Выкидной | Раскалённая лава':  1750,
   'Коготь | Нефрит':              2300,
   'Хищник | Бездна':              5200,
@@ -7803,6 +7929,17 @@ const CASE_DEFS = [
    odds:{common:8,  uncommon:18, rare:24, epic:22, legend:22, myth:6}},
   {id:'black', accent:'ak47',   name:'Чёрный рынок', sub:'Всё самое злое',      tier:'#e0463c',
    odds:{common:5,  uncommon:15, rare:22, epic:23, legend:26, myth:9}},
+  /* 4.27.0: два кейса по мотивам игр. Состав задаётся полем guns — фильтр по ключу
+     ствола, а не по имени скина: имена в каталоге повторяются («Ледник» есть и у
+     ПП-5, и у Магнума), и фильтр по имени затащил бы в кейс чужой ствол. */
+  {id:'vice', accent:'katana', name:'Вайс-Сити', sub:'Арсенал GTA', tier:'#ff5fa2',
+   guns:['glock','usp','deagle','p2000','cz75','r8','mp9','mp5','mac10','sawedoff','mag7',
+         'bat','katana','chainsaw','machete','crowbar'],
+   odds:{common:34, uncommon:30, rare:20, epic:10, legend:4, myth:2}},
+  {id:'erangel', accent:'pan', name:'Эрангель', sub:'Арсенал PUBG', tier:'#c2a06a',
+   guns:['ak47','m4a4','m4a1','sg553','ssg08','scar20','negev','aug','mp5','sawedoff',
+         'pan','machete','crowbar'],
+   odds:{common:30, uncommon:29, rare:22, epic:12, legend:5, myth:2}},
   /* Ножевой кейс — единственный, где в пуле только ножи (флаг knives).
      Эксклюзив босса («Сингулярность») сюда не попадает: он остаётся наградой босса.
      Цена считается тем же правилом «возврат 90 %», вручную её не задаём. */
@@ -8092,6 +8229,12 @@ function anchorPool(){
   return caseAnchorPool({id:'__default', accent:'', odds:{common:1,uncommon:1,rare:1,epic:1,legend:1,myth:1}});
 }
 function casePoolOf(c){
+  /* 4.27.0: кейс-игра. Состав задан полем guns — берём ровно эти стволы и ничего
+     больше: якорная сборка ниже подмешивает в каждый кейс по скину каждой редкости
+     из общего каталога, и «Арсенал GTA» наполнился бы чужими стволами. */
+  if(c.guns){
+    return SKINS.filter(s => !s.excl && (c.odds[s.r] | 0) && c.guns.indexOf(s.w) >= 0);
+  }
   if(c.accent){
     const acc = SKINS.filter(s => !s.excl && s.w === c.accent);
     const have = {};
@@ -8139,6 +8282,7 @@ function casePoolOf(c){
     c.odds[s.r] &&
     !s.excl &&                                  /* эксклюзивы босса только из босса */
     (!c.knives || KNIVES.indexOf(s.w) >= 0) &&  /* ножевой кейс — только ножи */
+    (!c.guns || c.guns.indexOf(s.w) >= 0) &&   /* 4.27.0: состав по стволам */
     (!c.pool || c.pool.indexOf(s.n) >= 0));
 }
 function caseAvgByRarity(c){
@@ -8223,7 +8367,7 @@ function casePrice(c){
 
 /* 4.3.6: ротация. Постоянные (always) видны всегда, сезонные — только когда активны.
    Ничего не удаляем: 21 кейс остаётся, меняется лишь витрина. */
-const ALWAYS_CASES = ['start','tin','night','prisma','neon','knives','legend','black'];
+const ALWAYS_CASES = ['start','tin','night','prisma','neon','knives','legend','black','vice','erangel'];
 CASE_DEFS.forEach(c => {
   c.always = ALWAYS_CASES.indexOf(c.id) >= 0;
   c.seasonal = !c.always;
@@ -8242,8 +8386,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.26.0';
-const BUILD   = '2026-11-14';
+const VERSION = '4.27.0';
+const BUILD   = '2026-11-15';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -10494,7 +10638,7 @@ function casesFiltered(){
 function caseCover(c, coverUsed){
   /* на крышку — самый дорогой ствол из пула, каждый скин только на одной крышке */
   const pool = casePoolOf(c);
-  const guns = pool.filter(s => KNIVES.indexOf(s.w) < 0);
+  const guns = pool.filter(s => MELEE.indexOf(s.w) < 0);
   const crop = (guns.length ? guns : pool).sort((a,b)=>b.val-a.val);
   const top = crop.filter(s => !coverUsed.has(s.id))[0] || crop[0];
   if(top) coverUsed.add(top.id);
@@ -10738,7 +10882,7 @@ function crateSvg(c, opts){
 function crateGunOf(c){
   const pool = casePoolOf(c);
   if(!pool.length) return null;
-  const guns = pool.filter(s => KNIVES.indexOf(s.w) < 0);
+  const guns = pool.filter(s => MELEE.indexOf(s.w) < 0);
   const cand = guns.length ? guns : pool;
   return cand.reduce((a,b) => (b.val > a.val ? b : a), cand[0]);
 }
@@ -11712,7 +11856,7 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   }catch(e){}
   try{ tutEvent('win_show'); }catch(e){}
   if(item.first){ questState().firstUid = item.uid; questEvent('opened'); }
-  if(window.__feedReady) FEED.mine(skin, val, skin.r === 'myth' && KNIVES.indexOf(skin.w) >= 0 ? 'knife' : 'open');
+  if(window.__feedReady) FEED.mine(skin, val, skin.r === 'myth' && MELEE.indexOf(skin.w) >= 0 ? 'knife' : 'open');
 
   /* эффекты по редкости: неоновые звёзды — цветом самой редкости, от редкого и выше */
   const tier = RAR_ORDER.indexOf(skin.r);
@@ -11907,11 +12051,11 @@ function renderFilters(){
   const nw = state.newItems || [];
   const isNew = x => nw.indexOf(x.uid) >= 0;
   const countAll = inv.length;
-  const countWeapon = inv.filter(x => KNIVES.indexOf(x.skin.w) < 0).length;
-  const countKnife = inv.filter(x => KNIVES.indexOf(x.skin.w) >= 0).length;
+  const countWeapon = inv.filter(x => MELEE.indexOf(x.skin.w) < 0).length;
+  const countKnife = inv.filter(x => MELEE.indexOf(x.skin.w) >= 0).length;
   const newAll = inv.filter(isNew).length;
-  const newWeapon = inv.filter(x => isNew(x) && KNIVES.indexOf(x.skin.w) < 0).length;
-  const newKnife = inv.filter(x => isNew(x) && KNIVES.indexOf(x.skin.w) >= 0).length;
+  const newWeapon = inv.filter(x => isNew(x) && MELEE.indexOf(x.skin.w) < 0).length;
+  const newKnife = inv.filter(x => isNew(x) && MELEE.indexOf(x.skin.w) >= 0).length;
 
   setInvBadge($('#invBadgeAll'), newAll, countAll);
   setInvBadge($('#invBadgeWeapon'), newWeapon, countWeapon);
@@ -11943,9 +12087,9 @@ function invSorted(){
 
   // 1. Новые режимы (Линия 1)
   if (invNavCat === 'weapon') {
-    items = items.filter(x => KNIVES.indexOf(x.skin.w) < 0);
+    items = items.filter(x => MELEE.indexOf(x.skin.w) < 0);
   } else if (invNavCat === 'knife') {
-    items = items.filter(x => KNIVES.indexOf(x.skin.w) >= 0);
+    items = items.filter(x => MELEE.indexOf(x.skin.w) >= 0);
   } else if (invNavCat === 'st') {
     items = items.filter(x => x.st);
   } else if (invNavCat === 'rare') {
@@ -19015,6 +19159,20 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.27.0 · Два арсенала и ближний бой</b><br>
+      <b>Два новых кейса.</b> «Вайс-Сити» — пистолеты, револьвер, ПП и дробовики плюс бита,
+      катана, бензопила, мачете и лом. «Эрангель» — автоматы и снайперки плюс сковорода,
+      мачете и лом. Цены 555 и 535 кредитов, возврат тот же, что у остальных.<br>
+      <b>Шесть новых стволов.</b> Бита, катана, бензопила, сковорода, мачете и лом нарисованы
+      в том же стиле, что и остальные двадцать четыре: силуэт узнаётся с первого взгляда,
+      а расцветка ложится на них как на любое оружие.<br>
+      <b>Двенадцать новых скинов.</b> «Сковорода | Ад» и «Катана | Сталь» — мифические,
+      «Дубовая» и «Кровосток» — легендарные. Сковорода в каталоге теперь самая дорогая
+      вещь ближнего боя после балисонга.<br>
+      <b>Вкладка «Ножи» стала «Ближним боем».</b> Всё, что не стреляет, лежит там же:
+      и ножи, и новые стволы — отдельной вкладки не прибавилось.<br>
+      <b>Новый набор «Уличное» в коллекциях.</b> Двенадцать предметов ближнего боя,
+      за собранный набор — пыль, как и за остальные.<br>
       <b style="color:#ffd166">Что нового в 4.26.0 · Рейтинг снова растёт</b><br>
       <b>Результат уходит в таблицу сам.</b> Открыли кейс, прошли апгрейд — и через
       двадцать секунд число в рейтинге уже новое. Раньше отправка жила на старом
@@ -23023,7 +23181,10 @@ const ALBUM_SETS = [
   {k:'rifles',   name:'Автоматы и снайперки', ic:'⚙️', sub:'ОСНОВНОЙ КАЛИБР',
    guns:['m4a4','m4a1','sg553','ssg08','negev','scar20','aug']},
   {k:'knives',   name:'Холодное оружие',      ic:'🔪', sub:'МИФИЧЕСКИЙ НАБОР',
-   guns:['knife','karambit','flip','talon','butterfly']}
+   guns:['knife','karambit','flip','talon','butterfly']},
+  /* 4.27.0: уличный набор — всё, что не стреляет */
+  {k:'melee',    name:'Уличное',              ic:'🪓', sub:'БЛИЖНИЙ БОЙ',
+   guns:['bat','katana','chainsaw','pan','machete','crowbar']}
 ];
 /* 4.22.0: названия оружия — свои, по таблице. Ключи (glock, ak47…) не менялись:
    на них завязаны сейвы, пулы кейсов и картинки, ломать их нельзя. */
@@ -23038,13 +23199,16 @@ const GUN_RU = {glock:'Пистолет «G-18»', usp:'Пистолет «ЮС-
   aug:'Штурмовая винтовка «АУГ»', ak47:'Штурмовик «Калаш»',
   awp:'Снайперская винтовка «Магнум»',
   knife:'Боевой нож', karambit:'Изогнутый клинок «Коготь»', flip:'Выкидной нож',
-  talon:'Нож «Хищник»', butterfly:'Нож «Балисонг»'};
+  talon:'Нож «Хищник»', butterfly:'Нож «Балисонг»',
+  bat:'Бейсбольная бита', katana:'Катана', chainsaw:'Бензопила',
+  pan:'Сковорода', machete:'Мачете', crowbar:'Лом'};
 /* короткие имена — для узких мест (карточки соседа, бейджи), где полное не влезает */
 const GUN_SHORT = {glock:'G-18', usp:'ЮС-Тактик', deagle:'Ястреб', p2000:'П-2000',
   cz75:'ЦЗ-75', r8:'Р-8', mp9:'ПП-9', mp5:'ПП-5', mac10:'Мак-10', sawedoff:'Двустволка',
   mag7:'Маг-7', m4a4:'М-4', m4a1:'М-4 Тактик', sg553:'SG-55', ssg08:'ССГ-8', negev:'Негев',
   scar20:'Скар-20', aug:'АУГ', ak47:'Калаш', awp:'Магнум',
-  knife:'Нож', karambit:'Коготь', flip:'Выкидной', talon:'Хищник', butterfly:'Балисонг'};
+  knife:'Нож', karambit:'Коготь', flip:'Выкидной', talon:'Хищник', butterfly:'Балисонг',
+  bat:'Бита', katana:'Катана', chainsaw:'Пила', pan:'Сковорода', machete:'Мачете', crowbar:'Лом'};
 const ALB_DUST = 500;   /* пыль за собранный набор; одноразово, state.albGot */
 
 function albumSeen(){
@@ -23774,7 +23938,7 @@ window.__sr = {
   albumClaim, albumSkinsOf, albumSetGot, albumTotals, albumSeen, ALBUM_SETS,
   grantMainReward, mainQuestDone, mainQuestCheck, uniqueSkin, MAIN_SET,
   get fails(){ return state.fails||0; },
-  MISSIONS, CASES, RAR_ORDER, KNIVES, floatMult, rollRarity, rollSkin, todayKey, RAR,
+  MISSIONS, CASES, RAR_ORDER, KNIVES, MELEE, floatMult, rollRarity, rollSkin, todayKey, RAR,
   caseCanPity, caseEV, casePrice, casePoolOf, caseAvgByRarity, rollSkin, rollRarity, makeItem, itemVal, patAvgOfSkin, luckAdd,
   renderMissions, renderSlots, renderInv, renderCases, renderBalance, svgWeapon, weaponArtUrl,
   BADGES, STICKERS, ACH,
@@ -24117,7 +24281,9 @@ window.__sr = {
     { id: "titan", name: "\u0422\u0438\u0442\u0430\u043D", sub: "\u0422\u044F\u0436\u0451\u043B\u0430\u044F \u0430\u0440\u0442\u0438\u043B\u043B\u0435\u0440\u0438\u044F", tier: "#a98a4d", odds: { common: 12, uncommon: 22, rare: 25, epic: 20, legend: 17, myth: 4 } },
     { id: "legend", name: "\u041B\u0435\u0433\u0435\u043D\u0434\u0430", sub: "\u0422\u043E\u043B\u044C\u043A\u043E \u043B\u0435\u0433\u0435\u043D\u0434\u0430\u0440\u043A\u0438", tier: "#ffb02e", odds: { common: 8, uncommon: 18, rare: 24, epic: 22, legend: 22, myth: 6 } },
     { id: "black", name: "\u0427\u0451\u0440\u043D\u044B\u0439 \u0440\u044B\u043D\u043E\u043A", sub: "\u0412\u0441\u0451 \u0441\u0430\u043C\u043E\u0435 \u0437\u043B\u043E\u0435", tier: "#e0463c", odds: { common: 5, uncommon: 15, rare: 22, epic: 23, legend: 26, myth: 9 } },
-    { id: "knives", name: "\u041D\u043E\u0436\u0435\u0432\u043E\u0439", sub: "\u0422\u043E\u043B\u044C\u043A\u043E \u043D\u043E\u0436\u0438", tier: "#c9a227", knives: true, odds: { epic: 62, legend: 29, myth: 9 } }
+    { id: "knives", name: "\u041D\u043E\u0436\u0435\u0432\u043E\u0439", sub: "\u0422\u043E\u043B\u044C\u043A\u043E \u043D\u043E\u0436\u0438", tier: "#c9a227", knives: true, odds: { epic: 62, legend: 29, myth: 9 } },
+    { id: "vice", name: "\u0412\u0430\u0439\u0441-\u0421\u0438\u0442\u0438", sub: "\u0410\u0440\u0441\u0435\u043d\u0430\u043b GTA", tier: "#ff5fa2", guns: ["glock", "usp", "deagle", "p2000", "cz75", "r8", "mp9", "mp5", "mac10", "sawedoff", "mag7", "bat", "katana", "chainsaw", "machete", "crowbar"], odds: { common: 34, uncommon: 30, rare: 20, epic: 10, legend: 4, myth: 2 } },
+    { id: "erangel", name: "\u042d\u0440\u0430\u043d\u0433\u0435\u043b\u044c", sub: "\u0410\u0440\u0441\u0435\u043d\u0430\u043b PUBG", tier: "#c2a06a", guns: ["ak47", "m4a4", "m4a1", "sg553", "ssg08", "scar20", "negev", "aug", "mp5", "sawedoff", "pan", "machete", "crowbar"], odds: { common: 30, uncommon: 29, rare: 22, epic: 12, legend: 5, myth: 2 } }
   ];
 
   // src/data/weapons.ts
@@ -24146,11 +24312,18 @@ window.__sr = {
     { id: "karambit", name: "\u0418\u0437\u043e\u0433\u043d\u0443\u0442\u044b\u0439 \u043a\u043b\u0438\u043d\u043e\u043a \u00ab\u041a\u043e\u0433\u043e\u0442\u044c\u00bb", cat: "knife" },
     { id: "butterfly", name: "\u041d\u043e\u0436 \u00ab\u0411\u0430\u043b\u0438\u0441\u043e\u043d\u0433\u00bb", cat: "knife" },
     { id: "flip", name: "\u0412\u044b\u043a\u0438\u0434\u043d\u043e\u0439 \u043d\u043e\u0436", cat: "knife" },
-    { id: "talon", name: "\u041d\u043e\u0436 \u00ab\u0425\u0438\u0449\u043d\u0438\u043a\u00bb", cat: "knife" }
+    { id: "talon", name: "\u041d\u043e\u0436 \u00ab\u0425\u0438\u0449\u043d\u0438\u043a\u00bb", cat: "knife" },
+    { id: "bat", name: "\u0411\u0435\u0439\u0441\u0431\u043e\u043b\u044c\u043d\u0430\u044f \u0431\u0438\u0442\u0430", cat: "melee" },
+    { id: "katana", name: "\u041a\u0430\u0442\u0430\u043d\u0430", cat: "melee" },
+    { id: "chainsaw", name: "\u0411\u0435\u043d\u0437\u043e\u043f\u0438\u043b\u0430", cat: "melee" },
+    { id: "pan", name: "\u0421\u043a\u043e\u0432\u043e\u0440\u043e\u0434\u0430", cat: "melee" },
+    { id: "machete", name: "\u041c\u0430\u0447\u0435\u0442\u0435", cat: "melee" },
+    { id: "crowbar", name: "\u041b\u043e\u043c", cat: "melee" }
   ];
   var KNIVES = ["knife", "karambit", "butterfly", "flip", "talon"];
+  var MELEE = KNIVES.concat(["bat", "katana", "chainsaw", "pan", "machete", "crowbar"]);
   function isKnife(w) {
-    return KNIVES.indexOf(w) >= 0;
+    return MELEE.indexOf(w) >= 0;
   }
   var WEAPON_BY_ID = new Map(WEAPONS.map((w) => [w.id, w]));
 
@@ -24265,7 +24438,10 @@ window.__sr = {
   var LUCK_MAX_VAL = 60;
   var LUCK_INC = { common: 1, uncommon: 2, rare: 4, epic: 6, legend: 6, myth: 6 };
   function casePoolOf(c) {
-    return SKINS.filter((s) => c.odds[s.r] !== void 0 && !s.excl && (!c.knives || KNIVES.indexOf(s.w) >= 0) && (!c.pool || c.pool.indexOf(s.n) >= 0));
+    if (c.guns) {
+      return SKINS.filter((s) => !s.excl && c.odds[s.r] !== void 0 && c.guns.indexOf(s.w) >= 0);
+    }
+    return SKINS.filter((s) => c.odds[s.r] !== void 0 && !s.excl && (!c.knives || KNIVES.indexOf(s.w) >= 0) && (!c.guns || c.guns.indexOf(s.w) >= 0) && (!c.pool || c.pool.indexOf(s.n) >= 0));
   }
   function caseAvgByRarity(c) {
     const pool = casePoolOf(c);
@@ -26450,6 +26626,7 @@ window.__sr = {
       CASE_DEFS,
       WEAPONS,
       KNIVES,
+      MELEE,
       isKnife,
       MISSIONS,
       ACH,
