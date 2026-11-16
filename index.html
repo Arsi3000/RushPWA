@@ -5095,6 +5095,72 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
 }
 </style>
+<style>
+/* 4.29.0: РИТМ-ШТУРМ — сцена забега */
+#runModal .sheet{padding:0!important;width:min(96vw,560px)!important;max-width:min(96vw,560px)!important;
+  height:94vh!important;max-height:94vh!important;position:relative;overflow:hidden;display:block;background:#06080e}
+#runRhythmCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;border-radius:14px}
+#runModal #runX{position:absolute;top:8px;right:8px;z-index:8}
+#rhythmWeapon{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);width:170px;height:80px;
+  pointer-events:none;z-index:3;transition:transform .07s ease-out}
+#rhythmWeapon svg{width:100%;height:100%}
+#runTop{position:absolute;top:0;left:0;right:0;padding:11px 14px 0;display:flex;align-items:flex-start;
+  justify-content:space-between;z-index:4;pointer-events:none}
+#runTop .rt-left{min-width:0}
+#runPhase{font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#8b98b0}
+#runTries{display:flex;gap:5px;margin-top:6px}
+#runTries i{width:20px;height:5px;border-radius:3px;background:rgba(255,255,255,.14)}
+#runTries i.on{background:linear-gradient(90deg,#ffd06a,#e9a316);box-shadow:0 0 10px rgba(255,176,46,.5)}
+#runTimer{font-size:15px;font-weight:900;color:#c8d3e4;font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,Menlo,Consolas,monospace}
+.rr-screen{position:absolute;inset:0;z-index:6;display:none;align-items:center;justify-content:center;
+  padding:18px;overflow-y:auto;background:radial-gradient(120% 90% at 50% 0%,rgba(60,14,22,.9),rgba(5,7,12,.97) 62%)}
+.rr-screen.on{display:flex}
+.rr-card{width:100%;max-width:380px;margin:auto;text-align:center}
+.rr-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:9px;font-weight:900;
+  letter-spacing:.16em;text-transform:uppercase;color:#ffd08a;background:rgba(255,176,46,.13);
+  border:1px solid rgba(255,176,46,.36);margin-bottom:10px}
+.rr-card h4{font-size:26px;font-weight:900;line-height:1.1;margin-bottom:8px}
+.rr-card h4 span{color:#ffb02e;text-shadow:0 0 24px rgba(255,176,46,.5)}
+.rr-card p{font-size:12.5px;line-height:1.55;color:#98a5ba;margin-bottom:14px}
+.rr-card p b{color:#ffd08a}
+.rr-rules{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;text-align:left}
+.rr-rules div{display:flex;gap:9px;align-items:center;padding:8px 10px;border-radius:9px;font-size:11.5px;
+  line-height:1.45;color:#c8d3e4;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.rr-rules i{flex:0 0 18px;font-style:normal;text-align:center}
+.rr-cal{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;border-radius:9px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-size:11px;color:#8b98b0}
+.rr-cal span{flex:0 0 auto}
+.rr-cal input{flex:1;min-width:0;accent-color:#ffb02e}
+.rr-cal b{flex:0 0 50px;text-align:right;color:#ffd08a;font-variant-numeric:tabular-nums}
+.rr-btn{width:100%;padding:14px;border:0;border-radius:12px;font:inherit;font-size:13px;font-weight:900;
+  background:linear-gradient(180deg,#ffd06a,#e9a316);color:#2a1c00;cursor:pointer;margin-top:2px}
+.rr-btn:active{transform:translateY(1px)}
+.rr-btn.rr-ghost{background:rgba(255,255,255,.06);color:#c9d4e6;border:1px solid rgba(255,255,255,.12);
+  box-shadow:none;margin-top:8px;font-weight:800}
+.rr-keys{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.rr-keys kbd{min-width:32px;padding:6px 0;border-radius:7px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.13);border-bottom-width:2px;font-size:11px;font-weight:900;
+  font-family:ui-monospace,monospace;color:#dbe7fb;text-align:center}
+.rr-head{text-align:center;margin-bottom:14px}
+.rr-grade{font-size:56px;font-weight:900;line-height:1}
+.rr-grade.S{color:#ffd76a;text-shadow:0 0 34px rgba(255,215,106,.75)}
+.rr-grade.A{color:#6ee7a0;text-shadow:0 0 28px rgba(110,231,160,.5)}
+.rr-grade.B{color:#63b3ff}
+.rr-grade.C{color:#ff8f9f}
+.rr-verdict{font-size:12.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-top:5px}
+.rr-sub{font-size:11px;color:#8b98b0;margin-top:5px}
+.rr-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.rr-stats div{display:flex;justify-content:space-between;font-size:11.5px;padding:8px 10px;
+  border-radius:8px;background:rgba(255,255,255,.04)}
+.rr-stats b{color:#ffd08a;font-variant-numeric:tabular-nums}
+.rr-drop{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:11px;margin-bottom:12px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);text-align:left}
+.rr-drop .rr-art{width:70px;height:42px;flex:0 0 70px;display:flex;align-items:center;justify-content:center}
+.rr-drop .rr-art svg{max-width:100%;max-height:100%}
+.rr-nm{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr-vl{font-size:11px;color:#ffd08a;font-weight:800;margin-top:2px}
+</style>
 </head>
 <body>
 <!-- 4.7.2: пока заставка не начала играть, экран закрыт этой шторкой.
@@ -6196,12 +6262,49 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 </div>
 
 <!-- 3.11.0: ЗАБЕГ -->
+<!-- 4.29.0: РИТМ-ШТУРМ — танк дня -->
 <div class="modal" id="runModal">
-  <div class="sheet" style="width:min(94vw,470px)">
-    <header><h3>Забег</h3><button class="x" data-close="runModal">✕</button></header>
-    <div class="body">
-      <div id="runBody"></div>
+  <div class="sheet" id="runSheet">
+    <canvas id="runRhythmCanvas"></canvas>
+    <div id="rhythmWeapon"></div>
+    <button class="x" data-close="runModal" id="runX">✕</button>
+    <div id="runTop">
+      <div class="rt-left">
+        <div id="runPhase">ПИСТОЛЕТ</div>
+        <div id="runTries"></div>
+      </div>
+      <div id="runTimer">42.0</div>
     </div>
+    <div id="runStart" class="rr-screen on">
+      <div class="rr-card">
+        <div class="rr-badge">мини-игра</div>
+        <h4>Ритм-<span>Штурм</span></h4>
+        <p>Танк дня на <b>900 HP</b>. Сорок две секунды, четыре ствола меняются сами. Вход свободный, попыток в день — три.</p>
+        <div class="rr-rules">
+          <div><i>🎯</i><span>Нота на линии — жми дорожку. Точнее попал — сильнее удар.</span></div>
+          <div><i>🔫</i><span>Пистолет → ПП → винтовка → AWP. Урон растёт, ноты реже.</span></div>
+          <div><i>💀</i><span>Промах бьёт по тебе: −8 HP. Кончилось здоровье — бой проигран.</span></div>
+          <div><i>🏆</i><span>Уничтожил танк — предмет не выше «редкого» и пыль по урону.</span></div>
+        </div>
+        <div class="rr-cal">
+          <span>Задержка тапа</span>
+          <input type="range" id="runOffset" min="-150" max="150" step="5" value="0">
+          <b id="runOffsetV">0 мс</b>
+        </div>
+        <button class="rr-btn" id="runGo">В бой</button>
+        <div class="rr-keys"><kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd></div>
+      </div>
+    </div>
+    <div id="runPause" class="rr-screen">
+      <div class="rr-card">
+        <div class="rr-badge">пауза</div>
+        <h4>Стоп-кадр</h4>
+        <p>Попытка не сгорает. Продолжишь — бой пойдёт с того же места.</p>
+        <button class="rr-btn" id="runResume">Продолжить</button>
+        <button class="rr-btn rr-ghost" id="runQuit">Выйти без награды</button>
+      </div>
+    </div>
+    <div id="runResult" class="rr-screen"></div>
   </div>
 </div>
 
@@ -8405,7 +8508,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.28.1';
+const VERSION = '4.29.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -17175,7 +17278,7 @@ function renderMiniModes(){
   if(r){
     const left = runLeft();
     r.textContent = left > 0
-      ? `Забегов в этот час: ${left} · 10 открытий, артефакты, рекорд ${(state.runBest|0).toLocaleString('ru-RU')}`
+      ? `Попыток сегодня: ${left} · танк дня, ритм-бой · рекорд ${(state.runBest|0).toLocaleString('ru-RU')}`
       : 'На этот час всё — новая десятка в начале следующего';
   }
   if(s){
@@ -17196,319 +17299,842 @@ function renderMiniModes(){
 }
 
 /* =========================================================
-   3.11.0: ЗАБЕГ НА 10 ОТКРЫТИЙ
-   Десять открытий одного кейса подряд. Между ними — выбор одного
-   артефакта из трёх. Предметы настоящие и забираются в инвентарь,
-   поэтому внутри работают узор и контракт, а счёт забега — это
-   как раз их сумма. Вход ≈ 10 × цена (формула runMult, см. ниже; замер:
-   возврат 89,8 %, разброс по 21 кейсу 85–94 %). Отдельной выплаты кредитами
-   нет: предметы и есть награда, иначе возврат удвоился бы.
+   4.29.0: РИТМ-ШТУРМ — забег на танк дня
+   Замена старого забега на 10 открытий. Вход свободный,
+   три попытки в день, босс 900 HP, сорок две секунды,
+   четыре ствола меняются сами. Урон по боссу решает награду.
+   Танк — спрайт cases/tank.png (Blender), иначе вектор.
    ========================================================= */
-const RUN_LEN = 10;
-/* 4.4.5: вход больше не «10 кейсов × 1,33». Замер на реальном коде (25 000 забегов
-   на каждый из 21 кейса) показал, что артефакты добавляют к базовым 10 открытиям
-   не +3,3 цены кейса, как считали в 3.12.2, а всего ~+0,4. С множителем 1,33
-   возврат выходил 63–77 % (в среднем 70,6 %) вместо заявленных 90.
-   Теперь вход считается по формуле mult(price) = 0,968 · (price/175)^0,072 —
-   она повторяет измеренную кривую: дешёвые кейсы дают больше за счёт гвоздя
-   (тир выше = цена ×3 от абсолютной базы), дорогие меньше.
-   Контрольный замер после правки: возврат 89,8 % в среднем, 85,2–94,0 % по кейсам. */
-const RUN_MULT_BASE = 0.968, RUN_MULT_EXP = 0.072, RUN_MULT_REF = 175;
-const RUN_HOUR_MAX = 10;
-const RUN_MAX_PRICE = 2100;   /* ножевой кейс в забег не берём: ножи дают отдельную кривую */
-const RUN_BONUS_CAP = 3;      /* больше ×3 на предмет не накопится — иначе станок */
+const RUN_TRIES = 3;                 /* попыток в день */
+const RUN_MAX_PRICE = 0;             /* 4.29.0: кейс не выбирается, вход свободный */
+const BOSS_HP_MAX = 900, PLAYER_HP_MAX = 100, MISS_DMG = 8;
+const SONG_DURATION = 42000, RUN_COUNTDOWN = 3000;
+const PERFECT_MS = 60, GREAT_MS = 110, GOOD_MS = 160;
+const HIT_MULT = { perfect:1, great:0.75, good:0.4 };
+const PHASES = [
+  { name:'ПИСТОЛЕТ', weapon:'glock', from:0,     to:10000, dmg:8,  speed:0.55, color:'#ffb02e' },
+  { name:'ПП',       weapon:'mp9',   from:10000, to:20000, dmg:5,  speed:0.70, color:'#63b3ff' },
+  { name:'ВИНТОВКА', weapon:'ak47',  from:20000, to:30000, dmg:18, speed:0.62, color:'#a970ff' },
+  { name:'AWP',      weapon:'awp',   from:30000, to:42000, dmg:45, speed:0.80, color:'#ff5f6d' }
+];
+const TANK_ART = 'https://arsi3000.github.io/RushPWA/cases/tank.png';
+let runCase = null, runCaseSel = null, runBusy = false, run = null;
 
-/* Расклад подобран замером, а не на глаз. Считал так: базовый забег без
-   артефактов = 66–69 % входа (10 открытий по 90 % цены при входе ×1,30).
-   Значит артефакты должны добавлять в среднем ~0,33 цены кейса за шаг,
-   чтобы выйти на согласованные 88–91 %. Отсюда: подкова — обычный вариант,
-   зеркало — реже, а «тяжёлые» (монета, гвоздь) не чаще раза в 4 шага,
-   иначе один гвоздь (тир выше = цена ×3) весит две цены кейса. */
-const RUN_ARTS = {
-  horseshoe: { n:'Подкова',  ic:'🧲', d:'Следующий предмет дороже в 1,2 раза' },
-  mirror:    { n:'Зеркало',  ic:'🪞', d:'Следующий предмет дороже в 1,5 раза' },
-  coin:      { n:'Монета',   ic:'🪙', d:'Сразу вернуть цену кейса' },
-  nail:      { n:'Гвоздь',   ic:'🔨', d:'Следующий предмет — на тир выше (шанс 35 %, не выше редкого)' }
-};
-const RUN_W = { horseshoe: 8, mirror: 4, coin: 1, nail: 2 };
-const RUN_HEAVY_GAP = 4;      /* тяжёлый артефакт — не чаще раза в 4 шага */
-const RUN_ART_EVERY = 2;      /* выбор артефакта через каждые два открытия */
-const RUN_NAIL_CHANCE = 0.35;
-/* Потолок надбавки в долях цены кейса. Без него на дорогих кейсах ×1,5 к
-   легендарке добавляло больше цены кейса и возврат уезжал к 95 %:
-   выигрыш от артефакта должен быть заметным, но не «второй кейс». */
-const RUN_BONUS_CAP_HORSE = 0.30, RUN_BONUS_CAP_MIRROR = 0.80;
-let run = null;               /* активный забег или null */
-let runBusy = false;
-
-function runMult(c){
-  const p = Math.max(1, c ? c.price : 0);
-  return RUN_MULT_BASE * Math.pow(p / RUN_MULT_REF, RUN_MULT_EXP);
-}
-function runEntry(c){ return Math.round(RUN_LEN * (c ? c.price : 0) * runMult(c)); }
+/* ---------- попытки в день ---------- */
 function runUsed(){
-  const o = state.run;
-  if(!o || o.hour !== hourKey()) return 0;
+  const o = state.runDay;
+  if(!o || o.d !== todayKey()) return 0;
   return o.n | 0;
 }
-function runLeft(){ return Math.max(0, RUN_HOUR_MAX - runUsed()); }
+function runLeft(){ return Math.max(0, RUN_TRIES - runUsed()); }
 function runTakeOnce(){
-  const k = hourKey();
-  if(!state.run || state.run.hour !== k) state.run = {hour:k, n:0};
-  state.run.n = (state.run.n | 0) + 1;
+  const k = todayKey();
+  if(!state.runDay || state.runDay.d !== k) state.runDay = { d:k, n:0 };
+  state.runDay.n = (state.runDay.n | 0) + 1;
   save();
 }
-function runCasesList(){ return CASES.filter(c => c.price <= RUN_MAX_PRICE); }
+function runEntry(){ return 0; }     /* совместимость: вход бесплатный */
+function runCasesList(){ return CASES.filter(c => c.price <= 2100 && !c.knives); }
 
-let runCaseSel = null;        /* какого кейса будем бежать */
-function openRun(){
-  SFX.click();
-  if(!runCasesList().length){ toast('Нет кейсов для забега'); return; }
-  $('#runModal').classList.add('on');
-  renderRun();
-  renderMiniModes();
+/* ---------- танк-спрайт ---------- */
+const rrTank = { img:null, ok:false, tint:null, glow:null, tried:false };
+function rrLoadTank(){
+  if(rrTank.tried) return;
+  rrTank.tried = true;
+  const im = new Image();
+  im.onload = function(){
+    rrTank.img = im; rrTank.ok = true;
+    /* два тонированных слоя: красный (попадание) и белый (вспышка) */
+    try{
+      const mk = function(col, alpha){
+        const c = document.createElement('canvas');
+        c.width = im.naturalWidth; c.height = im.naturalHeight;
+        const x = c.getContext('2d');
+        x.drawImage(im, 0, 0);
+        x.globalCompositeOperation = 'source-atop';
+        x.globalAlpha = alpha; x.fillStyle = col;
+        x.fillRect(0, 0, c.width, c.height);
+        return c;
+      };
+      rrTank.tint = mk('#ff2f4d', 0.85);
+      rrTank.glow = mk('#ffe0a0', 0.9);
+    }catch(e){}
+  };
+  im.onerror = function(){ rrTank.ok = false; };
+  im.src = TANK_ART + '?v=1';
 }
-function runCaseNow(){
-  const list = runCasesList();
-  const c = CASES.find(x => x.id === runCaseSel);
-  return (c && list.indexOf(c) >= 0) ? c : (list[list.length - 1] || CASES[0]);
-}
-function runScore(){ return run ? run.score : 0; }
 
-function runArtOffer(curStep, lastHeavy){
-  /* три разных артефакта. «Тяжёлые» (монета/гвоздь) в мешок попадают только
-     если с прошлого тяжёлого прошло не меньше RUN_HEAVY_GAP шагов. */
-  if(curStep == null) curStep = run ? run.i : 0;
-  if(lastHeavy == null) lastHeavy = run ? (run.lastHeavy || 0) : -99;
-  const sinceHeavy = curStep - lastHeavy;
-  const heavyOk = sinceHeavy >= RUN_HEAVY_GAP;
-  const bag = [];
-  Object.keys(RUN_W).forEach(k => {
-    if(!heavyOk && (k === 'coin' || k === 'nail')) return;
-    for(let i = 0; i < RUN_W[k]; i++) bag.push(k);
-  });
-  const out = [];
-  let guard = 0;
-  while(out.length < 3 && guard++ < 60 && bag.length){
-    const k = bag[Math.floor(Math.random() * bag.length)];
-    if(out.indexOf(k) < 0) out.push(k);
+/* ---------- состояние сцены ---------- */
+const rr = {
+  cv:null, ctx:null, W:0, H:0, DPR:Math.min(2, window.devicePixelRatio||1),
+  notes:[], tracers:[], dmgN:[], misses:[],
+  laneFlash:[0,0,0,0], pressed:[false,false,false,false], held:[null,null,null,null],
+  bossFlash:0, bossShake:0, screenShake:0, phaseFlash:0, weaponFlash:0, weaponKick:0,
+  phaseOverlay:null, combo:0, maxCombo:0, score:0,
+  counts:{perfect:0,great:0,good:0,miss:0},
+  bossHp:BOSS_HP_MAX, playerHp:PLAYER_HP_MAX,
+  songTime:0, running:false, finished:false, phase:-1, win:false,
+  lastT:0, raf:0, countdown:0, offset:0, paused:false, active:false,
+  barrel:0, recoil:0
+};
+
+/* ---------- звук ---------- */
+function rrTone(freq,dur,vol,type,delay){
+  try{
+    const a = audio(); if(!a) return;
+    const t0 = a.currentTime + (delay||0);
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.06, t0+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t0); o.stop(t0+dur+0.02);
+  }catch(e){}
+}
+function rrHitSound(grade,phase){
+  const base = [220,260,200,160][phase] || 220;
+  if(grade==='perfect'){ rrTone(base*3,0.06,0.08,'triangle'); rrTone(base*4.5,0.05,0.04,'sine',0.01); if(phase===3) rrTone(80,0.15,0.12,'sine'); }
+  else if(grade==='great'){ rrTone(base*2.4,0.06,0.06,'triangle'); }
+  else if(grade==='good'){ rrTone(base*1.8,0.07,0.05,'triangle'); }
+}
+function rrMissSound(){ rrTone(120,0.18,0.07,'sawtooth'); rrTone(80,0.22,0.05,'sine',0.02); }
+function rrPhaseSound(){ rrTone(330,0.4,0.06,'sine'); rrTone(440,0.4,0.05,'sine',0.05); rrTone(660,0.5,0.04,'sine',0.1); }
+function rrWinSound(){ [523,659,784,1046].forEach(function(f,i){ rrTone(f,0.35,0.07,'triangle',i*0.09); }); }
+function rrLoseSound(){ [330,262,196].forEach(function(f,i){ rrTone(f,0.4,0.06,'sine',i*0.12); }); }
+
+/* ---------- чарт: одинаковый в течение часа ---------- */
+function rrSeed(){
+  const d = new Date();
+  return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate() + d.getHours()*7919;
+}
+function rrRng(a){
+  return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+}
+function rrBuildChart(){
+  const r = rrRng(rrSeed());
+  const rl = function(n){ return Math.floor(r()*n); };
+  const beat = 468, notes = [];
+  let t = 2400, i = 0;
+  const p0 = [[0],[1],[2],[3],[0,1],[2,3],[1,2]];
+  while(t < 9500){
+    p0[i%p0.length].forEach(function(l){ notes.push({lane:l,time:t,type:'tap',phase:0,hit:false,done:false}); });
+    t += beat * (i%3===0 ? 1 : 0.75); i++;
   }
-  if(out.length < 3){
-    ['horseshoe','mirror','coin'].forEach(k => { if(out.length < 3 && out.indexOf(k) < 0) out.push(k); });
+  t = 10300;
+  while(t < 19500){
+    notes.push({lane:rl(4),time:t,type:'tap',phase:1,hit:false,done:false});
+    if(r()<0.35) notes.push({lane:rl(4),time:t+beat*0.4,type:'tap',phase:1,hit:false,done:false});
+    t += beat*0.65;
   }
-  return out;
+  t = 20300;
+  while(t < 29500){
+    const lane = rl(4);
+    if(r()<0.4) notes.push({lane:lane,time:t,type:'long',dur:beat*1.5,phase:2,hit:false,done:false});
+    else notes.push({lane:lane,time:t,type:'tap',phase:2,hit:false,done:false});
+    t += beat*0.9;
+  }
+  t = 30300;
+  while(t < 41000){
+    notes.push({lane:rl(4),time:t,type:'tap',phase:3,hit:false,done:false});
+    t += beat*1.7;
+  }
+  return notes.sort(function(a,b){ return a.time-b.time; });
 }
 
-function renderRun(){
-  const box = $('#runBody');
-  if(!box) return;
-  const c = runCaseNow();
-  const entry = runEntry(c);
-  const left = runLeft();
-  const best = state.runBest | 0;
+/* ---------- геометрия ---------- */
+function rrLaneX(i){ return rr.W * (i+0.5) / 4; }
+function rrJudgeY(){ return rr.H * 0.80; }
+function rrBossPos(){
+  const s = rr.bossShake;
+  const sx = s>0 ? (Math.random()-0.5)*s*16 : 0;
+  const sy = s>0 ? (Math.random()-0.5)*s*16 : 0;
+  return { x: rr.W/2 + Math.sin(rr.songTime*0.001)*10 + sx,
+           y: rr.H*0.175 + sy,
+           r: Math.min(rr.W,rr.H)*0.135 };
+}
+function rrRound(x,y,w,h,r){
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  rr.ctx.beginPath();
+  rr.ctx.moveTo(x+r,y);
+  rr.ctx.arcTo(x+w,y,x+w,y+h,r);
+  rr.ctx.arcTo(x+w,y+h,x,y+h,r);
+  rr.ctx.arcTo(x,y+h,x,y,r);
+  rr.ctx.arcTo(x,y,x+w,y,r);
+  rr.ctx.closePath();
+}
+function rrHexA(hex,a){
+  const m = hex.replace('#','').match(/../g).map(function(v){ return parseInt(v,16); });
+  return 'rgba('+m[0]+','+m[1]+','+m[2]+','+a+')';
+}
+function rrLight(hex,k){
+  return '#'+hex.replace('#','').match(/../g).map(function(v){
+    const n = parseInt(v,16);
+    return Math.min(255,Math.round(n+(255-n)*k)).toString(16).padStart(2,'0');
+  }).join('');
+}
+function rrDark(hex,k){
+  return '#'+hex.replace('#','').match(/../g).map(function(v){
+    const n = parseInt(v,16);
+    return Math.max(0,Math.round(n*(1-k))).toString(16).padStart(2,'0');
+  }).join('');
+}
 
-  if(!run){
-    box.innerHTML = `
-      <div class="hint" id="runSub" style="margin-bottom:10px">
-        Десять открытий одного кейса подряд. Каждые два открытия — три артефакта, берёте один.
-        Всё выпавшее остаётся у вас. Забегов в этот час: <b>${left}</b> из ${RUN_HOUR_MAX}.
-      </div>
-      <select class="bat-select" id="runCase2" aria-label="Кейс для забега">
-        ${runCasesList().map(x => `<option value="${x.id}" ${x.id === (c && c.id) ? 'selected' : ''}>${x.name} · ${x.price.toLocaleString('ru-RU')} кредитов</option>`).join('')}
-      </select>
-      <div class="run-head">
-        <div><div class="run-k">Вход за забег</div><div class="run-v">${entry.toLocaleString('ru-RU')}</div></div>
-        <div><div class="run-k">Открытий</div><div class="run-v">${RUN_LEN}</div></div>
-        <div><div class="run-k">Рекорд</div><div class="run-v">${best.toLocaleString('ru-RU')}</div></div>
-      </div>
-      <div class="hint" style="font-size:11.5px;line-height:1.5;margin-top:8px">
-        Счёт забега — сумма выпавших предметов. Вход уже включает надбавку 30 %: в среднем забег
-        возвращает около 89 % вложенного, но хороший расклад артефактов выводит далеко в плюс.
-      </div>
-      <button class="btn-primary" id="runGo" style="width:100%;margin-top:12px" ${left ? '' : 'disabled'}>
-        ${left ? 'Начать забег' : 'На этот час всё'}
-      </button>`;
-    const sel2 = $('#runCase2');
-    if(sel2){
-      if(c) sel2.value = c.id;
-      sel2.addEventListener('change', ()=>{ runCaseSel = sel2.value; renderRun(); });
+/* ---------- ввод ---------- */
+function rrLaneDown(lane){
+  if(!rr.running || rr.finished || rr.paused) return;
+  rr.pressed[lane] = true;
+  rr.laneFlash[lane] = 1;
+  audio();
+  const now = rr.songTime - (rr.offset||0);   /* калибровка задержки */
+  let best = null, bestD = Infinity;
+  for(let i=0;i<rr.notes.length;i++){
+    const n = rr.notes[i];
+    if(n.lane !== lane || n.hit || n.done) continue;
+    const d = Math.abs(now - n.time);
+    if(d < bestD){ bestD = d; best = n; }
+  }
+  if(!best || bestD > GOOD_MS) return;
+  const grade = bestD<=PERFECT_MS ? 'perfect' : bestD<=GREAT_MS ? 'great' : 'good';
+  if(best.type === 'tap'){
+    best.hit = true; best.done = true;
+    rrApplyHit(grade, lane, best);
+  } else if(best.type === 'long'){
+    best.hit = true; best.holdStart = now;
+    rr.held[lane] = best;
+    rrApplyHit(grade, lane, best);
+  }
+}
+function rrLaneUp(lane){
+  rr.pressed[lane] = false;
+  const h = rr.held[lane];
+  if(h && !h.done){
+    const end = h.time + h.dur;
+    if(rr.songTime >= end - 80){
+      h.done = true;
+      rrDamageBoss(Math.round(PHASES[h.phase].dmg*0.6), lane);
+      rr.combo++; rr.maxCombo = Math.max(rr.maxCombo, rr.combo);
+      rr.counts.perfect++;
+    } else {
+      h.done = true;
+      rrApplyMiss(h);
     }
-    const go = $('#runGo');
-    if(go) go.addEventListener('click', ()=>{
-      if(sel2) runCaseSel = sel2.value;
-      runBegin();
-    });
+  }
+  rr.held[lane] = null;
+}
+const RUN_KEYMAP = { KeyD:0, KeyF:1, KeyJ:2, KeyK:3, ArrowLeft:0, ArrowDown:1, ArrowUp:2, ArrowRight:3 };
+function rrKeyDown(e){
+  const l = RUN_KEYMAP[e.code];
+  if(l === undefined) return;
+  e.preventDefault();
+  if(rr.pressed[l]) return;
+  rrLaneDown(l);
+}
+function rrKeyUp(e){
+  const l = RUN_KEYMAP[e.code];
+  if(l === undefined) return;
+  e.preventDefault();
+  rrLaneUp(l);
+}
+const rrPointers = new Map();
+function rrPointerDown(e){
+  if(!rr.cv || rr.paused) return;
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  const rect = rr.cv.getBoundingClientRect();
+  const lane = Math.max(0, Math.min(3, Math.floor((e.clientX-rect.left) / (rect.width/4))));
+  rrPointers.set(e.pointerId, lane);
+  rrLaneDown(lane);
+}
+function rrPointerUp(e){
+  const l = rrPointers.get(e.pointerId);
+  if(l !== undefined){ rrLaneUp(l); rrPointers.delete(e.pointerId); }
+}
+
+/* ---------- попадания ---------- */
+function rrApplyHit(grade, lane, note){
+  const dmg = Math.round(PHASES[note.phase].dmg * HIT_MULT[grade]);
+  rrDamageBoss(dmg, lane);
+  rr.combo++;
+  rr.maxCombo = Math.max(rr.maxCombo, rr.combo);
+  const mult = 1 + Math.min(2, Math.floor(rr.combo/10)*0.1);
+  rr.score += Math.round((grade==='perfect'?300 : grade==='great'?200 : 100) * mult);
+  rr.counts[grade]++;
+  rr.weaponKick = 1;
+  rr.recoil = 1;
+  rrHitSound(grade, note.phase);
+  try{ if(navigator.vibrate) navigator.vibrate(grade==='perfect'?12:8); }catch(e){}
+}
+function rrDamageBoss(dmg, lane){
+  rr.bossHp = Math.max(0, rr.bossHp - dmg);
+  rr.bossFlash = 1;
+  rr.bossShake = Math.min(1, rr.bossShake + 0.35);
+  rr.screenShake = Math.min(1, rr.screenShake + 0.14);
+  const bp = rrBossPos();
+  rr.tracers.push({lane:lane, t:0, life:180});
+  rr.dmgN.push({text:'+'+dmg, x:bp.x+(Math.random()-0.5)*90, y:bp.y, t:0, life:800, big:dmg>=30});
+  if(rr.bossHp <= 0 && !rr.finished){ rr.win = true; setTimeout(rrFinish, 600); }
+}
+function rrApplyMiss(note){
+  rr.combo = 0;
+  rr.counts.miss++;
+  rr.playerHp = Math.max(0, rr.playerHp - MISS_DMG);
+  rr.screenShake = 1;
+  rr.misses.push({lane:note.lane, t:0, life:400});
+  rrMissSound();
+  try{ if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
+  if(rr.playerHp <= 0 && !rr.finished){ rr.win = false; setTimeout(rrFinish, 500); }
+}
+
+/* ---------- фазы ---------- */
+function rrCheckPhase(){
+  for(let i = 0; i < PHASES.length; i++){
+    if(rr.songTime >= PHASES[i].from && rr.songTime < PHASES[i].to && rr.phase !== i){
+      rr.phase = i;
+      rr.phaseFlash = 1; rr.weaponFlash = 1; rr.screenShake = 0.5;
+      rr.phaseOverlay = {text: PHASES[i].name + ' · ×' + PHASES[i].dmg, t:0, dur:1400};
+      rrPhaseSound();
+      const ph = $('#runPhase'); if(ph) ph.textContent = PHASES[i].name;
+      rrRenderWeapon(PHASES[i].weapon);
+    }
+  }
+}
+function rrRenderWeapon(w){
+  const box = $('#rhythmWeapon');
+  if(!box) return;
+  let best = null, bestV = -1;
+  (state.inv||[]).forEach(function(it){
+    const sk = skinById(it.id);
+    if(sk && sk.w === w){
+      const v = itemVal(it);
+      if(v > bestV){ bestV = v; best = sk; }
+    }
+  });
+  if(!best) best = SKINS.find(function(s){ return s.w === w && !s.excl; }) || SKINS[0];
+  const color = (RAR[best.r] ? RAR[best.r].color : '#ffb02e');
+  box.style.color = color;
+  box.innerHTML = svgWeapon(best);
+  const svg = box.querySelector('svg');
+  if(svg){
+    svg.setAttribute('width','100%');
+    svg.setAttribute('height','100%');
+    svg.style.filter = 'drop-shadow(0 0 12px ' + color + '88)';
+  }
+}
+
+/* ---------- обновление ---------- */
+function rrUpdate(dt){
+  if(rr.countdown > 0){
+    rr.countdown -= dt;
+    if(rr.countdown <= 0){ rr.running = true; rr.songTime = 0; rr.lastT = 0; }
     return;
   }
+  rr.songTime += dt;
+  rrCheckPhase();
+  for(let i=0;i<4;i++) rr.laneFlash[i] = Math.max(0, rr.laneFlash[i] - dt/200);
+  rr.bossFlash = Math.max(0, rr.bossFlash - dt/220);
+  rr.bossShake = Math.max(0, rr.bossShake - dt/400);
+  rr.screenShake = Math.max(0, rr.screenShake - dt/250);
+  rr.phaseFlash = Math.max(0, rr.phaseFlash - dt/400);
+  rr.weaponFlash = Math.max(0, rr.weaponFlash - dt/300);
+  rr.weaponKick = Math.max(0, rr.weaponKick - dt/100);
+  rr.recoil = Math.max(0, rr.recoil - dt/90);
 
-  /* забег идёт */
-  const arts = run.arts;
-  const artList = arts.length
-    ? arts.map(k => `<span class="run-art">${RUN_ARTS[k].ic} ${RUN_ARTS[k].n}</span>`).join('')
-    : '<span class="run-art plain">пока пусто</span>';
-  const pending = [];
-  if(run.nextMul && run.nextMul !== 1) pending.push(`×${run.nextMul.toFixed(2)} к следующему`);
-  if(run.nextRar) pending.push('редкость выше');
-
-  box.innerHTML = `
-    <div class="run-head">
-      <div><div class="run-k">Шаг</div><div class="run-v">${Math.min(run.i + 1, RUN_LEN)} / ${RUN_LEN}</div></div>
-      <div><div class="run-k">Счёт</div><div class="run-v" style="color:#ffd08a">${run.score.toLocaleString('ru-RU')}</div></div>
-      <div><div class="run-k">Вложено</div><div class="run-v">${run.entry.toLocaleString('ru-RU')}</div></div>
-    </div>
-    <div class="run-track"><div class="run-fill" style="width:${Math.round(run.i / RUN_LEN * 100)}%"></div></div>
-    <div class="run-arts">${artList}</div>
-    ${pending.length ? `<div class="hint" style="font-size:11.5px;color:#a9d8b0">Заряжено: ${pending.join(' · ')}</div>` : ''}
-    <div class="run-drop" id="runDrop">${run.lastHtml || '<span class="run-wait">Жмите «Открыть» — предмет появится здесь</span>'}</div>
-    <div id="runChoices"></div>
-    <button class="btn-primary" id="runGo" style="width:100%;margin-top:12px" ${runBusy ? 'disabled' : ''}>
-      ${runBusy ? 'Открываем…' : (run.i >= RUN_LEN ? 'Завершить' : 'Открыть предмет ' + (run.i + 1))}
-    </button>
-    <button class="btn-ghost" id="runStop" style="width:100%;margin-top:8px">Выйти из забега</button>
-    <div class="hint" style="margin-top:8px;font-size:11.5px;line-height:1.5">
-      Набранное остаётся у вас в любом случае: вход уже оплачен целиком, за неоткрытые шаги
-      второй раз не спишется.
-    </div>`;
-
-  const go = $('#runGo');
-  if(go) go.addEventListener('click', ()=>{ if(run.i >= RUN_LEN) runFinish(); else runStep(); });
-  const st = $('#runStop');
-  if(st) st.addEventListener('click', ()=>{ if(run) runFinish(); });
-  renderRunChoices();
-}
-
-function renderRunChoices(){
-  const box = $('#runChoices');
-  if(!box) return;
-  if(!run || !run.offer || !run.offer.length){ box.innerHTML = ''; return; }
-  box.innerHTML = `<div class="run-pick-h">Возьмите один артефакт</div>
-    <div class="run-choice">${run.offer.map((k, i) => `
-      <button class="run-card" data-art="${k}" data-i="${i}">
-        <span class="run-ic">${RUN_ARTS[k].ic}</span>
-        <span class="run-n">${RUN_ARTS[k].n}</span>
-        <span class="run-d">${RUN_ARTS[k].d}</span>
-      </button>`).join('')}</div>`;
-  box.querySelectorAll('[data-art]').forEach(b => b.addEventListener('click', ()=>{
-    runPick(b.dataset.art);
-  }));
-}
-
-function runBegin(){
-  if(run) return;
-  const c = runCaseNow();
-  const entry = runEntry(c);
-  if(runLeft() <= 0){ toast('На этот час забегов больше нет'); return; }
-  if(state.coins < entry){ toast(`Нужно ${entry.toLocaleString('ru-RU')} кредитов на вход`); return; }
-  state.coins -= entry;                     /* единственное списание за весь забег */
-  runTakeOnce();
-  run = {caseId: c.id, caseName: c.name, price: c.price, entry,
-         i: 0, score: 0, arts: [], offer: null, nextMul: 1, nextRar: false,
-         lastHeavy: -99, items: [], lastHtml: ''};
-  renderBalance(true); save();
-  SFX.open();
-  renderRun();
-}
-function runStep(){
-  if(!run || runBusy) return;
-  if(run.i >= RUN_LEN){ runFinish(); return; }
-  const c = CASES.find(x => x.id === run.caseId);
-  if(!c){ runFinish(); return; }
-  runBusy = true;
-  renderRun();
-
-  let rar = rollRarity(c.odds);
-  if(run.nextRar){
-    /* гвоздь: тир выше с шансом и не выше легендарного — иначе одно попадание
-       стоит как полтора кейса */
-    if(Math.random() < RUN_NAIL_CHANCE){
-      const i = RAR_ORDER.indexOf(rar), cap = RAR_ORDER.indexOf('rare');
-      if(i >= 0 && i < cap) rar = RAR_ORDER[i + 1];
+  if(rr.phaseOverlay){
+    rr.phaseOverlay.t += dt;
+    if(rr.phaseOverlay.t > rr.phaseOverlay.dur) rr.phaseOverlay = null;
+  }
+  const now = rr.songTime;
+  for(let i=0;i<rr.notes.length;i++){
+    const n = rr.notes[i];
+    if(n.hit || n.done) continue;
+    if(n.type === 'tap' && now - n.time > GOOD_MS){ n.done = true; rrApplyMiss(n); }
+    if(n.type === 'long' && !n.hit && now - n.time > GOOD_MS){ n.done = true; rrApplyMiss(n); }
+  }
+  for(let i=0;i<4;i++){
+    const h = rr.held[i];
+    if(!h || h.done) continue;
+    if(now >= h.time + h.dur){
+      h.done = true; rr.held[i] = null;
+      rrDamageBoss(Math.round(PHASES[h.phase].dmg*0.6), i);
+      rr.combo++; rr.maxCombo = Math.max(rr.maxCombo, rr.combo);
+      rr.counts.perfect++;
     }
-    run.nextRar = false;
   }
-  const sk = rollSkin(rar, c);
-  const it = makeItem(sk);
-  if(run.nextMul && run.nextMul > 1){
-    const base = itemVal(it);                       /* без надбавки */
-    const cap = (run.nextMul >= 1.5 ? RUN_BONUS_CAP_MIRROR : RUN_BONUS_CAP_HORSE) * c.price;
-    const add = Math.min(base * (run.nextMul - 1), cap);
-    it.bn = Math.round((1 + add / Math.max(1, base)) * 1000) / 1000;
-    run.nextMul = 1;
+  rr.tracers = rr.tracers.filter(function(e){ return (e.t += dt) < e.life; });
+  rr.dmgN = rr.dmgN.filter(function(e){ e.t += dt; e.y -= dt*0.08; return e.t < e.life; });
+  rr.misses = rr.misses.filter(function(e){ return (e.t += dt) < e.life; });
+
+  const w = $('#rhythmWeapon');
+  if(w) w.style.transform = 'translateX(-50%) translateY(' + (-8*rr.weaponKick) + 'px) scale(' + (1 + rr.weaponFlash*0.08) + ')';
+
+  const tm = $('#runTimer');
+  if(tm) tm.textContent = (Math.max(0, SONG_DURATION - now)/1000).toFixed(1);
+
+  if(now > SONG_DURATION && !rr.finished){ rr.win = false; rrFinish(); }
+}
+
+/* ---------- отрисовка ---------- */
+function rrRender(){
+  if(!rr.ctx) return;
+  const ctx = rr.ctx;
+  ctx.save();
+  if(rr.screenShake > 0) ctx.translate((Math.random()-0.5)*rr.screenShake*12, (Math.random()-0.5)*rr.screenShake*12);
+  rrDrawBg(ctx);
+  rrDrawBoss(ctx);
+  rrDrawLanes(ctx);
+  rrDrawNotes(ctx);
+  rrDrawFx(ctx);
+  rrDrawHud(ctx);
+  ctx.restore();
+}
+function rrDrawBg(ctx){
+  const g = ctx.createRadialGradient(rr.W/2, rr.H*0.18, 0, rr.W/2, rr.H*0.18, rr.H*0.95);
+  g.addColorStop(0,'#221018'); g.addColorStop(0.45,'#120a10'); g.addColorStop(1,'#06080e');
+  ctx.fillStyle = g; ctx.fillRect(0,0,rr.W,rr.H);
+  /* сетка земли для ощущения глубины */
+  ctx.strokeStyle = 'rgba(120,160,120,.05)'; ctx.lineWidth = 1;
+  for(let i=1;i<10;i++){
+    const y = rr.H*0.18 + Math.pow(i/9, 2.1) * rr.H*0.82;
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(rr.W,y); ctx.stroke();
   }
-  const val = itemVal(it);
-  addSkin(sk, it);
-  run.items.push({uid: it.uid, id: sk.id, val});
-  run.score += val;
-  run.i += 1;
-  const R = RAR[sk.r];
-  run.lastHtml = `<div class="run-item">
-      <div class="run-piece">${svgWeapon(sk)}</div>
-      <div class="run-meta">
-        <div class="run-nm" style="color:${R.color}">${sk.n}</div>
-        <div class="run-rt">${R.name} · ${it.fl.toFixed(3)}${it.st ? ' · ★' : ''}${it.bn && it.bn > 1 ? ' · ×' + it.bn.toFixed(2) : ''}</div>
-        <div class="run-val">+${val.toLocaleString('ru-RU')}</div>
-      </div>
-    </div>`;
-  sfxWin(sk.r);
-  addDust(0);
-  /* артефакт предлагаем на каждом втором шаге: четыре выбора за забег.
-     Девять выборов давали слишком много — замер показывал 131 % возврата. */
-  if(run.i < RUN_LEN && run.i % RUN_ART_EVERY === 0){
-    run.offer = runArtOffer(run.i, run.lastHeavy);
+  if(rr.bossFlash>0){ ctx.fillStyle='rgba(255,80,90,'+(rr.bossFlash*0.13)+')'; ctx.fillRect(0,0,rr.W,rr.H); }
+  if(rr.phaseFlash>0){ ctx.fillStyle='rgba(255,176,46,'+(rr.phaseFlash*0.10)+')'; ctx.fillRect(0,0,rr.W,rr.H); }
+  const hp = rr.playerHp/PLAYER_HP_MAX;
+  if(hp < 0.5){
+    const vg = ctx.createRadialGradient(rr.W/2,rr.H/2,Math.min(rr.W,rr.H)*0.35,rr.W/2,rr.H/2,Math.max(rr.W,rr.H)*0.72);
+    vg.addColorStop(0,'rgba(255,0,0,0)');
+    vg.addColorStop(1,'rgba(255,20,30,'+((0.5-hp)*0.9)+')');
+    ctx.fillStyle = vg; ctx.fillRect(0,0,rr.W,rr.H);
+  }
+}
+function rrDrawBoss(ctx){
+  const p = rrBossPos();
+  const hp = rr.bossHp / BOSS_HP_MAX;
+
+  /* свечение под танком */
+  const glow = ctx.createRadialGradient(p.x, p.y+p.r*0.5, 0, p.x, p.y+p.r*0.5, p.r*2.0);
+  glow.addColorStop(0,'rgba(255,80,90,'+(0.20 + rr.bossFlash*0.30)+')');
+  glow.addColorStop(0.55,'rgba(255,40,60,'+(0.07 + rr.bossFlash*0.12)+')');
+  glow.addColorStop(1,'rgba(255,40,60,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(p.x-p.r*2, p.y-p.r, p.r*4, p.r*3.4);
+
+  if(rrTank.ok && rrTank.img){
+    const iw = rrTank.img.naturalWidth, ih = rrTank.img.naturalHeight;
+    const w = p.r * 2.5, h = w * ih / iw;
+    const x = p.x - w/2 + rr.recoil*4, y = p.y - h/2;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.drawImage(rrTank.img, x, y, w, h);
+    if(rr.bossFlash > 0.05 && rrTank.tint){
+      ctx.globalAlpha = Math.min(1, rr.bossFlash) * 0.55;
+      ctx.drawImage(rrTank.tint, x, y, w, h);
+    }
+    ctx.restore();
   } else {
-    run.offer = null;
+    /* векторный запасной танк, если спрайт не пришёл */
+    const w = p.r*2.2, h = p.r*1.1;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.fillStyle = rr.bossFlash>0.3 ? '#7d2a30' : '#2f3d2c';
+    ctx.strokeStyle = '#ff5f6d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-w/2,-h*0.1); ctx.lineTo(w/2,-h*0.1);
+    ctx.lineTo(w*0.36,h*0.34); ctx.lineTo(-w*0.36,h*0.34); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillRect(-w*0.14,-h*0.42,w*0.34,h*0.34);
+    ctx.beginPath(); ctx.moveTo(w*0.1,-h*0.3); ctx.lineTo(w*0.62,-h*0.3);
+    ctx.lineWidth = 5; ctx.strokeStyle = '#8b98b0'; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* полоса HP босса */
+  const w2 = Math.min(rr.W-40, 380), h2 = 14, x2 = (rr.W-w2)/2, y2 = p.y + p.r*0.86;
+  ctx.font='900 9px system-ui'; ctx.fillStyle='#8b98b0'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('ТАНК ДНЯ', rr.W/2, y2-5);
+  ctx.fillStyle='rgba(0,0,0,.7)'; rrRound(x2,y2,w2,h2,h2/2); ctx.fill();
+  const bg = ctx.createLinearGradient(x2,0,x2+w2,0);
+  bg.addColorStop(0,'#ff2f4d'); bg.addColorStop(0.5,'#ff5f6d'); bg.addColorStop(1,'#ff8f9f');
+  ctx.fillStyle=bg; rrRound(x2,y2,w2*hp,h2,h2/2); ctx.fill();
+  ctx.strokeStyle='rgba(255,95,109,.7)'; ctx.lineWidth=1; rrRound(x2,y2,w2,h2,h2/2); ctx.stroke();
+  ctx.font='900 10px system-ui'; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(Math.max(0,Math.ceil(rr.bossHp))+' / '+BOSS_HP_MAX, rr.W/2, y2+h2/2);
+}
+function rrDrawLanes(ctx){
+  const jy = rrJudgeY(), lw = rr.W/4;
+  const pc = PHASES[Math.max(0,rr.phase)].color;
+  for(let i=0;i<4;i++){
+    if(rr.laneFlash[i]>0){
+      const g = ctx.createLinearGradient(0,jy-320,0,jy+60);
+      g.addColorStop(0, rrHexA(pc,0));
+      g.addColorStop(1, rrHexA(pc, 0.22*rr.laneFlash[i]));
+      ctx.fillStyle = g; ctx.fillRect(lw*i, jy-320, lw, 380);
+    }
+  }
+  ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){ ctx.beginPath(); ctx.moveTo(lw*i,0); ctx.lineTo(lw*i,rr.H); ctx.stroke(); }
+  ctx.shadowColor=pc; ctx.shadowBlur=12; ctx.strokeStyle=pc; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,jy); ctx.lineTo(rr.W,jy); ctx.stroke();
+  ctx.shadowBlur=0;
+  for(let i=0;i<4;i++){
+    ctx.strokeStyle = rrHexA(pc, 0.35 + rr.laneFlash[i]*0.6);
+    ctx.lineWidth = 1 + rr.laneFlash[i]*2;
+    const pw = lw*0.65, ph = 14;
+    rrRound(lw*i + (lw-pw)/2, jy-ph/2, pw, ph, ph/2);
+    ctx.stroke();
+  }
+}
+function rrDrawNotes(ctx){
+  const now = rr.songTime;
+  const jy = rrJudgeY(), lw = rr.W/4;
+  for(let i=0;i<rr.notes.length;i++){
+    const n = rr.notes[i];
+    if(n.done) continue;
+    const ph = PHASES[n.phase];
+    const speed = rr.H * ph.speed;
+    const y = jy - (n.time-now)/1000*speed;
+    if(y < -90 || y > rr.H+30) continue;
+    const x = rrLaneX(n.lane);
+    const w = lw*0.5, h = Math.max(22, rr.H*0.032);
+    const c = ph.color;
+    if(n.type==='tap'){
+      ctx.shadowColor=c; ctx.shadowBlur = n.phase===3 ? 20 : 8;
+      const g = ctx.createLinearGradient(x,y-h/2,x,y+h/2);
+      g.addColorStop(0, rrLight(c,0.4)); g.addColorStop(0.5,c); g.addColorStop(1, rrDark(c,0.3));
+      ctx.fillStyle=g; rrRound(x-w/2,y-h/2,w,h,h/2); ctx.fill();
+      ctx.shadowBlur=0; ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1; ctx.stroke();
+      if(n.phase===3){ ctx.strokeStyle='#ffd76a'; ctx.lineWidth=1.5; rrRound(x-w/2-3,y-h/2-3,w+6,h+6,(h+6)/2); ctx.stroke(); }
+    } else if(n.type==='long'){
+      const y2 = jy - (n.time+n.dur-now)/1000*speed;
+      const top = Math.min(y,y2), bot = Math.max(y,y2);
+      ctx.fillStyle = rrHexA(c, 0.47); rrRound(x-w/2,top,w,bot-top,w/2); ctx.fill();
+      ctx.shadowColor=c; ctx.shadowBlur=10; ctx.fillStyle=c;
+      rrRound(x-w/2,y-h/2,w,h,h/2); ctx.fill(); ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(255,255,255,.4)';
+      rrRound(x-w*0.15, top+h/3, w*0.3, Math.max(2,bot-top-h), 2); ctx.fill();
+    }
+  }
+}
+function rrDrawFx(ctx){
+  for(let i=0;i<rr.tracers.length;i++){
+    const t = rr.tracers[i];
+    const k = 1 - t.t/t.life;
+    const x = rrLaneX(t.lane), jy = rrJudgeY(), bp = rrBossPos();
+    const pc = PHASES[Math.max(0,rr.phase)].color;
+    const g = ctx.createLinearGradient(x,jy,bp.x,bp.y);
+    g.addColorStop(0,'rgba(255,255,255,'+(k*0.9)+')');
+    g.addColorStop(0.5, rrHexA(pc, k*0.7));
+    g.addColorStop(1,'rgba(255,176,46,0)');
+    ctx.strokeStyle=g; ctx.lineWidth = 2+k*2;
+    ctx.beginPath(); ctx.moveTo(x,jy); ctx.lineTo(bp.x,bp.y); ctx.stroke();
+  }
+  for(let i=0;i<rr.dmgN.length;i++){
+    const d = rr.dmgN[i];
+    const k = 1 - d.t/d.life;
+    ctx.font = '900 ' + (d.big?24:18) + 'px system-ui';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = d.big ? 'rgba(255,215,106,'+k+')' : 'rgba(255,176,46,'+k+')';
+    ctx.shadowColor='#ffb02e'; ctx.shadowBlur = 10*k;
+    ctx.fillText(d.text, d.x, d.y); ctx.shadowBlur = 0;
+  }
+  for(let i=0;i<rr.misses.length;i++){
+    const m = rr.misses[i];
+    const k = 1 - m.t/m.life;
+    const x = rrLaneX(m.lane), y = rrJudgeY();
+    ctx.strokeStyle = 'rgba(255,80,90,'+k+')'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x-14,y-14); ctx.lineTo(x+14,y+14);
+    ctx.moveTo(x+14,y-14); ctx.lineTo(x-14,y+14);
+    ctx.stroke();
+  }
+}
+function rrDrawHud(ctx){
+  if(rr.combo > 1){
+    const big = rr.combo >= 20;
+    ctx.font = '900 ' + (big?32:22) + 'px system-ui';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = big ? '#ffb02e' : '#ffd08a';
+    ctx.shadowColor='#ffb02e'; ctx.shadowBlur = big?22:10;
+    ctx.fillText(rr.combo + ' COMBO', rr.W/2, rrJudgeY()-72);
+    ctx.shadowBlur = 0;
+  }
+  ctx.font = '900 22px system-ui';
+  ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillStyle='#fff';
+  ctx.fillText(rr.score.toLocaleString('ru-RU'), rr.W-16, 52);
+
+  const w = Math.min(rr.W-40,300), x = (rr.W-w)/2, y = rr.H-24, hp = rr.playerHp/PLAYER_HP_MAX;
+  ctx.fillStyle='rgba(0,0,0,.7)'; rrRound(x,y,w,10,5); ctx.fill();
+  ctx.fillStyle = hp>0.5 ? '#43c97a' : hp>0.25 ? '#ffb02e' : '#ff5f6d';
+  rrRound(x,y,w*hp,10,5); ctx.fill();
+  ctx.font='900 9px system-ui'; ctx.fillStyle='rgba(255,255,255,.85)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('HP '+Math.max(0,Math.ceil(rr.playerHp))+' / '+PLAYER_HP_MAX, rr.W/2, y+5);
+
+  if(rr.countdown > 0){
+    const n = Math.ceil(rr.countdown/1000);
+    ctx.font='900 72px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,220,150,.95)'; ctx.shadowColor='#ffb02e'; ctx.shadowBlur=30;
+    ctx.fillText(n>0 ? String(n) : 'БОЙ', rr.W/2, rr.H*0.56);
+    ctx.shadowBlur=0;
+  } else if(rr.phaseOverlay){
+    const k = rr.phaseOverlay.t/rr.phaseOverlay.dur;
+    const a = k<0.15 ? k/0.15 : k>0.8 ? (1-k)/0.2 : 1;
+    ctx.font='900 26px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,220,150,'+a+')'; ctx.shadowColor='#ffb02e'; ctx.shadowBlur=20;
+    ctx.fillText(rr.phaseOverlay.text, rr.W/2, rr.H/2); ctx.shadowBlur=0;
+  }
+}
+
+/* ---------- цикл ---------- */
+function rrLoop(t){
+  if(!rr.active) return;
+  if(!rr.lastT) rr.lastT = t;
+  const dt = Math.min(50, t - rr.lastT);
+  rr.lastT = t;
+  rrUpdate(dt);
+  rrRender();
+  if(rr.active) rr.raf = requestAnimationFrame(rrLoop);
+}
+function rrResize(){
+  if(!rr.cv) return;
+  const r = rr.cv.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  rr.W = r.width; rr.H = r.height;
+  rr.cv.width = Math.floor(rr.W * rr.DPR);
+  rr.cv.height = Math.floor(rr.H * rr.DPR);
+  rr.ctx.setTransform(rr.DPR,0,0,rr.DPR,0,0);
+}
+
+/* ---------- экраны ---------- */
+function rrShow(id, on){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(on) el.classList.add('on'); else el.classList.remove('on');
+}
+function rrPaintTries(){
+  const box = $('#runTries');
+  if(!box) return;
+  const left = runLeft();
+  let html = '';
+  for(let i=0;i<RUN_TRIES;i++) html += '<i class="'+(i<left?'on':'')+'"></i>';
+  box.innerHTML = html;
+}
+
+/* ---------- запуск ---------- */
+function openRun(){
+  SFX.click();
+  rrLoadTank();
+  runBusy = false;
+  const left = runLeft();
+  if(left <= 0){ toast('Попытки на сегодня кончились — приходите завтра'); return; }
+
+  $('#runModal').classList.add('on');
+  rr.cv = document.getElementById('runRhythmCanvas');
+  if(!rr.cv){ toast('Сцена не готова'); return; }
+  rr.ctx = rr.cv.getContext('2d');
+  rr.notes = rrBuildChart();
+  rr.tracers = []; rr.dmgN = []; rr.misses = [];
+  rr.laneFlash = [0,0,0,0]; rr.pressed = [false,false,false,false]; rr.held = [null,null,null,null];
+  rr.bossFlash = 0; rr.bossShake = 0; rr.screenShake = 0;
+  rr.phaseFlash = 0; rr.weaponFlash = 0; rr.weaponKick = 0; rr.recoil = 0;
+  rr.phaseOverlay = null;
+  rr.combo = 0; rr.maxCombo = 0; rr.score = 0;
+  rr.counts = {perfect:0, great:0, good:0, miss:0};
+  rr.bossHp = BOSS_HP_MAX; rr.playerHp = PLAYER_HP_MAX;
+  rr.songTime = 0; rr.running = false; rr.finished = false;
+  rr.phase = -1; rr.win = false; rr.paused = false;
+  rr.countdown = RUN_COUNTDOWN + 400; rr.lastT = 0; rr.active = false;
+  rr.offset = state.rrOffset | 0;
+
+  rrShow('runStart', true);
+  rrShow('runPause', false);
+  rrShow('runResult', false);
+  const ph = $('#runPhase'); if(ph) ph.textContent = 'ПИСТОЛЕТ';
+  const tm = $('#runTimer'); if(tm) tm.textContent = '42.0';
+  rrPaintTries();
+  rrRenderWeapon('glock');
+
+  cancelAnimationFrame(rr.raf);
+  /* сцену рисуем один раз под интро, цикл запустит кнопка «В бой» */
+  requestAnimationFrame(function(){
+    rrResize();
+    rrRender();
+  });
+  document.addEventListener('keydown', rrKeyDown);
+  document.addEventListener('keyup', rrKeyUp);
+  rr.cv.addEventListener('pointerdown', rrPointerDown);
+  rr.cv.addEventListener('pointerup', rrPointerUp);
+  rr.cv.addEventListener('pointercancel', rrPointerUp);
+  window.addEventListener('resize', rrResize);
+}
+function rrStop(){
+  rr.active = false; rr.running = false;
+  cancelAnimationFrame(rr.raf);
+  document.removeEventListener('keydown', rrKeyDown);
+  document.removeEventListener('keyup', rrKeyUp);
+  window.removeEventListener('resize', rrResize);
+  if(rr.cv){
+    rr.cv.removeEventListener('pointerdown', rrPointerDown);
+    rr.cv.removeEventListener('pointerup', rrPointerUp);
+    rr.cv.removeEventListener('pointercancel', rrPointerUp);
   }
   runBusy = false;
-  save();
-  renderRun();
-  if(run.i >= RUN_LEN) setTimeout(()=>{ /* даём посмотреть последний дроп */ }, 200);
 }
-function runPick(k){
-  if(!run || !run.offer || run.offer.indexOf(k) < 0) return;
-  run.arts.push(k);
-  if(k === 'horseshoe') run.nextMul = Math.min(RUN_BONUS_CAP, (run.nextMul || 1) * 1.2);
-  else if(k === 'mirror') run.nextMul = Math.min(RUN_BONUS_CAP, (run.nextMul || 1) * 1.5);
-  else if(k === 'nail') run.nextRar = true;
-  if(k === 'coin'){
-    /* монета возвращает цену кейса сразу, но это часть возврата, а не бонус сверху */
-    state.coins += run.price;
-    run.score += run.price;
-    run.items.push({uid: 0, id: '', val: run.price, coin: true});
-    renderBalance(true);
-    toast(`Монета: +${run.price.toLocaleString('ru-RU')} кредитов`);
+(function(){
+  const m = document.getElementById('runModal');
+  if(!m || !window.MutationObserver) return;
+  new MutationObserver(function(){
+    if(!m.classList.contains('on') && rr.active) rrStop();
+  }).observe(m, {attributes:true, attributeFilter:['class']});
+})();
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) return;
+  if(!rr.active || rr.paused) return;
+  rr.paused = true; rr.active = false;
+  cancelAnimationFrame(rr.raf);
+  rrShow('runPause', true);
+});
+
+/* ---------- финал ---------- */
+function rrFinish(){
+  if(rr.finished) return;
+  rr.finished = true; rr.running = false;
+  rrStop();
+
+  const total = rr.counts.perfect + rr.counts.great + rr.counts.good + rr.counts.miss;
+  const acc = total ? (rr.counts.perfect + rr.counts.great*0.75 + rr.counts.good*0.4) / total : 0;
+  const dmgPct = 1 - (rr.bossHp / BOSS_HP_MAX);
+
+  let grade;
+  if(rr.win && acc >= 0.9) grade = 'S';
+  else if(rr.win && acc >= 0.75) grade = 'A';
+  else if(dmgPct >= 0.75) grade = 'A';
+  else if(dmgPct >= 0.5) grade = 'B';
+  else grade = 'C';
+
+  const isBest = rr.score > (state.runBest | 0);
+  if(isBest) state.runBest = rr.score;
+
+  /* 4.29.0: вход свободный, поэтому награда ограничена —
+     один предмет не выше «редкого» и только за победу над танком,
+     плюс пыль по урону (максимум 20). Три попытки в день. */
+  let drop = null;
+  if(rr.win){
+    const pool = SKINS.filter(function(s){ return s.r === 'rare' && !s.excl; });
+    const pool2 = pool.length ? pool : SKINS.filter(function(s){ return s.r === 'uncommon' && !s.excl; });
+    if(pool2.length){
+      const skin = pool2[Math.floor(Math.random() * pool2.length)];
+      const item = makeItem(skin);
+      try{ addSkin(skin, item); }catch(e){}
+      drop = { skin: skin, item: item, val: itemVal(item) };
+    }
   }
-  if(k === 'nail' || k === 'coin') run.lastHeavy = run.i;
-  run.offer = null;
+  const dust = Math.min(20, Math.round(dmgPct*20));
+  if(dust > 0){ try{ addDust(dust); }catch(e){} }
   save();
-  SFX.click();
-  renderRun();
+
+  const res = document.getElementById('runResult');
+  if(res){
+    const RCOL = { common:'#8b93a7', uncommon:'#4aa3ff', rare:'#a970ff', epic:'#ff5fa2', legend:'#ffb02e', myth:'#ff4d4d' };
+    const verdict = rr.win ? 'ТАНК УНИЧТОЖЕН' : (dmgPct >= 0.75 ? 'ПОЧТИ ДОБИЛ' : dmgPct >= 0.5 ? 'ТАНК ДЕРЖИТСЯ' : 'ТАНК ВЫСТОЯЛ');
+    const left = runLeft();
+    res.innerHTML = '<div class="rr-card">' +
+      '<div class="rr-head">' +
+        '<div class="rr-grade '+grade+'">'+grade+'</div>' +
+        '<div class="rr-verdict" style="color:'+(rr.win?'#6ee7a0':'#ff8f9f')+'">'+verdict+'</div>' +
+        '<div class="rr-sub">'+Math.round(dmgPct*100)+'% урона · точность '+Math.round(acc*100)+'%'+(isBest?' · новый рекорд':'')+'</div>' +
+      '</div>' +
+      '<div class="rr-stats">' +
+        '<div><span>Perfect</span><b>'+rr.counts.perfect+'</b></div>' +
+        '<div><span>Great</span><b>'+rr.counts.great+'</b></div>' +
+        '<div><span>Good</span><b>'+rr.counts.good+'</b></div>' +
+        '<div><span>Miss</span><b>'+rr.counts.miss+'</b></div>' +
+        '<div><span>Счёт</span><b>'+rr.score.toLocaleString('ru-RU')+'</b></div>' +
+        '<div><span>Комбо</span><b>'+rr.maxCombo+'</b></div>' +
+      '</div>' +
+      (drop
+        ? '<div class="rr-drop"><div class="rr-art">'+svgWeapon(drop.skin)+'</div>' +
+          '<div style="min-width:0"><div class="rr-nm" style="color:'+(RCOL[drop.skin.r]||'#fff')+'">'+drop.skin.n+'</div>' +
+          '<div class="rr-vl">'+drop.val.toLocaleString('ru-RU')+' кредитов · '+RAR[drop.skin.r].name+'</div></div></div>'
+        : '<div class="rr-drop" style="opacity:.55"><div class="rr-art" style="font-size:20px">💨</div>' +
+          '<div style="min-width:0"><div class="rr-nm">Пыль +'+dust+'</div>' +
+          '<div class="rr-vl">'+(rr.win?'танк уничтожен':'предмет — только за победу над танком')+'</div></div></div>') +
+      '<button class="rr-btn" id="rrClose">'+(left>0 ? 'Ещё раз · осталось '+left : 'Забрать')+'</button>' +
+      (left>0 ? '<button class="rr-btn rr-ghost" id="rrExit">Выйти</button>' : '') +
+      '</div>';
+    res.classList.add('on');
+    const closeBtn = res.querySelector('#rrClose');
+    if(closeBtn) closeBtn.addEventListener('click', function(){
+      if(runLeft() > 0){ runBusy=false; openRun(); }
+      else closeRun();
+    });
+    const exitBtn = res.querySelector('#rrExit');
+    if(exitBtn) exitBtn.addEventListener('click', closeRun);
+  }
+  if(rr.win) rrWinSound(); else rrLoseSound();
+  try{ renderInv(); }catch(e){}
+  try{ renderBalance(true); }catch(e){}
+  try{ renderMiniModes(); }catch(e){}
+  try{ achCheck(); }catch(e){}
+  try{ raidTick('case', 1); }catch(e){}
 }
-function runFinish(){
-  if(!run) return;
-  const score = run.score, entry = run.entry, c = run.caseName;
-  const isBest = score > (state.runBest | 0);
-  let dust = 0;
-  if(isBest){
-    state.runBest = score;
-    state.runBestCase = c;
-    /* пыль за рекорд входит в общий суточный потолок (5 пыли = 1 кредит, 500 кр/день) */
-    const byScore = Math.round(score / Math.max(1, run.price) * 6);
-    const roomCoin = dustExLeft();               /* остаток дневного потолка в кредитах */
-    const roomDust = roomCoin * DUST_PER_COIN;
-    dust = Math.max(0, Math.min(byScore, roomDust));
-    if(dust) addDust(dust);
-  }
-  const keep = run.items.filter(x => !x.coin);
-  run = null;
-  save();
+function closeRun(){
+  rrStop();
   $('#runModal').classList.remove('on');
-  renderMiniModes();
-  renderBalance(true);
-  const pct = entry ? Math.round(score / entry * 100) : 0;
-  toast(`Забег: ${score.toLocaleString('ru-RU')} из ${entry.toLocaleString('ru-RU')} (${pct} %)` +
-        (dust ? ` · рекорд! +${dust} пыли` : '') + ` · предметов ${keep.length} в инвентаре`);
-  SFX.success();
+  rrShow('runResult', false);
+  try{ renderInv(); }catch(e){}
+  try{ renderBalance(true); }catch(e){}
+  try{ renderMiniModes(); }catch(e){}
 }
+function rrStartBattle(){
+  if(runBusy) return;
+  if(runLeft() <= 0){ toast('Попытки на сегодня кончились'); return; }
+  runBusy = true;
+  runTakeOnce();
+  rrPaintTries();
+  rrShow('runStart', false);
+  rr.countdown = RUN_COUNTDOWN + 400;
+  rr.lastT = 0; rr.active = true;
+  cancelAnimationFrame(rr.raf);
+  rr.raf = requestAnimationFrame(rrLoop);
+  setTimeout(function(){ runBusy = false; }, 400);
+}
+function rrResume(){
+  if(!rr.paused) return;
+  rr.paused = false; rr.active = true; rr.lastT = 0;
+  rrShow('runPause', false);
+  rr.raf = requestAnimationFrame(rrLoop);
+}
+function runBegin(){ return openRun(); }
+function runStep(){ return null; }
+function runPick(){ return null; }
+function runFinish(){ return rrFinish(); }
+
+/* ---------- кнопки и калибровка ---------- */
+(function(){
+  const go = $('#runGo');
+  if(go) go.addEventListener('click', function(){ SFX.click(); rrStartBattle(); });
+  const rs = $('#runResume');
+  if(rs) rs.addEventListener('click', function(){ SFX.click(); rrResume(); });
+  const qt = $('#runQuit');
+  if(qt) qt.addEventListener('click', function(){ rr.paused = false; closeRun(); });
+  const off = $('#runOffset');
+  if(off){
+    off.value = state.rrOffset | 0;
+    const lbl = $('#runOffsetV');
+    if(lbl) lbl.textContent = ((state.rrOffset|0) > 0 ? '+' : '') + (state.rrOffset|0) + ' мс';
+    off.addEventListener('input', function(){
+      rr.offset = parseInt(this.value,10) || 0;
+      if(lbl) lbl.textContent = (rr.offset>0?'+':'') + rr.offset + ' мс';
+    });
+    off.addEventListener('change', function(){
+      state.rrOffset = rr.offset;
+      save();
+    });
+  }
+})();
+
 
 /* 4.4.4: пока открыт полноэкранный режим (тир / башня / баттл), главная страница
    не рисуется — см. body.sr-live в CSS. Следим за классом .on у модалок,
@@ -19274,7 +19900,25 @@ function renderAbout(){
         font:900 12px/1 inherit;cursor:pointer">Вернуть карточку цели</button>` : ''}
     ${renderThemeBlock()}
     ${errLogBlock()}
+    <div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);font-size:11px;line-height:1.5;color:#8b98b0">
+      <b style="color:#c8d3e4">Благодарности.</b> Танк дня — «Concept tank» автора
+      <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
+    </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.29.0 · Ритм-Штурм вместо забега</b><br>
+      <b>Забег стал игрой.</b> Вместо десяти открытий — ритм-бой: четыре дорожки,
+      сорок две секунды, четыре ствола меняются сами (пистолет → ПП → винтовка → AWP).
+      Ноты летят к линии, попадание бьёт танк дня, промах бьёт тебя.<br>
+      <b>Вход свободный.</b> Кейс больше не выбирается и не оплачивается, попыток — три
+      в день. Награда за победу: один предмет не выше «редкого» плюс пыль по урону.<br>
+      <b>Босс — танк.</b> Зелёный концепт-танк, отрендеренный и вставленный спрайтом:
+      дёргается от попаданий, вспыхивает, отвечает откатом ствола.<br>
+      <b>Честная сложность.</b> Чарт один и тот же в течение часа — попытки сравнимы,
+      песню можно выучить. Слайдер задержки тапа под ваш телефон: на Android звук и
+      касание опаздывают, без этого «идеально» не поймать.<br>
+      <b>Пауза не сжигает попытку.</b> Свернул игру — бой встал, вернулся — продолжил.<br>
+      <b>Танк из Sketchfab.</b> «Concept tank» автора joshopel, лицензия CC-BY-4.0:
+      форма взята за основу, рендер свой.<br>
       <b style="color:#ffd166">Что нового в 4.28.1 · Апгрейд больше не обманывает</b><br>
       <b>Во время прокрутки сцену не сдвинуть.</b> Пока колесо крутится, ставку, цель,
       процент и модификаторы менять нельзя: «Очистить ставку» и чипы гаснут до остановки.
@@ -19287,15 +19931,6 @@ function renderAbout(){
       но не шанс — теперь чипы заблокированы, и цифра всегда та, по которой идёт RNG.<br>
       <b>Знак в итоге.</b> При удачном апгрейде с дешёвым флоатом печаталось «+-277» —
       теперь честный минус.<br>
-      <b style="color:#ffd166">Что нового в 4.28.0 · Ящики стали настоящими</b><br>
-      <b>Все 23 кейса нарисованы заново.</b> Раньше ящик собирался из плоских граней,
-      и объёма в нём не было. Теперь у каждого кейса своя отрендеренная картинка:
-      скруглённые рёбра, которые ловят свет, тени в щелях, тёмные накладки на всех
-      восьми углах, защёлки с замком и панель с артом ствола.<br>
-      <b>Цвет — из самого кейса.</b> Каждый ящик окрашен в цвет своей редкости,
-      поэтому «Неон» розовый, «Болото» зелёное, а «Чёрный рынок» — красно-чёрный.<br>
-      <b>Файла нет — ящик прежний.</b> Если картинка не загрузилась, игра сама
-      возвращается к старому вектору: без сети каталог выглядит как раньше.<br>
       
     </div>
     <button id="aboutChlogBtn" type="button" style="width:100%;margin:10px 0 0;padding:11px;border-radius:12px;
@@ -23954,12 +24589,11 @@ window.__sr = {
   srLocalFresh, srLocalWorth, srPackInfo, srPackWorse, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
   SR_NOTIFY, rewMark, rewLeft, REW_MS, SR_VIBRATE, FX,
   openCraft, craftDo, renderCraft, renderMiniModes,
-  /* 3.11.0 забег */
+  /* 4.29.0: Ритм-Штурм вместо старого забега */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
-  get run(){ return run; }, RUN_LEN, runMult, RUN_HOUR_MAX, RUN_ARTS, RUN_BONUS_CAP, runCasesList,
+  get run(){ return rr; }, RUN_TRIES, PHASES, BOSS_HP_MAX, PLAYER_HP_MAX, runCasesList,
   set runCaseSel(v){ runCaseSel = v; }, get runCaseSel(){ return runCaseSel; },
-  runArtOffer, RUN_W, RUN_HEAVY_GAP, RUN_NAIL_CHANCE, RUN_ART_EVERY,
-  RUN_BONUS_CAP_HORSE, RUN_BONUS_CAP_MIRROR, RUN_MAX_PRICE,
+  rrFinish, rrStop, rrTank, TANK_ART,
   dayUsedCount, SNIP_TRIES, BAT_HOUR_MAX,
   get upPhase(){ return upPhase; },
   renderInvCount, renderStats, renderAbout, updateOpenBtn,
