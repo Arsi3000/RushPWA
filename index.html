@@ -1816,6 +1816,11 @@ body.theme-dragon header::after{
   height:92px;margin:7px 0;background:none;border:0;overflow:visible}
 .crate .crate-svg{width:100%;height:100%;display:block;overflow:visible;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+/* 4.28.0: готовый рендер ящика. object-fit: contain — карточка 92 px и герой
+   разной высоты, а рисунок квадратный, поэтому вписываем без обрезки */
+.crate .crate-art{width:100%;height:100%;object-fit:contain;display:block;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
+.hero-crate .crate .crate-art{filter:drop-shadow(0 10px 22px rgba(0,0,0,.6))}
 .case .open-in{display:block;width:100%;margin-top:7px;font:inherit;font-size:var(--fs-11, 11px);font-weight:800;
   letter-spacing:.05em;padding:5px 7px;border-radius:10px;cursor:pointer;color:#aab6c9;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);transition:.15s}
@@ -8400,8 +8405,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.27.1';
-const BUILD   = '2026-11-15';
+const VERSION = '4.28.0';
+const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -10934,13 +10939,44 @@ function crateGunOf(c){
   return cand.reduce((a,b) => (b.val > a.val ? b : a), cand[0]);
 }
 
+/* 4.28.0: ЯЩИК — КАРТИНКОЙ.
+   Прошлый ящик рисовался узлами SVG: три грани, залитые на фиксированный процент
+   темнее. Форму он передавал, а «дорогой» вид — нет. Теперь каждый кейс — это
+   готовый PNG, отрендеренный в Blender нашим светом, со своей палитрой из tier
+   и артом ствола в панели. Файла нет — молча возвращаемся к прежнему SVG,
+   поэтому откат не нужен: достаточно не заливать файл. */
+const CASE_ART_BASE = 'https://arsi3000.github.io/RushPWA/cases/';
+const CASE_ART_V = 1;
+const CASE_ART_BAD = Object.create(null);
+try{ window.CASE_ART_BAD = CASE_ART_BAD; }catch(e){}
+function caseArtUrl(c){ return CASE_ART_BASE + c.id + '.png?v=' + CASE_ART_V; }
+/* картинка не открылась (нет сети, файл не залит) — перерисовываем этот ящик
+   прежним вектором и запоминаем, чтобы не дёргать сеть на каждом экране */
+function crateArtFail(img){
+  const box = img && img.parentNode;
+  if(!box || !box.dataset) return;
+  const id = box.dataset.decal;
+  const c = CASES.filter(x => x.id === id)[0];
+  if(id) CASE_ART_BAD[id] = 1;
+  if(!c) return;
+  box.outerHTML = crateHtml(c, box.dataset.big === '1');
+}
+/* onerror в разметке вызывается из глобальной области, поэтому обе функции
+   обязаны быть в window — иначе «crateArtFail is not defined» и ящик-битыш */
+try{ window.crateArtFail = crateArtFail; }catch(e){}
 function crateHtml(c, big){
   /* бейдж «НОЖИ» — только на мелкой карточке: в крупной он улетал к правому краю
      блока и висел в пустоте, а подзаголовок героя и так говорит «с ножами» */
-  return `<div class="crate" data-decal="${c.id}">${crateSvg(c, {big})}
-    ${(!big && caseHasKnife(c)) ? '<span class="knife-tag">НОЖИ</span>' : ''}</div>`;
+  const tag = (!big && caseHasKnife(c)) ? '<span class="knife-tag">НОЖИ</span>' : '';
+  if(CASE_ART_BAD[c.id]){
+    return `<div class="crate" data-decal="${c.id}">${crateSvg(c, {big})}${tag}</div>`;
+  }
+  return `<div class="crate" data-decal="${c.id}" data-big="${big ? 1 : 0}">` +
+    `<img class="crate-art" src="${caseArtUrl(c)}" alt="" loading="lazy" decoding="async"` +
+    ` onerror="crateArtFail(this)">${tag}</div>`;
 }
 
+try{ window.crateHtml = crateHtml; }catch(e){}
 const CASES_PER_ROW = () => {
   const w = window.innerWidth;
   if(w >= 820) return 5;
@@ -19206,6 +19242,15 @@ function renderAbout(){
     ${renderThemeBlock()}
     ${errLogBlock()}
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.28.0 · Ящики стали настоящими</b><br>
+      <b>Все 23 кейса нарисованы заново.</b> Раньше ящик собирался из плоских граней,
+      и объёма в нём не было. Теперь у каждого кейса своя отрендеренная картинка:
+      скруглённые рёбра, которые ловят свет, тени в щелях, тёмные накладки на всех
+      восьми углах, защёлки с замком и панель с артом ствола.<br>
+      <b>Цвет — из самого кейса.</b> Каждый ящик окрашен в цвет своей редкости,
+      поэтому «Неон» розовый, «Болото» зелёное, а «Чёрный рынок» — красно-чёрный.<br>
+      <b>Файла нет — ящик прежний.</b> Если картинка не загрузилась, игра сама
+      возвращается к старому вектору: без сети каталог выглядит как раньше.<br>
       <b style="color:#ffd166">Что нового в 4.27.1 · Арты встали на свои места</b><br>
       <b>Картинки больше не путаются.</b> Бита показывала «Призрака», катана — дубовую биту,
       бензопила — катану: у новых скинов совпали номера. Первый из двенадцати получил
