@@ -2152,6 +2152,8 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
 .mini-card:hover{border-color:rgba(255,255,255,.28);color:#fff}
 .mini-ic{font-size:var(--fs-18, 18px);line-height:1}
 .mini-t{font-weight:800;font-size:var(--fs-14, 14px)}
+/* 4.30.0: длинный заголовок режима не влезал в плитку — на ступень мельче */
+.mini-t-rr{font-size:var(--fs-13, 13px);letter-spacing:-.01em}
 .mini-d{font-size:var(--fs-11, 11px);color:#8d9ab2;line-height:1.35}
 
 
@@ -5122,6 +5124,19 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   border:1px solid rgba(255,176,46,.36);margin-bottom:10px}
 .rr-card h4{font-size:26px;font-weight:900;line-height:1.1;margin-bottom:8px}
 .rr-card h4 span{color:#ffb02e;text-shadow:0 0 24px rgba(255,176,46,.5)}
+/* 4.30.0: экран старта — в стиле прототипа: SKIN RUSH по буквам радугой,
+   под ним маленькое «· РИТМ-ШТУРМ ·» циановым свечением */
+.rr-logo{display:flex;justify-content:center;gap:.055em;margin-bottom:9px;
+  font-size:clamp(25px,8.2vw,36px);font-weight:900;line-height:1;letter-spacing:.01em;
+  animation:rrLogoPulse 2.8s ease-in-out infinite}
+.rr-logo b{font-weight:900}
+@keyframes rrLogoPulse{
+  0%,100%{filter:drop-shadow(0 0 13px rgba(34,230,255,.32))}
+  50%{filter:drop-shadow(0 0 22px rgba(224,92,255,.48))}
+}
+@media(prefers-reduced-motion:reduce){.rr-logo{animation:none;filter:drop-shadow(0 0 14px rgba(34,230,255,.35))}}
+.rr-subtx{font-size:11px;font-weight:900;letter-spacing:.44em;text-indent:.44em;color:#22e6ff;
+  text-shadow:0 0 12px rgba(34,230,255,.8),0 0 26px rgba(34,230,255,.45);margin-bottom:15px}
 .rr-card p{font-size:12.5px;line-height:1.55;color:#98a5ba;margin-bottom:14px}
 .rr-card p b{color:#ffd08a}
 .rr-rules{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;text-align:left}
@@ -5811,7 +5826,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
     </button>
     <button class="mini-card" id="openRunTrial">
       <span class="mini-ic">🎵</span>
-      <span class="mini-t">Ритм-Штурм · танк дня</span>
+      <span class="mini-t mini-t-rr">Ритм-Штурм · танк дня</span>
       <span class="mini-d" id="runLeft">3 забега в день · ритм-бой на 42 секунды</span>
     </button>
     <button class="mini-card" id="openTowerTrial">
@@ -6268,8 +6283,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
     </div>
     <div id="runStart" class="rr-screen on">
       <div class="rr-card">
-        <div class="rr-badge">мини-игра</div>
-        <h4>Ритм-<span>Штурм</span></h4>
+        <div class="rr-logo" aria-label="SKIN RUSH"><b style="color:#22e6ff">S</b><b style="color:#4aa8ff">K</b><b style="color:#6a7bff">I</b><b style="color:#9b5cff">N</b><b style="color:#e05cff">R</b><b style="color:#ff5f9e">U</b><b style="color:#ff8a5c">S</b><b style="color:#ffd24a">H</b></div>
+        <div class="rr-subtx">· РИТМ-ШТУРМ ·</div>
         <p>Танк дня на <b>900 HP</b>. Сорок две секунды, четыре ствола меняются сами. Вход свободный, попыток в день — три.</p>
         <div class="rr-rules">
           <div><i>🎯</i><span>Нота на линии — жми дорожку. Точнее попал — сильнее удар.</span></div>
@@ -8493,7 +8508,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.29.1';
+const VERSION = '4.30.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -9315,12 +9330,13 @@ const MUSIC_SOURCES = musSourceList();
 const MUSIC_SCENE_CFG = {
   menu:  { rate: 1.00, vol: 0.32 },
   spin:  { rate: 1.00, vol: 0.12 },   /* вариант B: на рулетке уходит в подложку */
-  tower: { rate: 0.95, vol: 0.30 }
+  tower: { rate: 0.95, vol: 0.30 },
+  run:   { rate: 1.00, vol: 0.08 }    /* 4.30.0: под бит «Ритм-Штурма» — еле слышно */
 };
 /* 4.13.1: сцены крутят ОДИН И ТОТ ЖЕ трек, поэтому переход между ними —
    это только громкость (и темп, если он разный), а не новый источник.
    Иначе меню→рулетка обрывало трек и он начинался с первой секунды. */
-const MUSIC_CONTINUOUS = { menu: 1, spin: 1, tower: 1 };
+const MUSIC_CONTINUOUS = { menu: 1, spin: 1, tower: 1, run: 1 };
 
 function musBusGain(){
   const a = audio();
@@ -17367,14 +17383,17 @@ const rr = {
 function rrTone(freq,dur,vol,type,delay){
   try{
     const a = audio(); if(!a) return;
+    /* 4.30.0: звук «Ритм-Штурма» шёл мимо sfxMaster — тумблер 🔇 его не глушил,
+       а общая громкость 0.85 не применялась. Теперь всё в одну шину. */
+    if(sfxIsMuted()) return;
     const t0 = a.currentTime + (delay||0);
     const o = a.createOscillator(), g = a.createGain();
     o.type = type || 'sine';
-    o.frequency.setValueAtTime(freq, t0);
+    o.frequency.setValueAtTime(Math.max(20,freq), t0);
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(vol||0.06, t0+0.006);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
-    o.connect(g); g.connect(a.destination);
+    o.connect(g); g.connect(sfxMaster || a.destination);
     o.start(t0); o.stop(t0+dur+0.02);
   }catch(e){}
 }
@@ -17388,6 +17407,97 @@ function rrMissSound(){ rrTone(120,0.18,0.07,'sawtooth'); rrTone(80,0.22,0.05,'s
 function rrPhaseSound(){ rrTone(330,0.4,0.06,'sine'); rrTone(440,0.4,0.05,'sine',0.05); rrTone(660,0.5,0.04,'sine',0.1); }
 function rrWinSound(){ [523,659,784,1046].forEach(function(f,i){ rrTone(f,0.35,0.07,'triangle',i*0.09); }); }
 function rrLoseSound(){ [330,262,196].forEach(function(f,i){ rrTone(f,0.4,0.06,'sine',i*0.12); }); }
+
+/* ---------- 4.30.0: БИТ ПОД РИТМ-БОЙ ----------
+   Чарт собран в единицах 468 мс (переменная beat в rrBuildChart),
+   поэтому бит идёт по той же сетке — удары ложатся под ноты.
+   Планируем на 150 мс вперёд по часам Web Audio: rAF в WebView гуляет,
+   а расписание в audio-времени точное. Файлов нет — синтез, как у SFX. */
+const RR_BEAT_SEC = 0.468;
+const rrBeat = { on:false, next:0, idx:0, gain:null, musOn:false };
+
+function rrBeatBus(){
+  const a = audio(); if(!a) return null;
+  if(!rrBeat.gain){
+    rrBeat.gain = a.createGain();
+    rrBeat.gain.gain.value = 0.5;
+    rrBeat.gain.connect(sfxMaster || a.destination);
+  }
+  return rrBeat.gain;
+}
+function rrBeatKick(t){
+  const a = audio(); const bus = rrBeatBus(); if(!a||!bus) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(44, t + 0.09);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.85, t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+  o.connect(g); g.connect(bus); o.start(t); o.stop(t + 0.18);
+}
+function rrBeatNoise(t, dur, freq, q, vol){
+  const a = audio(); const bus = rrBeatBus(); if(!a||!bus||!sfxNoise) return;
+  const src = a.createBufferSource(); src.buffer = sfxNoise;
+  const f = a.createBiquadFilter();
+  f.type = 'highpass'; f.frequency.value = freq; f.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(bus);
+  src.start(t); src.stop(t + dur + 0.02);
+}
+function rrBeatBass(t, freq, dur){
+  const a = audio(); const bus = rrBeatBus(); if(!a||!bus) return;
+  const o = a.createOscillator(), g = a.createGain();
+  const f = a.createBiquadFilter();
+  o.type = 'sawtooth'; o.frequency.value = freq;
+  f.type = 'lowpass'; f.frequency.setValueAtTime(420, t);
+  f.frequency.exponentialRampToValueAtTime(150, t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.20, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + 0.02);
+}
+/* один удар сетки: бочка 1 и 3, снейр 2 и 4, хэты восьмыми, бас на долю */
+function rrBeatBar(i, t){
+  const p = i % 4;
+  if(p === 0 || p === 2) rrBeatKick(t);
+  if(p === 1 || p === 3) rrBeatNoise(t, 0.11, 1600, 1.1, 0.20);
+  rrBeatNoise(t, 0.035, 7800, 0.9, p % 2 ? 0.10 : 0.055);
+  rrBeatNoise(t + RR_BEAT_SEC * 0.5, 0.028, 8200, 0.9, 0.045);
+  if(p === 0){
+    const roots = [55, 55, 46.25, 49];
+    rrBeatBass(t, roots[(i >> 2) % roots.length], RR_BEAT_SEC * 1.7);
+  }
+}
+function rrBeatStart(){
+  const a = audio(); if(!a) return;
+  if(sfxIsMuted()) return;
+  rrBeatBus();
+  rrBeat.idx = Math.max(0, Math.floor((rr.songTime || 0) / (RR_BEAT_SEC * 1000)));
+  rrBeat.next = a.currentTime + 0.14;
+  rrBeat.on = true;
+  /* трек уходит в тихую подложку, иначе он спорит с битом */
+  try{ musSet('run'); rrBeat.musOn = true; }catch(e){}
+}
+function rrBeatStop(){
+  rrBeat.on = false;
+  if(rrBeat.musOn){ try{ musSet('menu'); }catch(e){} rrBeat.musOn = false; }
+}
+function rrBeatTick(){
+  if(!rrBeat.on) return;
+  const a = audio(); if(!a) return;
+  /* догон: после сворачивания next отстаёт, и без этого выпалила бы пачка нот разом */
+  if(rrBeat.next < a.currentTime) rrBeat.next = a.currentTime + 0.02;
+  let guard = 0;
+  while(rrBeat.next < a.currentTime + 0.15 && guard++ < 16){
+    rrBeatBar(rrBeat.idx, rrBeat.next);
+    rrBeat.next += RR_BEAT_SEC;
+    rrBeat.idx++;
+  }
+}
 
 /* ---------- чарт: одинаковый в течение часа ---------- */
 function rrSeed(){
@@ -17549,7 +17659,9 @@ function rrApplyHit(grade, lane, note){
   rr.weaponKick = 1;
   rr.recoil = 1;
   rrHitSound(grade, note.phase);
-  try{ if(navigator.vibrate) navigator.vibrate(grade==='perfect'?12:8); }catch(e){}
+  /* 4.30.0: через SR_VIBRATE — иначе вибрация бьёт при выключенном тумблере
+     и не доходит до нативного моста в APK */
+  try{ if(typeof SR_VIBRATE !== 'undefined') SR_VIBRATE.play(grade==='perfect' ? [14] : [8]); }catch(e){}
 }
 function rrDamageBoss(dmg, lane){
   rr.bossHp = Math.max(0, rr.bossHp - dmg);
@@ -17612,7 +17724,7 @@ function rrRenderWeapon(w){
 function rrUpdate(dt){
   if(rr.countdown > 0){
     rr.countdown -= dt;
-    if(rr.countdown <= 0){ rr.running = true; rr.songTime = 0; rr.lastT = 0; }
+    if(rr.countdown <= 0){ rr.running = true; rr.songTime = 0; rr.lastT = 0; rrBeatStart(); }
     return;
   }
   rr.songTime += dt;
@@ -17878,6 +17990,7 @@ function rrLoop(t){
   const dt = Math.min(50, t - rr.lastT);
   rr.lastT = t;
   rrUpdate(dt);
+  if(rr.running && !rr.paused) rrBeatTick();
   rrRender();
   if(rr.active) rr.raf = requestAnimationFrame(rrLoop);
 }
@@ -17955,6 +18068,7 @@ function openRun(){
 }
 function rrStop(){
   rr.active = false; rr.running = false;
+  rrBeatStop();
   cancelAnimationFrame(rr.raf);
   document.removeEventListener('keydown', rrKeyDown);
   document.removeEventListener('keyup', rrKeyUp);
@@ -17977,6 +18091,7 @@ document.addEventListener('visibilitychange', function(){
   if(!document.hidden) return;
   if(!rr.active || rr.paused) return;
   rr.paused = true; rr.active = false;
+  rrBeatStop();
   cancelAnimationFrame(rr.raf);
   rrShow('runPause', true);
 });
@@ -18088,6 +18203,7 @@ function rrStartBattle(){
 function rrResume(){
   if(!rr.paused) return;
   rr.paused = false; rr.active = true; rr.lastT = 0;
+  rrBeatStart();
   rrShow('runPause', false);
   rr.raf = requestAnimationFrame(rrLoop);
 }
@@ -19876,13 +19992,45 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.30.0 · Бит и звук</b><br>
+      <b>У «Ритм-Штурма» появился бит.</b> Бочка, снейр, хэты и бас идут по той же сетке,
+      что и ноты, — попадать стало во что, а не в тишину. Файлов не добавилось: бит
+      синтезируется на лету и меняется с каждым часом вместе с чартом.<br>
+      <b>Звук собран в одну шину.</b> Раньше звуки боя шли мимо общего выключателя: тумблер 🔇
+      их не глушил, а общая громкость к ним не применялась. Теперь глушится всё, и вибрация
+      тоже — она больше не бьёт при выключенном тумблере.<br>
+      <b>Экран старта в стиле прототипа.</b> Вместо заголовка — логотип SKIN RUSH по буквам
+      радугой и под ним маленькое «· РИТМ-ШТУРМ ·» циановым свечением.<br>
+      <b>Плитка в «Испытаниях».</b> Заголовок режима чуть мельче — длинная строка больше
+      не жмётся к краям.<br>
       <b style="color:#ffd166">Что нового в 4.29.1</b><br>
       <b>Экран старта «Ритм-Штурма» стал чище:</b> убрали ползунок задержки тапа и подсказку
       с английскими клавишами — на телефоне они только мешали. Под кнопкой «В бой» больше
       ничего не просвечивает.<br>
       <b>Плитка режима переименована:</b> теперь она называется «Ритм-Штурм · танк дня»,
       а подпись честно говорит, что забегов три в день и сколько осталось.<br>
-      <b style="color:#ffd166">Что нового в 4.29.0 · Ритм-Штурм вместо забега</b><br>
+
+    </div>
+    <button id="aboutChlogBtn" type="button" style="width:100%;margin:10px 0 0;padding:11px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#c9d4e6;
+      font:900 12.5px/1 inherit;cursor:pointer">Вся история версий ▾</button>
+    <div id="aboutChlogOld" hidden>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
+      <b style="color:#7dff9b">Что нового в 4.28.1 · Апгрейд больше не обманывает</b><br>
+      <b>Во время прокрутки сцену не сдвинуть.</b> Пока колесо крутится, ставку, цель,
+      процент и модификаторы менять нельзя: «Очистить ставку» и чипы гаснут до остановки.
+      Раньше на середине можно было очистить ставку — неудачный апгрейд отменялся
+      без потерь, а оплаченный щит сгорал.<br>
+      <b>Подмены цели на ходу больше нет.</b> Исход и выплата считаются по снимку,
+      сделанному в момент запуска. Раньше можно было крутить на дешёвую цель с высоким
+      шансом, а перед остановкой подставить дорогую и получить её.<br>
+      <b>Процент показывает то, что крутится.</b> Клик по «75 %» на ходу менял подпись,
+      но не шанс — теперь чипы заблокированы, и цифра всегда та, по которой идёт RNG.<br>
+      <b>Знак в итоге.</b> При удачном апгрейде с дешёвым флоатом печаталось «+-277» —
+      теперь честный минус.<br>
+    </div>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(99,179,255,.12),rgba(40,90,140,.04));border:1px solid rgba(99,179,255,.3)">
+      <b style="color:#7dff9b">Что нового в 4.29.0 · Ритм-Штурм вместо забега</b><br>
       <b>Забег стал игрой.</b> Вместо десяти открытий — ритм-бой: четыре дорожки,
       сорок две секунды, четыре ствола меняются сами (пистолет → ПП → винтовка → AWP).
       Ноты летят к линии, попадание бьёт танк дня, промах бьёт тебя.<br>
@@ -19895,24 +20043,7 @@ function renderAbout(){
       <b>Пауза не сжигает попытку.</b> Свернул игру — бой встал, вернулся — продолжил.<br>
       <b>Танк из Sketchfab.</b> «Concept tank» автора joshopel, лицензия CC-BY-4.0:
       форма взята за основу, рендер свой.<br>
-      <b style="color:#ffd166">Что нового в 4.28.1 · Апгрейд больше не обманывает</b><br>
-      <b>Во время прокрутки сцену не сдвинуть.</b> Пока колесо крутится, ставку, цель,
-      процент и модификаторы менять нельзя: «Очистить ставку» и чипы гаснут до остановки.
-      Раньше на середине можно было очистить ставку — неудачный апгрейд отменялся
-      без потерь, а оплаченный щит сгорал.<br>
-      <b>Подмены цели на ходу больше нет.</b> Исход и выплата считаются по снимку,
-      сделанному в момент запуска. Раньше можно было крутить на дешёвую цель с высоким
-      шансом, а перед остановкой подставить дорогую и получить её.<br>
-      <b>Процент показывает то, что крутится.</b> Клик по «75 %» на ходу менял подпись,
-      но не шанс — теперь чипы заблокированы, и цифра всегда та, по которой идёт RNG.<br>
-      <b>Знак в итоге.</b> При удачном апгрейде с дешёвым флоатом печаталось «+-277» —
-      теперь честный минус.<br>
-      
     </div>
-    <button id="aboutChlogBtn" type="button" style="width:100%;margin:10px 0 0;padding:11px;border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#c9d4e6;
-      font:900 12.5px/1 inherit;cursor:pointer">Вся история версий ▾</button>
-    <div id="aboutChlogOld" hidden>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
       <b style="color:#ffd166">Что нового в 4.6.0</b><br>
       <b>Музыка.</b> Три сцены синтезом на Web Audio — меню, прокрутка кейса, триумф.
