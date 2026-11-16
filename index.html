@@ -5128,20 +5128,11 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rr-rules div{display:flex;gap:9px;align-items:center;padding:8px 10px;border-radius:9px;font-size:11.5px;
   line-height:1.45;color:#c8d3e4;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
 .rr-rules i{flex:0 0 18px;font-style:normal;text-align:center}
-.rr-cal{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;border-radius:9px;
-  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-size:11px;color:#8b98b0}
-.rr-cal span{flex:0 0 auto}
-.rr-cal input{flex:1;min-width:0;accent-color:#ffb02e}
-.rr-cal b{flex:0 0 50px;text-align:right;color:#ffd08a;font-variant-numeric:tabular-nums}
 .rr-btn{width:100%;padding:14px;border:0;border-radius:12px;font:inherit;font-size:13px;font-weight:900;
   background:linear-gradient(180deg,#ffd06a,#e9a316);color:#2a1c00;cursor:pointer;margin-top:2px}
 .rr-btn:active{transform:translateY(1px)}
 .rr-btn.rr-ghost{background:rgba(255,255,255,.06);color:#c9d4e6;border:1px solid rgba(255,255,255,.12);
   box-shadow:none;margin-top:8px;font-weight:800}
-.rr-keys{display:flex;gap:6px;justify-content:center;margin-top:10px}
-.rr-keys kbd{min-width:32px;padding:6px 0;border-radius:7px;background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.13);border-bottom-width:2px;font-size:11px;font-weight:900;
-  font-family:ui-monospace,monospace;color:#dbe7fb;text-align:center}
 .rr-head{text-align:center;margin-bottom:14px}
 .rr-grade{font-size:56px;font-weight:900;line-height:1}
 .rr-grade.S{color:#ffd76a;text-shadow:0 0 34px rgba(255,215,106,.75)}
@@ -5701,7 +5692,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <div class="trs-ic">🕹</div>
         <div class="trs-txt">
           <div class="trs-t">Испытания откроются <b id="trsLeft">через 24 ч</b></div>
-          <div class="trs-d">Тир, башня, барабан, забег и баттл — пять режимов на каждый день</div>
+          <div class="trs-d">Тир, башня, барабан, ритм-штурм и баттл — пять режимов на каждый день</div>
         </div>
         <button class="trs-go" id="trsOpen" type="button">Открыть сейчас</button>
       </div>
@@ -5819,9 +5810,9 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       <span class="mini-d" id="batLeft">10 боёв в час · вы и три бота, победитель забирает всё</span>
     </button>
     <button class="mini-card" id="openRunTrial">
-      <span class="mini-ic">🏃</span>
-      <span class="mini-t">Забег · 10 открытий</span>
-      <span class="mini-d" id="runLeft">10 забегов в час · артефакты между открытиями, рекорд</span>
+      <span class="mini-ic">🎵</span>
+      <span class="mini-t">Ритм-Штурм · танк дня</span>
+      <span class="mini-d" id="runLeft">3 забега в день · ритм-бой на 42 секунды</span>
     </button>
     <button class="mini-card" id="openTowerTrial">
       <span class="mini-ic">🗼</span>
@@ -6286,13 +6277,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
           <div><i>💀</i><span>Промах бьёт по тебе: −8 HP. Кончилось здоровье — бой проигран.</span></div>
           <div><i>🏆</i><span>Уничтожил танк — предмет не выше «редкого» и пыль по урону.</span></div>
         </div>
-        <div class="rr-cal">
-          <span>Задержка тапа</span>
-          <input type="range" id="runOffset" min="-150" max="150" step="5" value="0">
-          <b id="runOffsetV">0 мс</b>
-        </div>
         <button class="rr-btn" id="runGo">В бой</button>
-        <div class="rr-keys"><kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd></div>
       </div>
     </div>
     <div id="runPause" class="rr-screen">
@@ -8508,7 +8493,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.29.0';
+const VERSION = '4.29.1';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -17278,8 +17263,8 @@ function renderMiniModes(){
   if(r){
     const left = runLeft();
     r.textContent = left > 0
-      ? `Попыток сегодня: ${left} · танк дня, ритм-бой · рекорд ${(state.runBest|0).toLocaleString('ru-RU')}`
-      : 'На этот час всё — новая десятка в начале следующего';
+      ? `3 забега в день · осталось ${left} · рекорд ${(state.runBest|0).toLocaleString('ru-RU')}`
+      : '3 забега в день · на сегодня всё, приходите завтра';
   }
   if(s){
     const left = Math.max(0, TIR_SESSIONS - dayUsedCount('snip'));
@@ -17945,7 +17930,7 @@ function openRun(){
   rr.songTime = 0; rr.running = false; rr.finished = false;
   rr.phase = -1; rr.win = false; rr.paused = false;
   rr.countdown = RUN_COUNTDOWN + 400; rr.lastT = 0; rr.active = false;
-  rr.offset = state.rrOffset | 0;
+  rr.offset = 0;
 
   rrShow('runStart', true);
   rrShow('runPause', false);
@@ -18119,20 +18104,6 @@ function runFinish(){ return rrFinish(); }
   if(rs) rs.addEventListener('click', function(){ SFX.click(); rrResume(); });
   const qt = $('#runQuit');
   if(qt) qt.addEventListener('click', function(){ rr.paused = false; closeRun(); });
-  const off = $('#runOffset');
-  if(off){
-    off.value = state.rrOffset | 0;
-    const lbl = $('#runOffsetV');
-    if(lbl) lbl.textContent = ((state.rrOffset|0) > 0 ? '+' : '') + (state.rrOffset|0) + ' мс';
-    off.addEventListener('input', function(){
-      rr.offset = parseInt(this.value,10) || 0;
-      if(lbl) lbl.textContent = (rr.offset>0?'+':'') + rr.offset + ' мс';
-    });
-    off.addEventListener('change', function(){
-      state.rrOffset = rr.offset;
-      save();
-    });
-  }
 })();
 
 
@@ -19905,6 +19876,12 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.29.1</b><br>
+      <b>Экран старта «Ритм-Штурма» стал чище:</b> убрали ползунок задержки тапа и подсказку
+      с английскими клавишами — на телефоне они только мешали. Под кнопкой «В бой» больше
+      ничего не просвечивает.<br>
+      <b>Плитка режима переименована:</b> теперь она называется «Ритм-Штурм · танк дня»,
+      а подпись честно говорит, что забегов три в день и сколько осталось.<br>
       <b style="color:#ffd166">Что нового в 4.29.0 · Ритм-Штурм вместо забега</b><br>
       <b>Забег стал игрой.</b> Вместо десяти открытий — ритм-бой: четыре дорожки,
       сорок две секунды, четыре ствола меняются сами (пистолет → ПП → винтовка → AWP).
@@ -19914,8 +19891,7 @@ function renderAbout(){
       <b>Босс — танк.</b> Зелёный концепт-танк, отрендеренный и вставленный спрайтом:
       дёргается от попаданий, вспыхивает, отвечает откатом ствола.<br>
       <b>Честная сложность.</b> Чарт один и тот же в течение часа — попытки сравнимы,
-      песню можно выучить. Слайдер задержки тапа под ваш телефон: на Android звук и
-      касание опаздывают, без этого «идеально» не поймать.<br>
+      песню можно выучить.<br>
       <b>Пауза не сжигает попытку.</b> Свернул игру — бой встал, вернулся — продолжил.<br>
       <b>Танк из Sketchfab.</b> «Concept tank» автора joshopel, лицензия CC-BY-4.0:
       форма взята за основу, рендер свой.<br>
