@@ -2151,7 +2151,10 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
 .mini-card:hover{border-color:rgba(255,255,255,.28);color:#fff}
 .mini-ic{font-size:var(--fs-18, 18px);line-height:1}
-.mini-t{font-weight:800;font-size:var(--fs-14, 14px)}
+.mini-t{font-weight:900;font-size:var(--fs-14, 14px);letter-spacing:-.005em;
+  background:linear-gradient(92deg,#ffd76a,#ff8a3d 55%,#ff2d9b);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 10px rgba(255,138,61,.22))}
 /* 4.30.0: длинный заголовок режима не влезал в плитку — на ступень мельче */
 .mini-t-rr{font-size:var(--fs-13, 13px);letter-spacing:-.01em}
 .mini-d{font-size:var(--fs-11, 11px);color:#8d9ab2;line-height:1.35}
@@ -5167,6 +5170,49 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rr-nm{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rr-vl{font-size:11px;color:#ffd08a;font-weight:800;margin-top:2px}
 </style>
+<style>
+/* ============ 4.31.0: «МЕТКИЙ НОЖ» + общие НАСТРОЙКИ ============ */
+#knifeModal .sheet{padding:0!important;width:min(96vw,560px)!important;max-width:min(96vw,560px)!important;
+  height:94vh!important;max-height:94vh!important;position:relative;overflow:hidden;display:block;background:#06080e}
+#knifeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;border-radius:14px}
+#knTop{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;
+  justify-content:space-between;padding:10px 12px 0;pointer-events:none}
+#knTop .kn-ib{pointer-events:auto;width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(12,14,28,.62);color:#e8ecf5;font-size:14px;display:grid;place-items:center;cursor:pointer}
+#knTop .kn-ib:active{transform:scale(.94)}
+#knHud{text-align:center;flex:1;min-width:0}
+#knScore{font-size:34px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 20px rgba(255,215,106,.45)}
+#knHud .kn-lbl{font-size:9px;letter-spacing:.18em;font-weight:800;color:#8b98b0;margin-top:3px}
+#knTries{display:flex;gap:5px;justify-content:center;margin-top:7px}
+#knTries i{width:18px;height:4px;border-radius:3px;background:rgba(255,255,255,.14)}
+#knTries i.on{background:linear-gradient(90deg,#ffd06a,#e9a316);box-shadow:0 0 9px rgba(255,176,46,.55)}
+#knInfo{position:absolute;left:0;right:0;bottom:14px;z-index:5;text-align:center;
+  font-size:11px;font-weight:800;color:#8b98b0;letter-spacing:.04em;pointer-events:none}
+#knInfo b{color:#ffd08a}
+#knBanner{position:absolute;left:0;right:0;top:30%;z-index:7;text-align:center;pointer-events:none;
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
+#knBanner.show{opacity:1;transform:none}
+#knBanner b{display:block;font-size:26px;font-weight:900;color:#fff;text-shadow:0 0 24px rgba(255,215,106,.6),0 2px 8px #000}
+#knBanner span{display:block;font-size:11px;letter-spacing:.16em;font-weight:800;color:#ffd08a;margin-top:5px}
+#setModal .sheet{width:min(96vw,440px)}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 2px;
+  border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;color:#dfe7f4}
+.set-row:last-of-type{border-bottom:0}
+.sw{width:50px;height:29px;border-radius:99px;background:rgba(255,255,255,.14);position:relative;
+  cursor:pointer;transition:.22s;flex:0 0 auto;border:0}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
+  background:#fff;transition:.22s cubic-bezier(.3,1.4,.5,1)}
+.sw.on{background:linear-gradient(90deg,#ff2d9b,#ffd76a)}
+.sw.on::after{left:24px}
+.seg{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;color:#8b98b0;font-family:inherit;font-weight:800;
+  font-size:11px;padding:6px 9px;border-radius:8px;cursor:pointer}
+.seg button.on{background:rgba(255,255,255,.17);color:#fff}
+#fpsBadge{position:fixed;left:8px;bottom:8px;z-index:9998;font:800 10px/1 ui-monospace,monospace;
+  color:#6f7ea0;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:5px;pointer-events:none}
+.sr-cb #knifeCanvas{filter:contrast(1.12) saturate(1.15)}
+</style>
 </head>
 <body>
 <!-- 4.7.2: пока заставка не начала играть, экран закрыт этой шторкой.
@@ -5819,10 +5865,10 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       <span class="mini-t">Тир · стрельба по карточкам</span>
       <span class="mini-d" id="snipLeft">2 сессии в день · 5 выстрелов · 18 секунд · очки 150–300 по редкости</span>
     </button>
-    <button class="mini-card" id="openBatTrial">
-      <span class="mini-ic">🎰</span>
-      <span class="mini-t">Баттл</span>
-      <span class="mini-d" id="batLeft">10 боёв в час · вы и три бота, победитель забирает всё</span>
+    <button class="mini-card" id="openKnifeTrial">
+      <span class="mini-ic">🔪</span>
+      <span class="mini-t">Меткий нож · три уровня</span>
+      <span class="mini-d" id="knifeLeft">3 сессии в день · 10 ножей, яблоки, серия</span>
     </button>
     <button class="mini-card" id="openRunTrial">
       <span class="mini-ic">🎵</span>
@@ -6204,6 +6250,53 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   </div>
 </div>
 
+<!-- ==================== 4.31.0: МЕТКИЙ НОЖ ==================== -->
+<div class="modal" id="knifeModal">
+  <div class="sheet">
+    <canvas id="knifeCanvas"></canvas>
+    <div id="knTop">
+      <button class="kn-ib" id="knPauseBtn" aria-label="Пауза">❚❚</button>
+      <div id="knHud">
+        <div id="knScore">0</div>
+        <div class="kn-lbl">ОЧКИ</div>
+        <div id="knTries"></div>
+      </div>
+      <button class="kn-ib" id="knSetBtn" aria-label="Настройки">⚙</button>
+    </div>
+    <div id="knInfo">Уровень <b id="knLevel">—</b> · ножей <b id="knThrowsLeft">10</b> · яблок <b id="knApplesLeft">0</b></div>
+    <div id="knBanner"></div>
+
+    <div id="knStart" class="rr-screen on">
+      <div class="rr-card">
+        <div class="rr-logo" aria-label="SKIN RUSH"><b style="color:#22e6ff">S</b><b style="color:#4aa8ff">K</b><b style="color:#6a7bff">I</b><b style="color:#9b5cff">N</b><b style="color:#e05cff">R</b><b style="color:#ff5f9e">U</b><b style="color:#ff8a5c">S</b><b style="color:#ffd24a">H</b></div>
+        <div class="rr-subtx">· МЕТКИЙ НОЖ ·</div>
+        <p>Три уровня подряд. Десять ножей, вращающаяся мишень, яблоки. Попал в свой нож — все выпадают.</p>
+        <div class="rr-rules">
+          <div><i>🎯</i><span>Тапни — нож летит в мишень. Целься в свободный сектор.</span></div>
+          <div><i>🍎</i><span>Уровень 1 — просто воткни десять. Уровни 2 и 3 — ещё и расколи яблоки.</span></div>
+          <div><i>🔥</i><span>Бросай без пауз дольше двух секунд — серия даёт до ×5 к очкам.</span></div>
+          <div><i>💀</i><span>Попал в свой нож — сессия закончена. Мишень разгоняется к концу.</span></div>
+        </div>
+        <button class="rr-btn" id="knGo">Играть</button>
+        <div class="rr-sub" style="margin-top:10px">Сессий: <b id="knStartLeft">3</b>/3 · рекорд <b id="knStartBest">0</b> · нож: <b id="knStartSkin">—</b></div>
+      </div>
+    </div>
+
+    <div id="knPause" class="rr-screen">
+      <div class="rr-card">
+        <div class="rr-badge">пауза</div>
+        <h4>Стоп-кадр</h4>
+        <p>Сессия не сгорает. Продолжишь — бросок пойдёт с того же места.</p>
+        <button class="rr-btn" id="knResume">Продолжить</button>
+        <button class="rr-btn rr-ghost" id="knQuit">Закончить сессию</button>
+      </div>
+    </div>
+
+    <div id="knLevelDone" class="rr-screen"><div class="rr-card" id="knLevelBody"></div></div>
+    <div id="knResult" class="rr-screen"></div>
+  </div>
+</div>
+
 <!-- ТИР 2.0 -->
 <div class="modal sr-tir" id="sniperModal">
   <div class="sheet tir-sheet">
@@ -6213,6 +6306,9 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <div class="tir-h"><span>Рекорд</span><b id="tirBest">0</b></div>
         <div class="tir-h"><span>Осталось</span><b id="tirSess">2</b></div>
       </div>
+      <button id="tirSetBtn" type="button" aria-label="Настройки"
+        style="width:34px;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.14);
+        background:rgba(12,14,28,.6);color:#e8ecf5;font-size:14px;cursor:pointer;margin-right:6px">⚙</button>
       <button class="x" data-close="sniperModal">✕</button>
     </header>
 
@@ -6279,7 +6375,12 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <div id="runPhase">ПИСТОЛЕТ</div>
         <div id="runTries"></div>
       </div>
-      <div id="runTimer">42.0</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="runSetBtn" type="button" aria-label="Настройки"
+          style="pointer-events:auto;width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
+          background:rgba(12,14,28,.6);color:#e8ecf5;font-size:13px;cursor:pointer">⚙</button>
+        <div id="runTimer">42.0</div>
+      </div>
     </div>
     <div id="runStart" class="rr-screen on">
       <div class="rr-card">
@@ -6308,23 +6409,27 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   </div>
 </div>
 
-<!-- ДУЭЛЬ С БОТОМ -->
-<div class="modal" id="batModal">
-  <div class="sheet" style="width:min(96vw,560px)">
-    <header><h3>Баттл</h3><button class="x" data-close="batModal">✕</button></header>
+<!-- ==================== 4.31.0: НАСТРОЙКИ ==================== -->
+<div class="modal" id="setModal">
+  <div class="sheet">
+    <header><h3>Настройки</h3><button class="x" data-close="setModal">✕</button></header>
     <div class="body">
-      <div class="hint" id="batSub" style="margin-bottom:10px"></div>
-      <select class="bat-select" id="batCase" aria-label="Кейс для баттла"></select>
-      <div class="bat-stage"><div class="bat-arena" id="batArena"></div></div>
-      <div class="bat-res" id="batRes"></div>
-      <button class="btn-primary" id="batGo" style="width:100%;margin-top:12px">В бой</button>
-      <div class="hint" style="margin-top:8px;font-size:11.5px;line-height:1.5">
-        Вы и три бота открываете один и тот же кейс. Чей скин дороже — тот забирает все четыре.
-        При равной цене каждый остаётся при своём. Ставка — цена кейса, 10 боёв в час.
+      <div class="set-row">🔊 Звуки<button class="sw" data-set="sfx"></button></div>
+      <div class="set-row">🎵 Музыка<button class="sw" data-set="music"></button></div>
+      <div class="set-row">📳 Вибрация<button class="sw" data-set="haptic"></button></div>
+      <div class="set-row">💥 Тряска экрана<button class="sw" data-set="shake"></button></div>
+      <div class="set-row">👁 Режим дальтоника<button class="sw" data-set="cb"></button></div>
+      <div class="set-row">✨ Качество
+        <div class="seg" data-seg="quality">
+          <button data-v="auto">АВТО</button><button data-v="high">HIGH</button><button data-v="low">LOW</button>
+        </div>
       </div>
+      <div class="set-row">📊 Показывать FPS<button class="sw" data-set="fps"></button></div>
+      <button class="rr-btn rr-ghost" data-close="setModal" style="margin-top:16px">НАЗАД</button>
     </div>
   </div>
 </div>
+<div id="fpsBadge" hidden>60 FPS</div>
 
 <!-- УЗОРЫ -->
 <div class="modal" id="patModal">
@@ -8508,7 +8613,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.30.0';
+const VERSION = '4.31.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -11437,7 +11542,7 @@ function updateNavBadges(){
   // --- 2. Бейдж Испытаний ---
   let tri = 0;
   if (typeof tirLeft === 'function' && tirLeft() > 0) tri++;
-  if (typeof batLeft === 'function' && batLeft() > 0) tri++;
+  if (typeof knLeft === 'function' && knLeft() > 0) tri++;
   if (typeof runLeft === 'function' && runLeft() > 0) tri++;
   if (typeof rewLeft === 'function' && rewLeft('drum') <= 0) tri++;   /* 3.12.3: барабан доступен — считаем в «Испытаниях» */
   if (typeof towerLeft === 'function' && towerLeft() > 0) tri++;   /* 3.12.2: башня */
@@ -17269,7 +17374,7 @@ function batTakeOnce(){
 }
 
 function renderMiniModes(){
-  const s = $('#snipLeft'), d = $('#batLeft'), r = $('#runLeft'), tw = $('#towerLeft');
+  const s = $('#snipLeft'), d = $('#knifeLeft'), r = $('#runLeft'), tw = $('#towerLeft');
   if(tw){
     const left = towerLeft();
     tw.textContent = left > 0
@@ -17292,10 +17397,10 @@ function renderMiniModes(){
         : 'Сессии на сегодня кончились — тренироваться можно в любой момент');
   }
   if(d){
-    const left = batLeft();
+    const left = knLeft();
     d.textContent = left > 0
-      ? `Боёв в этот час: ${left} · вы и три бота, победитель забирает всё`
-      : 'На этот час всё — новая десятка в начале следующего';
+      ? `Сессий сегодня: ${left} · 10 ножей, яблоки, серия · рекорд ${(state.knBest|0).toLocaleString('ru-RU')}`
+      : 'На сегодня всё — три сессии израсходованы, приходите завтра';
   }
 }
 
@@ -17407,6 +17512,741 @@ function rrMissSound(){ rrTone(120,0.18,0.07,'sawtooth'); rrTone(80,0.22,0.05,'s
 function rrPhaseSound(){ rrTone(330,0.4,0.06,'sine'); rrTone(440,0.4,0.05,'sine',0.05); rrTone(660,0.5,0.04,'sine',0.1); }
 function rrWinSound(){ [523,659,784,1046].forEach(function(f,i){ rrTone(f,0.35,0.07,'triangle',i*0.09); }); }
 function rrLoseSound(){ [330,262,196].forEach(function(f,i){ rrTone(f,0.4,0.06,'sine',i*0.12); }); }
+
+
+/* =========================================================
+   4.31.0 · «МЕТКИЙ НОЖ» — Knife Hit вместо «Баттла»
+   Механика: мишень-полено вращается, нож летит по тапу.
+   Воткнул все десять — уровень пройден. Попал в свой же
+   нож — сессия закончена. На уровнях 2 и 3 нужно ещё
+   расколоть яблоки (1 и 2).
+   Скорость вращения выше, чем в прототипе: 0.92 → 1.44 об/с.
+   ========================================================= */
+const KN_SESSIONS = 3;
+const KN_TIERS = [
+  {score:0,   coins:40,  skin:null},
+  {score:120, coins:90,  skin:null},
+  {score:260, coins:180, skin:'uncommon'},
+  {score:420, coins:300, skin:'rare', oncePerDay:true}
+];
+const mod = function(a, m){ return ((a % m) + m) % m; };
+const angDiff = function(a, b){ return mod(a - b + Math.PI, Math.PI * 2) - Math.PI; };
+const KN_LEVELS = 3;
+const KN_THROWS = 10;
+const KN_SPEED0 = 0.92;          /* об/сек на первом броске уровня */
+const KN_SPEEDADD = 0.52;        /* прибавка к десятому броску */
+const KN_FLY_MS = 165;
+const KN_COLLIDE = 0.115;        /* радианы: ближе — попал в свой нож */
+const KN_APPLE = 0.15;           /* окно попадания по яблоку */
+const KN_COMBO_MS = 2000;
+const KN_APPLES = [0, 1, 2];     /* яблок на уровень */
+
+const kn = {
+  cv:null, ctx:null, W:0, H:0, DPR:2,
+  rot:0, speed:KN_SPEED0, level:0, throwIdx:0,
+  stuck:[], apples:[], flying:null,
+  score:0, applesHit:0, combo:0, mult:1, lastThrowAt:0, bestCombo:0,
+  active:false, running:false, raf:0, lastT:0, shake:0, flash:0, split:[],
+  skin:null, img:null, paused:false, sessionsUsed:0
+};
+
+function knDPR(){
+  const d = window.devicePixelRatio || 1;
+  const q = (typeof SRSET !== 'undefined') ? SRSET.quality : 'auto';
+  if(q === 'low') return 1;
+  if(q === 'high') return Math.min(3, d);
+  return Math.min(2, d);
+}
+
+/* ---------- скин ножа ---------- */
+function knPickSkin(){
+  const use = (state && state.knifeSkin) || null;
+  if(use){
+    const s = SKINS.filter(function(x){ return x.id === use; })[0];
+    if(s && s.w && KNIVES.indexOf(s.w) >= 0) return s;
+  }
+  /* лучший нож в инвентаре — чтобы награда была видна в бою */
+  let best = null, bestV = -1;
+  (state.inv || []).forEach(function(it){
+    const s = SKINS.filter(function(x){ return x.id === it.id; })[0];
+    if(!s || !s.w || KNIVES.indexOf(s.w) < 0) return;
+    const v = itemVal(it) || 0;
+    if(v > bestV){ bestV = v; best = s; }
+  });
+  if(best) return best;
+  return SKINS.filter(function(x){ return x.w === 'knife'; })[0] || KNIVES[0];
+}
+function knLoadArt(){
+  kn.skin = knPickSkin();
+  kn.img = null;
+  /* арт ствола лежит на сайте (как у всего остального в игре).
+     Нет сети или файла — рисуем клинок вектором, игра не зависит от картинки. */
+  try{
+    const im = new Image();
+    im.crossOrigin = 'anonymous';          /* без этого холст «пачкается» и его нельзя прочитать */
+    im.onload = function(){ kn.img = im; };
+    im.onerror = function(){ kn.img = null; };
+    im.src = weaponArtUrl(kn.skin.w);
+  }catch(e){ kn.img = null; }
+}
+
+/* векторный клинок: лезвие + гарда + рукоять, кончиком вправо */
+function knDrawVector(ctx, w, h, color){
+  const blade = w * 0.62, gh = h * 0.42;
+  ctx.fillStyle = '#dfe8f5';
+  ctx.beginPath();
+  ctx.moveTo(0, -h * 0.16);
+  ctx.lineTo(blade * 0.86, -h * 0.20);
+  ctx.lineTo(blade, 0);
+  ctx.lineTo(blade * 0.86, h * 0.30);
+  ctx.lineTo(0, h * 0.22);
+  ctx.closePath();
+  ctx.fill();
+  /* блик по лезвию */
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.beginPath();
+  ctx.moveTo(blade * 0.08, -h * 0.10);
+  ctx.lineTo(blade * 0.8, -h * 0.13);
+  ctx.lineTo(blade * 0.8, -h * 0.03);
+  ctx.lineTo(blade * 0.08, -h * 0.01);
+  ctx.closePath();
+  ctx.fill();
+  /* гарда */
+  ctx.fillStyle = '#3b4453';
+  ctx.fillRect(-h * 0.10, -gh, h * 0.22, gh * 2);
+  /* рукоять */
+  ctx.fillStyle = color || '#2f3644';
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(-w * 0.34, -h * 0.20, w * 0.30, h * 0.42, h * 0.12)
+                : ctx.rect(-w * 0.34, -h * 0.20, w * 0.30, h * 0.42);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.18)';
+  ctx.fillRect(-w * 0.30, -h * 0.14, w * 0.22, h * 0.08);
+}
+
+/* ---------- лимит сессий ---------- */
+function knUsedToday(){
+  const t = todayKey();
+  if(!state.knDay || state.knDay.d !== t) return 0;
+  return state.knDay.n | 0;
+}
+function knLeft(){ return Math.max(0, KN_SESSIONS - knUsedToday()); }
+function knTakeOnce(){
+  const t = todayKey();
+  if(!state.knDay || state.knDay.d !== t) state.knDay = {d:t, n:0};
+  state.knDay.n = (state.knDay.n | 0) + 1;
+  save();
+}
+
+/* ---------- звук (в общей шине SFX) ---------- */
+function knSnd(kind){
+  try{
+    if(kind === 'throw') SFX.click();
+    else if(kind === 'stick'){ tone(240, .07, {type:'triangle', gain:.06, slide:150}); noise(.05, {freq:900, gain:.05}); }
+    else if(kind === 'apple'){ tone(880, .1, {type:'triangle', gain:.08}); tone(1320, .12, {type:'sine', gain:.05, delay:.06}); noise(.12, {freq:4200, gain:.04}); }
+    else if(kind === 'fail'){ tone(170, .3, {type:'sawtooth', gain:.09, slide:60}); }
+    else if(kind === 'level'){ [523,659,784].forEach(function(f,i){ tone(f, .26, {type:'triangle', gain:.08, delay:i*.07}); }); }
+  }catch(e){}
+}
+
+/* ---------- разметка и показ экранов ---------- */
+function knEl(id){ return document.getElementById(id); }
+function knShow(id, on){
+  const e = knEl(id); if(!e) return;
+  e.classList.toggle('on', !!on);
+}
+function knPaintTries(){
+  const box = knEl('knTries'); if(!box) return;
+  box.innerHTML = '';
+  for(let i = 0; i < KN_SESSIONS; i++){
+    const s = document.createElement('i');
+    if(i < knLeft()) s.className = 'on';
+    box.appendChild(s);
+  }
+  const lvl = knEl('knLevel');
+  if(lvl) lvl.textContent = kn.active ? ('УР. ' + (kn.level + 1)) : 'УР. —';
+  const sc = knEl('knScore'); if(sc) sc.textContent = kn.score;
+  const ap = knEl('knApplesLeft'); if(ap) ap.textContent = kn.active ? knApplesLeft() : 0;
+  const thr = knEl('knThrowsLeft'); if(thr) thr.textContent = kn.active ? Math.max(0, KN_THROWS - kn.throwIdx) : KN_THROWS;
+}
+
+function openKnife(){
+  knLoadArt();
+  knPaintTries();
+  knShow('knResult', false);
+  knShow('knPause', false);
+  knShow('knStart', true);
+  const go = knEl('knGo');
+  if(go){
+    const left = knLeft();
+    go.disabled = left <= 0;
+    go.textContent = left > 0 ? 'Играть' : 'Сегодня всё';
+  }
+  const st = knEl('knStartLeft');
+  if(st) st.textContent = knLeft() + '/' + KN_SESSIONS;
+  const bs = knEl('knStartBest');
+  if(bs) bs.textContent = (state.knBest | 0).toLocaleString('ru-RU');
+  const s1 = knEl('knStartSkin');
+  if(s1) s1.textContent = (kn.skin && kn.skin.n) ? kn.skin.n : 'Нож';
+  const b = document.getElementById('knifeModal');
+  if(b && !b.classList.contains('on')) b.classList.add('on');
+}
+
+/* ---------- уровень ---------- */
+function knApplesLeft(){
+  return kn.apples.filter(function(a){ return !a.hit; }).length;
+}
+function knStartSession(){
+  if(knLeft() <= 0){ toast('Сессий на сегодня не осталось'); openKnife(); return; }
+  knTakeOnce();
+  kn.score = 0; kn.level = 0; kn.bestCombo = 0;
+  knPaintTries();
+  knStartLevel(0);
+}
+function knStartLevel(i){
+  kn.level = i;
+  kn.throwIdx = 0; kn.stuck = []; kn.split = [];
+  kn.combo = 0; kn.mult = 1; kn.lastThrowAt = 0;
+  kn.speed = KN_SPEED0;
+  kn.rot = Math.random() * Math.PI * 2;
+
+  const nA = KN_APPLES[i] || 0;
+  kn.apples = [];
+  for(let k = 0; k < nA; k++) kn.apples.push({ ang: (k * Math.PI) + Math.random() * 1.2, hit: false });
+
+  kn.cv = knEl('knifeCanvas');
+  kn.ctx = kn.cv.getContext('2d');
+  knResize();
+  knShow('knStart', false);
+  knShow('knPause', false);
+  knShow('knResult', false);
+
+  kn.active = true; kn.running = true; kn.paused = false;
+  kn.lastT = 0;
+  cancelAnimationFrame(kn.raf);
+  kn.raf = requestAnimationFrame(knLoop);
+
+  const b = knEl('knBanner');
+  if(b){
+    b.innerHTML = '<b>Уровень ' + (i + 1) + '</b><span>' + (nA ? (nA === 1 ? 'ОДНО ЯБЛОКО' : 'ДВА ЯБЛОКА') : 'ДЕСЯТЬ НОЖЕЙ') + '</span>';
+    b.classList.add('show');
+    setTimeout(function(){ b.classList.remove('show'); }, 1400);
+  }
+  knPaintTries();
+  knSnd('level');
+}
+function knResize(){
+  if(!kn.cv) return;
+  const r = kn.cv.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  kn.W = r.width; kn.H = r.height;
+  kn.DPR = knDPR();
+  kn.cv.width = Math.floor(kn.W * kn.DPR);
+  kn.cv.height = Math.floor(kn.H * kn.DPR);
+  kn.ctx.setTransform(kn.DPR, 0, 0, kn.DPR, 0, 0);
+}
+function knCX(){ return kn.W / 2; }
+function knCY(){ return kn.H * 0.335; }
+function knR(){ return Math.min(kn.W * 0.325, kn.H * 0.155); }
+
+/* ---------- бросок ---------- */
+function knThrow(){
+  if(!kn.running || kn.paused || kn.flying) return;
+  if(kn.throwIdx >= KN_THROWS) return;
+  kn.flying = { p: 0, fromY: kn.H + 70, toY: knCY() };
+  knSnd('throw');
+  const now = performance.now();
+  if(kn.lastThrowAt && now - kn.lastThrowAt > KN_COMBO_MS){ kn.combo = 0; kn.mult = 1; }
+  kn.lastThrowAt = now;
+}
+function knLand(){
+  const f = kn.flying; if(!f) return;
+  kn.flying = null;
+
+  const local = mod(Math.PI / 2 - kn.rot, Math.PI * 2);
+
+  /* попал в свой нож — сессия кончилась */
+  for(let i = 0; i < kn.stuck.length; i++){
+    if(Math.abs(angDiff(local, kn.stuck[i].ang)) < KN_COLLIDE){
+      kn.shake = SRSET.shake ? 1 : 0;
+      kn.flash = 1;
+      kn.running = false;
+      knSnd('fail');
+      try{ if(SRSET.haptic) SR_VIBRATE.play([40, 30, 60]); }catch(e){}
+      setTimeout(function(){ knFinish('Клинок в клинок — все ножи выпали'); }, 620);
+      return;
+    }
+  }
+
+  /* яблоко? */
+  let appleHit = false;
+  for(let i = 0; i < kn.apples.length; i++){
+    const a = kn.apples[i];
+    if(a.hit) continue;
+    if(Math.abs(angDiff(local, a.ang)) < KN_APPLE){
+      a.hit = true; appleHit = true;
+      kn.applesHit++;
+      kn.split.push({ ang: a.ang, t: 0 });
+      knSnd('apple');
+      break;
+    }
+  }
+
+  kn.combo++;
+  kn.bestCombo = Math.max(kn.bestCombo, kn.combo);
+  kn.mult = 1 + Math.min(4, Math.floor(kn.combo / 3));
+  kn.stuck.push({ ang: local, crit: appleHit });
+
+  kn.score += (appleHit ? 60 : 10) * kn.mult;
+  if(SRSET.haptic) { try{ SR_VIBRATE.play([8]); }catch(e){} }
+  knSnd('stick');
+  kn.flash = appleHit ? 1 : 0.4;
+  kn.throwIdx++;
+  knPaintTries();
+
+  if(appleHit && knApplesLeft() === 0 && kn.throwIdx >= KN_THROWS){
+    setTimeout(function(){ knLevelDone(); }, 300);
+    return;
+  }
+  if(kn.throwIdx >= KN_THROWS){
+    setTimeout(function(){
+      if(knApplesLeft() > 0) knFinish('Яблоко осталось целым');
+      else knLevelDone();
+    }, 320);
+  }
+}
+function knLevelDone(){
+  kn.running = false; kn.active = false;
+  cancelAnimationFrame(kn.raf);
+  knSnd('level');
+  if(kn.level + 1 >= KN_LEVELS){ knFinish(null, true); return; }
+  kn.score += 150;                       /* бонус за пройденный уровень */
+  knShow('knLevelDone', true);
+  const b = knEl('knLevelBody');
+  if(b){
+    b.innerHTML = '<div class="rr-badge">уровень пройден</div>' +
+      '<h4>Уровень ' + (kn.level + 1) + ' <span>чисто</span></h4>' +
+      '<p>Очков: <b>' + kn.score + '</b>. Дальше — ' +
+      (KN_APPLES[kn.level + 1] ? (KN_APPLES[kn.level + 1] === 1 ? 'одно яблоко' : 'два яблока') : 'десять ножей') + '.</p>' +
+      '<button class="rr-btn" id="knNext">Дальше ▶</button>';
+    const nb = knEl('knNext');
+    if(nb) nb.addEventListener('click', function(){ knShow('knLevelDone', false); knStartLevel(kn.level + 1); });
+  }
+}
+
+/* ---------- финал ---------- */
+function knFinish(reason, win){
+  kn.running = false; kn.active = false; kn.paused = false;
+  cancelAnimationFrame(kn.raf);
+  const score = kn.score;
+  if(score > (state.knBest | 0)) state.knBest = score;
+
+  let tier = null;
+  KN_TIERS.forEach(function(t){ if(score >= t.score) tier = t; });
+
+  let coins = 0, drop = null, dust = 0;
+  if(tier){
+    coins = tier.coins;
+    dust = Math.min(20, kn.applesHit * 4);
+    if(tier.skin && !(tier.oncePerDay && state.knDaySkin === todayKey())){
+      const rar = tier.skin;
+      const pool = SKINS.filter(function(s){ return s.r === rar && !s.excl; });
+      if(pool.length){
+        const sk = pool[Math.floor(Math.random() * pool.length)];
+        const item = makeItem(sk);
+        try{ addSkin(sk, item); }catch(e){}
+        drop = { skin: sk, item: item };
+        if(tier.oncePerDay) state.knDaySkin = todayKey();
+      }
+    }
+  }
+  if(coins > 0) state.coins += coins;
+  if(dust > 0) addDust(dust);
+  save();
+
+  const res = knEl('knResult');
+  if(res){
+    const COL = {common:'#8b93a7',uncommon:'#4aa3ff',rare:'#a970ff',epic:'#ff5fa2',legend:'#ffb02e'};
+    const grade = win ? 'S' : (score >= 300 ? 'A' : score >= 150 ? 'B' : 'C');
+    const verdict = win ? 'ВСЕ ТРИ УРОВНЯ' : (reason || 'ПОПЫТКА ЗАКОНЧЕНА');
+    let art = '';
+    if(drop && drop.skin){
+      art = '<div class="rr-drop"><div class="rr-art">' + svgWeapon(drop.skin) + '</div>' +
+            '<div style="min-width:0"><div class="rr-nm" style="color:' + (COL[drop.skin.r] || '#fff') + '">' +
+            drop.skin.n + '</div><div class="rr-vl">+' + itemVal(drop.item).toLocaleString('ru-RU') + ' кр</div></div></div>';
+    }
+    res.innerHTML =
+      '<div class="rr-card">' +
+        '<div class="rr-head">' +
+          '<div class="rr-grade ' + grade + '">' + grade + '</div>' +
+          '<div class="rr-verdict" style="color:#ffd08a">' + verdict + '</div>' +
+          '<div class="rr-sub">Уровень ' + (kn.level + 1) + ' из ' + KN_LEVELS + '</div>' +
+        '</div>' +
+        '<div class="rr-stats">' +
+          '<div><span>Очки</span><b>' + score + '</b></div>' +
+          '<div><span>Яблок</span><b>' + kn.applesHit + '</b></div>' +
+          '<div><span>Серия</span><b>' + kn.bestCombo + '</b></div>' +
+          '<div><span>Попыток</span><b>' + knLeft() + '/' + KN_SESSIONS + '</b></div>' +
+        '</div>' +
+        (coins ? '<div class="rr-drop"><div class="rr-art" style="font-size:24px">🪙</div><div><div class="rr-nm">Кредиты</div><div class="rr-vl">+' + coins + (dust ? ' · пыль +' + dust : '') + '</div></div></div>' : '') +
+        art +
+        '<button class="rr-btn" id="knAgain">' + (knLeft() > 0 ? 'Ещё раз · осталось ' + knLeft() : 'Закрыть') + '</button>' +
+      '</div>';
+    knShow('knResult', true);
+    const ag = knEl('knAgain');
+    if(ag) ag.addEventListener('click', function(){
+      knShow('knResult', false);
+      if(knLeft() > 0) knStartSession(); else openKnife();
+    });
+  }
+  if(win){
+    try{ if(typeof FX !== 'undefined' && FX.confetti) FX.confetti({ count: 70 }); }catch(e){}
+  }
+  knPaintTries();
+}
+
+/* ---------- отрисовка ---------- */
+function knHandleColor(){
+  try{
+    const r = kn.skin && kn.skin.r;
+    const c = r && RAR[r] && RAR[r].color;
+    return c || '#2f3644';
+  }catch(e){ return '#2f3644'; }
+}
+function knRender(){
+  const ctx = kn.ctx;
+  if(!ctx) return;
+  const W = kn.W, H = kn.H;
+  ctx.save();
+  if(kn.shake > 0 && SRSET.shake) ctx.translate((Math.random() - .5) * kn.shake * 12, (Math.random() - .5) * kn.shake * 12);
+
+  /* фон: тёмный цех */
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#10141d');
+  bg.addColorStop(.55, '#0b0e15');
+  bg.addColorStop(1, '#05070b');
+  ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+
+  /* конус света */
+  const lampY = H * 0.05;
+  const cg = ctx.createRadialGradient(W / 2, lampY, 0, W / 2, H * 0.45, H * 0.6);
+  cg.addColorStop(0, 'rgba(255,176,46,.16)');
+  cg.addColorStop(1, 'rgba(255,176,46,0)');
+  ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H);
+
+  /* пол */
+  const fy = H * 0.72;
+  const fg = ctx.createLinearGradient(0, fy, 0, H);
+  fg.addColorStop(0, '#161a23'); fg.addColorStop(1, '#07090d');
+  ctx.fillStyle = fg; ctx.fillRect(0, fy, W, H - fy);
+  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, fy); ctx.lineTo(W, fy); ctx.stroke();
+
+  /* мишень */
+  const X = knCX(), Y = knCY(), R = knR();
+  ctx.save();
+  ctx.translate(X, Y);
+  ctx.rotate(kn.rot);
+
+  /* полено */
+  const wood = ctx.createRadialGradient(-R * .3, -R * .3, R * .1, 0, 0, R);
+  wood.addColorStop(0, '#8a5a34');
+  wood.addColorStop(.6, '#6b4326');
+  wood.addColorStop(1, '#402815');
+  ctx.fillStyle = wood;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+  /* годовые кольца */
+  ctx.strokeStyle = 'rgba(30,16,6,.35)'; ctx.lineWidth = 1.2;
+  for(let i = 1; i <= 5; i++){
+    ctx.beginPath(); ctx.arc(0, 0, R * i / 6, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(20,10,4,.6)'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
+
+  /* яблоки */
+  kn.apples.forEach(function(a){
+    if(a.hit) return;
+    const ax = Math.cos(a.ang) * R * 0.62, ay = Math.sin(a.ang) * R * 0.62;
+    const rr2 = R * 0.15;
+    const ap = ctx.createRadialGradient(ax - rr2 * .35, ay - rr2 * .35, rr2 * .15, ax, ay, rr2);
+    if(SRSET.cb){ ap.addColorStop(0, '#ffffff'); ap.addColorStop(1, '#00c2ff'); }
+    else { ap.addColorStop(0, '#ff8a6a'); ap.addColorStop(1, '#c62a1f'); }
+    ctx.fillStyle = ap;
+    ctx.beginPath(); ctx.arc(ax, ay, rr2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(ax, ay, rr2, 0, Math.PI * 2); ctx.stroke();
+    /* листик */
+    ctx.fillStyle = '#3fa14a';
+    ctx.beginPath(); ctx.ellipse(ax + rr2 * .5, ay - rr2 * .95, rr2 * .45, rr2 * .22, -.6, 0, Math.PI * 2); ctx.fill();
+  });
+
+  /* воткнутые ножи */
+  const art = kn.img;
+  kn.stuck.forEach(function(k){
+    const a = k.ang;
+    ctx.save();
+    ctx.rotate(a);
+    const room = Math.max(40, kn.W / 2 - R * 0.9 - 4);
+    const w = Math.min(R * 0.62, room * 1.02), h = w * 0.34;
+    ctx.shadowColor = k.crit ? 'rgba(255,215,106,.9)' : 'rgba(0,0,0,.8)';
+    ctx.shadowBlur = k.crit ? 16 : 6;
+    ctx.translate(R * 0.9, 0);
+    if(art && art.complete && art.naturalWidth){
+      ctx.drawImage(art, 0, -h / 2, w, h);
+    } else {
+      knDrawVector(ctx, w, h, knHandleColor());
+    }
+    ctx.restore();
+  });
+  ctx.restore();
+
+  /* расколотые половинки яблока летят */
+  kn.split.forEach(function(s){
+    const t = s.t / 620;
+    const d = R * 0.62 + t * R * 0.9;
+    const ax = X + Math.cos(s.ang + kn.rot) * d;
+    const ay = Y + Math.sin(s.ang + kn.rot) * d + t * t * 90;
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.fillStyle = SRSET.cb ? '#00c2ff' : '#d8402f';
+    ctx.beginPath(); ctx.arc(ax, ay, R * 0.13, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  /* летящий нож */
+  if(kn.flying){
+    const f = kn.flying;
+    const y = f.fromY + (f.toY - f.fromY) * f.p;
+    const w = Math.min(R * 1.05, kn.W * 0.42), h = w * 0.34;
+    ctx.save();
+    ctx.translate(X, y);
+    ctx.rotate(-Math.PI / 2);
+    ctx.shadowColor = '#ffd06a'; ctx.shadowBlur = 12;
+    if(art && art.complete && art.naturalWidth) ctx.drawImage(art, -w * 0.86, -h / 2, w, h);
+    else knDrawVector(ctx, w, h, knHandleColor());
+    ctx.restore();
+    /* след */
+    const tr = ctx.createLinearGradient(X, y, X, y + 90);
+    tr.addColorStop(0, 'rgba(255,208,106,.6)');
+    tr.addColorStop(1, 'rgba(255,208,106,0)');
+    ctx.strokeStyle = tr; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X, y); ctx.lineTo(X, y + 90); ctx.stroke();
+  }
+
+  /* линия броска */
+  if(kn.running && !kn.flying && kn.throwIdx < KN_THROWS){
+    const y0 = Y + R + 16;
+    ctx.setLineDash([5, 6]);
+    ctx.strokeStyle = 'rgba(255,176,46,.28)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X, y0); ctx.lineTo(X, H * 0.95); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  if(kn.flash > 0){
+    ctx.fillStyle = 'rgba(255,208,106,' + (kn.flash * 0.09) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function knLoop(t){
+  if(!kn.active) return;
+  if(!kn.lastT) kn.lastT = t;
+  const dt = Math.min(48, t - kn.lastT);
+  kn.lastT = t;
+
+  if(kn.running && !kn.paused){
+    kn.rot = mod(kn.rot + kn.speed * Math.PI * 2 * dt / 1000, Math.PI * 2);
+    if(kn.flying){
+      kn.flying.p += dt / KN_FLY_MS;
+      if(kn.flying.p >= 1) knLand();
+    }
+    if(kn.lastThrowAt && performance.now() - kn.lastThrowAt > KN_COMBO_MS && kn.combo > 0){
+      kn.combo = 0; kn.mult = 1;
+    }
+  }
+  kn.shake = Math.max(0, kn.shake - dt / 320);
+  kn.flash = Math.max(0, kn.flash - dt / 380);
+  kn.split.forEach(function(s){ s.t += dt; });
+  kn.split = kn.split.filter(function(s){ return s.t < 640; });
+
+  knRender();
+  kn.raf = requestAnimationFrame(knLoop);
+}
+
+/* ---------- ввод ---------- */
+function knPointer(e){
+  if(!kn.running || kn.paused) return;
+  if(e && e.cancelable) e.preventDefault();
+  if(e && e.pointerType === 'mouse' && e.button !== 0) return;
+  knThrow();
+}
+function knPause(){
+  if(!kn.active || !kn.running) return;
+  kn.paused = true;
+  knShow('knPause', true);
+}
+function knResume(){
+  if(!kn.paused) return;
+  kn.paused = false;
+  knShow('knPause', false);
+  kn.lastT = 0;
+}
+function knQuit(){
+  kn.paused = false; kn.active = false; kn.running = false;
+  cancelAnimationFrame(kn.raf);
+  knShow('knPause', false);
+  knFinish('Вы вышли из боя');
+}
+
+/* ---------- привязка ---------- */
+(function(){
+  const b = document.getElementById('knifeModal');
+  if(!b) return;
+  new MutationObserver(function(){
+    if(!b.classList.contains('on') && kn.active){ kn.active = false; kn.running = false; cancelAnimationFrame(kn.raf); }
+  }).observe(b, {attributes:true, attributeFilter:['class']});
+
+  const cv = document.getElementById('knifeCanvas');
+  if(cv){
+    cv.addEventListener('pointerdown', knPointer);
+    window.addEventListener('resize', function(){ if(kn.active){ knResize(); } });
+  }
+  const go = document.getElementById('knGo');
+  if(go) go.addEventListener('click', function(){ SFX.click(); knStartSession(); });
+  const rs = document.getElementById('knResume');
+  if(rs) rs.addEventListener('click', function(){ SFX.click(); knResume(); });
+  const qt = document.getElementById('knQuit');
+  if(qt) qt.addEventListener('click', function(){ SFX.click(); knQuit(); });
+  const pa = document.getElementById('knPauseBtn');
+  if(pa) pa.addEventListener('click', function(){ SFX.click(); knPause(); });
+
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) return;
+    if(kn.active && kn.running && !kn.paused) knPause();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.code === 'Space' && kn.active){
+      e.preventDefault();
+      if(kn.paused) knResume(); else knPointer(null);
+    }
+  });
+})();
+
+/* =========================================================
+   4.31.0 · НАСТРОЙКИ (общие для тира, «Ритм-Штурма» и ножей)
+   Хранятся отдельно от сейва: это настройки устройства, а не прогресс,
+   и подписанный сейв из-за них трогать нельзя.
+   ========================================================= */
+const SRSET = (function(){
+  const KEY = 'sr.mini.set';
+  const DEF = {sfx:true, music:true, haptic:true, shake:true, cb:false, quality:'auto', fps:false};
+  let v = {};
+  try{
+    const raw = localStorage.getItem(KEY);
+    v = raw ? JSON.parse(raw) : {};
+  }catch(e){ v = {}; }
+  for(const k in DEF){ if(v[k] === undefined) v[k] = DEF[k]; }
+
+  function saveSet(){
+    try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){}
+  }
+
+  function apply(){
+    /* звук и музыка живут в своей шине — настройки лишь отражают их состояние */
+    try{ if(typeof sfxIsMuted === 'function' && sfxIsMuted() === v.sfx) sfxMute(!v.sfx); }catch(e){}
+    try{ if(typeof musIsOn === 'function' && musIsOn() !== v.music) musToggle(v.music); }catch(e){}
+    try{ if(typeof SR_VIBRATE !== 'undefined') SR_VIBRATE.set(!!v.haptic); }catch(e){}
+    document.body.classList.toggle('sr-cb', !!v.cb);
+    paintFps();
+    paintSwitches();
+  }
+
+  function paintSwitches(){
+    document.querySelectorAll('[data-set]').forEach(function(b){
+      b.classList.toggle('on', !!v[b.dataset.set]);
+    });
+    document.querySelectorAll('[data-seg="quality"] button').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v === v.quality);
+    });
+  }
+
+  function set(k, val){
+    v[k] = val;
+    saveSet();
+    apply();
+    paintSwitches();
+  }
+
+  /* FPS-плашка: считается по rAF, обновляется дважды в секунду */
+  let fpsRaf = 0, lastT = 0, frames = 0, acc = 0;
+  function paintFps(){
+    const el = document.getElementById('fpsBadge');
+    if(!el) return;
+    el.hidden = !v.fps;
+    if(!v.fps){ cancelAnimationFrame(fpsRaf); fpsRaf = 0; return; }
+    if(fpsRaf) return;
+    lastT = 0; frames = 0; acc = 0;
+    const tick = function(t){
+      if(!lastT){ lastT = t; }
+      const dt = t - lastT; lastT = t;
+      frames++; acc += dt;
+      if(acc > 500){
+        el.textContent = Math.round(frames * 1000 / acc) + ' FPS';
+        frames = 0; acc = 0;
+      }
+      fpsRaf = requestAnimationFrame(tick);
+    };
+    fpsRaf = requestAnimationFrame(tick);
+  }
+
+  return {
+    get sfx(){ return v.sfx; },
+    get music(){ return v.music; },
+    get haptic(){ return v.haptic; },
+    get shake(){ return v.shake; },
+    get cb(){ return v.cb; },
+    get quality(){ return v.quality; },
+    get fps(){ return v.fps; },
+    set: set, apply: apply, paint: paintSwitches
+  };
+})();
+
+/* разметка настроек: свайпы и сегменты */
+(function(){
+  const m = document.getElementById('setModal');
+  if(!m) return;
+  m.addEventListener('click', function(e){
+    const sw = e.target.closest ? e.target.closest('[data-set]') : null;
+    if(sw){
+      const k = sw.dataset.set;
+      SRSET.set(k, !SRSET[k]);
+      try{ SFX.click(); }catch(err){}
+      return;
+    }
+    const seg = e.target.closest ? e.target.closest('[data-seg="quality"] button') : null;
+    if(seg){
+      SRSET.set('quality', seg.dataset.v);
+      try{ SFX.click(); }catch(err){}
+      return;
+    }
+  });
+  SRSET.apply();
+})();
+
+function openSettings(){
+  try{ SFX.click(); }catch(e){}
+  SRSET.paint();
+  const m = document.getElementById('setModal');
+  if(m) m.classList.add('on');
+}
+
+(function(){
+  ['knSetBtn', 'runSetBtn', 'tirSetBtn'].forEach(function(id){
+    const b = document.getElementById(id);
+    if(b) b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openSettings(); });
+  });
+})();
 
 /* ---------- 4.30.0: БИТ ПОД РИТМ-БОЙ ----------
    Чарт собран в единицах 468 мс (переменная beat в rrBuildChart),
@@ -18227,7 +19067,7 @@ function runFinish(){ return rrFinish(); }
    не рисуется — см. body.sr-live в CSS. Следим за классом .on у модалок,
    поэтому работает любой способ закрытия: крестик, data-close, tirStop и т.п. */
 (function srLiveModals(){
-  const ids = ['towerModal', 'sniperModal', 'batModal'];
+  const ids = ['towerModal', 'sniperModal', 'runModal', 'knifeModal'];
   function sync(){
     let any = false;
     for(let i = 0; i < ids.length; i++){
@@ -19765,7 +20605,7 @@ $('#btnOpen').addEventListener('click', ()=>openCase(false));
 $('#openSniper')?.addEventListener('click', ()=>openSniper());
 $('#openSniperTrial')?.addEventListener('click', ()=>openSniper());
 $('#tirTrainBtn')?.addEventListener('click', ()=>openSniper(true));
-$('#openBatTrial')?.addEventListener('click', openBattle);
+$('#openKnifeTrial')?.addEventListener('click', openKnife);
 $('#openRunTrial')?.addEventListener('click', openRun);
 $('#openTowerTrial')?.addEventListener('click', openTower);
 /* 4.4.1: стрельба тапом В ТОЧКУ сцены (кнопок «ВЫСТРЕЛ» и «Пропуск» больше нет) */
@@ -19835,7 +20675,7 @@ $('#tirFire')?.addEventListener('click', function(e){ e.preventDefault(); e.stop
 $('#openBat')?.addEventListener('click', openBattle);
 $('#openRun')?.addEventListener('click', openRun);
 $('#openTower')?.addEventListener('click', openTower);
-$('#batGo').addEventListener('click', batGo);
+$('#batGo')?.addEventListener('click', batGo);
 $('#craftOpen').addEventListener('click', openCraft);
 $('#patOpen').addEventListener('click', openPatterns);
 (function(){
@@ -19992,6 +20832,16 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.31.0 · «Меткий нож» вместо «Баттла»</b><br>
+      <b>Новый режим в «Испытаниях».</b> «Меткий нож»: вращающаяся мишень, десять ножей,
+      три уровня подряд. На первом надо просто воткнуть все ножи, на втором — ещё и расколоть
+      яблоко, на третьем — два. Попал в свой нож — все выпадают, сессия закончена.
+      Скорость вращения выше, чем в макете: мишень разгоняется к концу уровня.<br>
+      <b>Серия.</b> Бросай без пауз дольше двух секунд — множитель растёт до ×5. Пауза обнуляет.<br>
+      <b>Настройки в одном месте.</b> Кнопка ⚙ теперь есть в тире, в «Ритм-Штурме» и в ножах:
+      звук, музыка, вибрация, тряска экрана, режим дальтоника, качество графики и счётчик FPS.<br>
+      <b>«Баттл» убран</b> — вместе с кейсами вчетвером и лентой ботов.<br>
+      <b>Плитки режимов в «Испытаниях»</b> — заголовки в одном стиле: золото с переходом в малиновый.<br>
       <b style="color:#ffd166">Что нового в 4.30.0 · Бит и звук</b><br>
       <b>У «Ритм-Штурма» появился бит.</b> Бочка, снейр, хэты и бас идут по той же сетке,
       что и ноты, — попадать стало во что, а не в тишину. Файлов не добавилось: бит
@@ -24696,6 +25546,7 @@ window.__sr = {
   srLocalFresh, srLocalWorth, srPackInfo, srPackWorse, srCloudInfo, rkRestoreCloud, rkAdoptLevel,
   SR_NOTIFY, rewMark, rewLeft, REW_MS, SR_VIBRATE, FX,
   openCraft, craftDo, renderCraft, renderMiniModes,
+  openKnife, knLeft, knStartSession, knFinish, openSettings, SRSET, kn,
   /* 4.29.0: Ритм-Штурм вместо старого забега */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
   get run(){ return rr; }, RUN_TRIES, PHASES, BOSS_HP_MAX, PLAYER_HP_MAX, runCasesList,
