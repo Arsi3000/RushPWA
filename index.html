@@ -5171,30 +5171,85 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .rr-vl{font-size:11px;color:#ffd08a;font-weight:800;margin-top:2px}
 </style>
 <style>
-/* ============ 4.31.0: «МЕТКИЙ НОЖ» + общие НАСТРОЙКИ ============ */
+/* ============ 4.32.0: «МЕТКИЙ НОЖ» — геймплей как в макете ============ */
 #knifeModal .sheet{padding:0!important;width:min(96vw,560px)!important;max-width:min(96vw,560px)!important;
-  height:94vh!important;max-height:94vh!important;position:relative;overflow:hidden;display:block;background:#06080e}
+  height:94vh!important;max-height:94vh!important;position:relative;overflow:hidden;display:block;background:#0a0806}
 #knifeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;border-radius:14px}
+
+/* верхняя полоса: пауза — счёт — выход */
 #knTop{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;
-  justify-content:space-between;padding:10px 12px 0;pointer-events:none}
-#knTop .kn-ib{pointer-events:auto;width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
-  background:rgba(12,14,28,.62);color:#e8ecf5;font-size:14px;display:grid;place-items:center;cursor:pointer}
-#knTop .kn-ib:active{transform:scale(.94)}
-#knHud{text-align:center;flex:1;min-width:0}
-#knScore{font-size:34px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;
-  text-shadow:0 0 20px rgba(255,215,106,.45)}
-#knHud .kn-lbl{font-size:9px;letter-spacing:.18em;font-weight:800;color:#8b98b0;margin-top:3px}
-#knTries{display:flex;gap:5px;justify-content:center;margin-top:7px}
-#knTries i{width:18px;height:4px;border-radius:3px;background:rgba(255,255,255,.14)}
-#knTries i.on{background:linear-gradient(90deg,#ffd06a,#e9a316);box-shadow:0 0 9px rgba(255,176,46,.55)}
-#knInfo{position:absolute;left:0;right:0;bottom:14px;z-index:5;text-align:center;
-  font-size:11px;font-weight:800;color:#8b98b0;letter-spacing:.04em;pointer-events:none}
-#knInfo b{color:#ffd08a}
-#knBanner{position:absolute;left:0;right:0;top:30%;z-index:7;text-align:center;pointer-events:none;
+  justify-content:space-between;gap:8px;padding:10px 12px 0;pointer-events:none}
+.kn-act{pointer-events:auto;width:40px;height:40px;flex:0 0 auto;border-radius:13px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(10,12,20,.66);color:#e8ecf5;
+  font-size:15px;font-weight:900;display:grid;place-items:center;cursor:pointer;line-height:1}
+.kn-act:active{transform:scale(.93);background:rgba(255,255,255,.14)}
+#knScoreWrap{text-align:center;flex:1 1 auto;min-width:0}
+#knScore{font-size:36px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;
+  text-shadow:0 0 22px rgba(255,215,106,.45)}
+#knScoreWrap .kn-lbl{font-size:9px;letter-spacing:.20em;font-weight:800;color:#8b98b0;margin-top:4px}
+#knTriesBox{display:flex;gap:5px;justify-content:center;margin-top:7px}
+#knTriesBox i{width:20px;height:4px;border-radius:3px;background:rgba(255,255,255,.15)}
+#knTriesBox i.on{background:linear-gradient(90deg,#ffd06a,#e9a316);box-shadow:0 0 9px rgba(255,176,46,.55)}
+#knLevelVal{font-size:16px;font-weight:900;line-height:1.1}
+#knR{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+#knGoal{font-size:11px;font-weight:900;color:#ffd08a;background:rgba(255,176,46,.12);
+  border:1px solid rgba(255,176,46,.35);border-radius:99px;padding:2px 8px}
+#knGoal[hidden]{display:none}
+#knR .kn-lbl{font-size:9px;letter-spacing:.16em;font-weight:800;color:#8b98b0;margin-top:-3px}
+
+/* столбик ножей слева, как в макете */
+#knBox{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+#knBoxList{display:flex;flex-direction:column;gap:clamp(3px,.85vh,7px);align-items:center}
+#knBoxList i{display:block;width:7px;height:clamp(15px,3.3vh,30px);position:relative;
+  background:linear-gradient(180deg,#eaf2ff,#8593a8);border-radius:2px;
+  box-shadow:0 0 6px rgba(190,215,255,.3);transition:opacity .22s,transform .22s,filter .22s}
+#knBoxList i::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);
+  border-left:2.5px solid transparent;border-right:2.5px solid transparent;
+  border-bottom:5px solid #eaf2ff}
+#knBoxList i.next{background:linear-gradient(180deg,#fff6cf,#ffd76a);
+  box-shadow:0 0 10px rgba(255,215,106,.85)}
+#knBoxList i.next::before{border-bottom-color:#ffd76a}
+#knBoxList i.used{opacity:.13;transform:scaleY(.6) translateY(2px);box-shadow:none;filter:grayscale(1)}
+#knBoxList i.used::before{border-bottom-color:rgba(255,255,255,.12)}
+#knBoxCount{font-size:11px;font-weight:800;color:#8b98b0;font-variant-numeric:tabular-nums}
+
+#knHint{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:5;text-align:center;font-size:12px;font-weight:800;color:#cfe0ff;opacity:.85;
+  pointer-events:none;animation:knBreathe 1.8s ease-in-out infinite}
+@keyframes knBreathe{0%,100%{opacity:.45}50%{opacity:.95}}
+#knBanner{position:absolute;left:0;right:0;top:26%;z-index:7;text-align:center;pointer-events:none;
   opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
 #knBanner.show{opacity:1;transform:none}
 #knBanner b{display:block;font-size:26px;font-weight:900;color:#fff;text-shadow:0 0 24px rgba(255,215,106,.6),0 2px 8px #000}
 #knBanner span{display:block;font-size:11px;letter-spacing:.16em;font-weight:800;color:#ffd08a;margin-top:5px}
+
+/* экраны поверх игры: непрозрачные, HUD под ними гаснет */
+#knifeModal.kn-ovr #knTop, #knifeModal.kn-ovr #knBox,
+#knifeModal.kn-ovr #knHint, #knifeModal.kn-ovr #knBanner{opacity:0;pointer-events:none;transition:opacity .18s}
+.kn-screen{position:absolute;inset:0;z-index:8;display:none;align-items:center;justify-content:center;
+  padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(58,26,10,.96),#07080d 62%)}
+.kn-screen.on{display:flex}
+.kn-card{width:100%;max-width:352px;margin:auto;text-align:center;padding:2px 0}
+.kn-card h3{font-size:19px;font-weight:900;margin-bottom:6px}
+.kn-card p{font-size:12.5px;line-height:1.5;color:#98a5ba;margin-bottom:12px}
+.kn-card p b{color:#ffd08a}
+.kn-rules{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;text-align:left}
+.kn-rules div{display:flex;gap:9px;align-items:center;padding:7px 9px;border-radius:9px;font-size:11.5px;
+  line-height:1.4;color:#c8d3e4;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.kn-rules i{flex:0 0 17px;font-style:normal;text-align:center}
+.kn-btn{width:100%;padding:14px;border:0;border-radius:13px;font:inherit;font-size:14px;font-weight:900;
+  background:linear-gradient(180deg,#ffe08a,#ffb020);color:#2a1c00;cursor:pointer;margin-top:8px;
+  box-shadow:0 8px 22px rgba(255,176,32,.22),inset 0 1px 0 rgba(255,255,255,.5)}
+.kn-btn:active{transform:translateY(1px)}
+.kn-btn:disabled{opacity:.45}
+.kn-btn.ghost{background:rgba(255,255,255,.07);color:#dfe7f4;border:1px solid rgba(255,255,255,.14);box-shadow:none;font-weight:800}
+.kn-row{display:flex;gap:8px}
+.kn-row .kn-btn{flex:1}
+.kn-stat{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:11px;color:#8b98b0}
+.kn-stat b{color:#ffd08a}
+
 #setModal .sheet{width:min(96vw,440px)}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 2px;
   border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;color:#dfe7f4}
@@ -5211,7 +5266,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 .seg button.on{background:rgba(255,255,255,.17);color:#fff}
 #fpsBadge{position:fixed;left:8px;bottom:8px;z-index:9998;font:800 10px/1 ui-monospace,monospace;
   color:#6f7ea0;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:5px;pointer-events:none}
-.sr-cb #knifeCanvas{filter:contrast(1.12) saturate(1.15)}
+.sr-cb #knifeCanvas{filter:contrast(1.1) saturate(1.2)}
 </style>
 </head>
 <body>
@@ -6250,50 +6305,72 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   </div>
 </div>
 
-<!-- ==================== 4.31.0: МЕТКИЙ НОЖ ==================== -->
+<!-- ==================== 4.32.0: МЕТКИЙ НОЖ ==================== -->
 <div class="modal" id="knifeModal">
   <div class="sheet">
     <canvas id="knifeCanvas"></canvas>
+
     <div id="knTop">
-      <button class="kn-ib" id="knPauseBtn" aria-label="Пауза">❚❚</button>
-      <div id="knHud">
+      <button class="kn-act" id="knPauseBtn" aria-label="Пауза">❚❚</button>
+      <div id="knScoreWrap">
         <div id="knScore">0</div>
         <div class="kn-lbl">ОЧКИ</div>
-        <div id="knTries"></div>
+        <div id="knTriesBox"></div>
       </div>
-      <button class="kn-ib" id="knSetBtn" aria-label="Настройки">⚙</button>
+      <div id="knR">
+        <div style="display:flex;gap:6px">
+          <button class="kn-act" id="knSetBtn" aria-label="Настройки">⚙</button>
+          <button class="kn-act" id="knClose" aria-label="Выход">✕</button>
+        </div>
+        <div id="knLevelVal">УР. 1</div>
+        <div class="kn-lbl">УРОВЕНЬ</div>
+        <div id="knGoal" hidden>🍎 0/0</div>
+      </div>
     </div>
-    <div id="knInfo">Уровень <b id="knLevel">—</b> · ножей <b id="knThrowsLeft">10</b> · яблок <b id="knApplesLeft">0</b></div>
+
+    <div id="knBox">
+      <div id="knBoxList"></div>
+      <div id="knBoxCount">10</div>
+    </div>
+
+    <div id="knHint">Тапни по экрану, чтобы бросить</div>
     <div id="knBanner"></div>
 
-    <div id="knStart" class="rr-screen on">
-      <div class="rr-card">
+    <!-- меню -->
+    <div id="knStart" class="kn-screen on">
+      <div class="kn-card">
         <div class="rr-logo" aria-label="SKIN RUSH"><b style="color:#22e6ff">S</b><b style="color:#4aa8ff">K</b><b style="color:#6a7bff">I</b><b style="color:#9b5cff">N</b><b style="color:#e05cff">R</b><b style="color:#ff5f9e">U</b><b style="color:#ff8a5c">S</b><b style="color:#ffd24a">H</b></div>
         <div class="rr-subtx">· МЕТКИЙ НОЖ ·</div>
-        <p>Три уровня подряд. Десять ножей, вращающаяся мишень, яблоки. Попал в свой нож — все выпадают.</p>
-        <div class="rr-rules">
+        <div class="kn-rules">
           <div><i>🎯</i><span>Тапни — нож летит в мишень. Целься в свободный сектор.</span></div>
-          <div><i>🍎</i><span>Уровень 1 — просто воткни десять. Уровни 2 и 3 — ещё и расколи яблоки.</span></div>
-          <div><i>🔥</i><span>Бросай без пауз дольше двух секунд — серия даёт до ×5 к очкам.</span></div>
-          <div><i>💀</i><span>Попал в свой нож — сессия закончена. Мишень разгоняется к концу.</span></div>
+          <div><i>🍎</i><span>Уровень 1 — воткни десять. Уровни 2 и 3 — ещё и расколи яблоки.</span></div>
+          <div><i>🔥</i><span>Бросай без пауз дольше двух секунд — серия даёт до ×5.</span></div>
+          <div><i>💀</i><span>Попал в свой нож — все выпадают. Мишень разгоняется к концу.</span></div>
         </div>
-        <button class="rr-btn" id="knGo">Играть</button>
-        <div class="rr-sub" style="margin-top:10px">Сессий: <b id="knStartLeft">3</b>/3 · рекорд <b id="knStartBest">0</b> · нож: <b id="knStartSkin">—</b></div>
+        <button class="kn-btn" id="knGo">Играть</button>
+        <div class="kn-row">
+          <button class="kn-btn ghost" id="knMenuSet">⚙ Настройки</button>
+        </div>
+        <div class="kn-stat"><span>Сессий: <b id="knStartLeft">3</b>/3</span><span>Рекорд: <b id="knStartBest">0</b></span></div>
+        <button class="kn-btn ghost" id="knMenuClose" style="margin-top:12px">✕ Выйти в игру</button>
       </div>
     </div>
 
-    <div id="knPause" class="rr-screen">
-      <div class="rr-card">
-        <div class="rr-badge">пауза</div>
-        <h4>Стоп-кадр</h4>
+    <!-- пауза -->
+    <div id="knPause" class="kn-screen">
+      <div class="kn-card">
+        <h3>Пауза</h3>
         <p>Сессия не сгорает. Продолжишь — бросок пойдёт с того же места.</p>
-        <button class="rr-btn" id="knResume">Продолжить</button>
-        <button class="rr-btn rr-ghost" id="knQuit">Закончить сессию</button>
+        <button class="kn-btn" id="knResume">▶ Продолжить</button>
+        <div class="kn-row">
+          <button class="kn-btn ghost" id="knQuit">Закончить</button>
+          <button class="kn-btn ghost" id="knMenuBtn">В меню</button>
+        </div>
       </div>
     </div>
 
-    <div id="knLevelDone" class="rr-screen"><div class="rr-card" id="knLevelBody"></div></div>
-    <div id="knResult" class="rr-screen"></div>
+    <div id="knLevelDone" class="kn-screen"><div class="kn-card" id="knLevelBody"></div></div>
+    <div id="knResult" class="kn-screen"></div>
   </div>
 </div>
 
@@ -8613,7 +8690,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.31.0';
+const VERSION = '4.32.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -17142,7 +17219,10 @@ document.addEventListener('click', (e)=>{
    Их закрытие сломало бы сценарий (например, достижение во время окна дропа
    закрывало бы сам дроп).
    ========================================================= */
-const SR_MODAL_EXEMPT = ['achModal','tutModal','tutMap','tutHint','feedModal','bootCover'];
+/* 4.32.0: настройки — всплывающее окно ПОВЕРХ игры (тир/ритм/ножи). Раньше оно
+   поднималось в общий стек и закрывало игру под собой: нажал ⚙ → «назад» →
+   выкинуло в «Испытания». Теперь оно стек не трогает. */
+const SR_MODAL_EXEMPT = ['achModal','tutModal','tutMap','tutHint','feedModal','bootCover','setModal'];
 let srModalStack = [];
 
 function srModalOn(el){
@@ -17515,12 +17595,11 @@ function rrLoseSound(){ [330,262,196].forEach(function(f,i){ rrTone(f,0.4,0.06,'
 
 
 /* =========================================================
-   4.31.0 · «МЕТКИЙ НОЖ» — Knife Hit вместо «Баттла»
-   Механика: мишень-полено вращается, нож летит по тапу.
-   Воткнул все десять — уровень пройден. Попал в свой же
-   нож — сессия закончена. На уровнях 2 и 3 нужно ещё
-   расколоть яблоки (1 и 2).
-   Скорость вращения выше, чем в прототипе: 0.92 → 1.44 об/с.
+   4.32.0 · «МЕТКИЙ НОЖ» — геймплей как в макете (Knife Hit)
+   Мишень-полено вращается, нож летит по тапу. Воткнул все
+   десять — уровень пройден. Попал в свой же нож — сессия
+   закончена. На уровнях 2 и 3 надо ещё расколоть яблоки.
+   Счётчик ножей — слева, столбиком, как в макете.
    ========================================================= */
 const KN_SESSIONS = 3;
 const KN_TIERS = [
@@ -17531,15 +17610,17 @@ const KN_TIERS = [
 ];
 const mod = function(a, m){ return ((a % m) + m) % m; };
 const angDiff = function(a, b){ return mod(a - b + Math.PI, Math.PI * 2) - Math.PI; };
+
 const KN_LEVELS = 3;
 const KN_THROWS = 10;
-const KN_SPEED0 = 0.92;          /* об/сек на первом броске уровня */
-const KN_SPEEDADD = 0.52;        /* прибавка к десятому броску */
-const KN_FLY_MS = 165;
+const KN_SPEED0 = 1.05;          /* об/сек на первом броске (в макете 0.6) */
+const KN_SPEEDADD = 0.62;        /* прибавка к десятому броску */
+const KN_FLY_MS = 150;
 const KN_COLLIDE = 0.115;        /* радианы: ближе — попал в свой нож */
-const KN_APPLE = 0.15;           /* окно попадания по яблоку */
+const KN_APPLE = 0.155;          /* окно попадания по яблоку */
 const KN_COMBO_MS = 2000;
 const KN_APPLES = [0, 1, 2];     /* яблок на уровень */
+const KN_FLOOR = 0.64;           /* где стена переходит в пол, как в макете */
 
 const kn = {
   cv:null, ctx:null, W:0, H:0, DPR:2,
@@ -17547,7 +17628,7 @@ const kn = {
   stuck:[], apples:[], flying:null,
   score:0, applesHit:0, combo:0, mult:1, lastThrowAt:0, bestCombo:0,
   active:false, running:false, raf:0, lastT:0, shake:0, flash:0, split:[],
-  skin:null, img:null, paused:false, sessionsUsed:0
+  skin:null, paused:false, handle:'#2f3644'
 };
 
 function knDPR(){
@@ -17558,14 +17639,13 @@ function knDPR(){
   return Math.min(2, d);
 }
 
-/* ---------- скин ножа ---------- */
+/* ---------- скин: берём цвет рукояти из инвентаря ---------- */
 function knPickSkin(){
   const use = (state && state.knifeSkin) || null;
   if(use){
     const s = SKINS.filter(function(x){ return x.id === use; })[0];
     if(s && s.w && KNIVES.indexOf(s.w) >= 0) return s;
   }
-  /* лучший нож в инвентаре — чтобы награда была видна в бою */
   let best = null, bestV = -1;
   (state.inv || []).forEach(function(it){
     const s = SKINS.filter(function(x){ return x.id === it.id; })[0];
@@ -17574,54 +17654,16 @@ function knPickSkin(){
     if(v > bestV){ bestV = v; best = s; }
   });
   if(best) return best;
-  return SKINS.filter(function(x){ return x.w === 'knife'; })[0] || KNIVES[0];
+  return SKINS.filter(function(x){ return x.w === 'knife'; })[0] || null;
 }
-function knLoadArt(){
+function knLoadSkin(){
   kn.skin = knPickSkin();
-  kn.img = null;
-  /* арт ствола лежит на сайте (как у всего остального в игре).
-     Нет сети или файла — рисуем клинок вектором, игра не зависит от картинки. */
+  let c = '#2f3644';
   try{
-    const im = new Image();
-    im.crossOrigin = 'anonymous';          /* без этого холст «пачкается» и его нельзя прочитать */
-    im.onload = function(){ kn.img = im; };
-    im.onerror = function(){ kn.img = null; };
-    im.src = weaponArtUrl(kn.skin.w);
-  }catch(e){ kn.img = null; }
-}
-
-/* векторный клинок: лезвие + гарда + рукоять, кончиком вправо */
-function knDrawVector(ctx, w, h, color){
-  const blade = w * 0.62, gh = h * 0.42;
-  ctx.fillStyle = '#dfe8f5';
-  ctx.beginPath();
-  ctx.moveTo(0, -h * 0.16);
-  ctx.lineTo(blade * 0.86, -h * 0.20);
-  ctx.lineTo(blade, 0);
-  ctx.lineTo(blade * 0.86, h * 0.30);
-  ctx.lineTo(0, h * 0.22);
-  ctx.closePath();
-  ctx.fill();
-  /* блик по лезвию */
-  ctx.fillStyle = 'rgba(255,255,255,.75)';
-  ctx.beginPath();
-  ctx.moveTo(blade * 0.08, -h * 0.10);
-  ctx.lineTo(blade * 0.8, -h * 0.13);
-  ctx.lineTo(blade * 0.8, -h * 0.03);
-  ctx.lineTo(blade * 0.08, -h * 0.01);
-  ctx.closePath();
-  ctx.fill();
-  /* гарда */
-  ctx.fillStyle = '#3b4453';
-  ctx.fillRect(-h * 0.10, -gh, h * 0.22, gh * 2);
-  /* рукоять */
-  ctx.fillStyle = color || '#2f3644';
-  ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(-w * 0.34, -h * 0.20, w * 0.30, h * 0.42, h * 0.12)
-                : ctx.rect(-w * 0.34, -h * 0.20, w * 0.30, h * 0.42);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.18)';
-  ctx.fillRect(-w * 0.30, -h * 0.14, w * 0.22, h * 0.08);
+    const r = kn.skin && kn.skin.r;
+    if(r && RAR[r] && RAR[r].color) c = RAR[r].color;
+  }catch(e){}
+  kn.handle = c;
 }
 
 /* ---------- лимит сессий ---------- */
@@ -17638,9 +17680,10 @@ function knTakeOnce(){
   save();
 }
 
-/* ---------- звук (в общей шине SFX) ---------- */
+/* ---------- звук: общая шина SFX ---------- */
 function knSnd(kind){
   try{
+    if(!SRSET.sfx) return;
     if(kind === 'throw') SFX.click();
     else if(kind === 'stick'){ tone(240, .07, {type:'triangle', gain:.06, slide:150}); noise(.05, {freq:900, gain:.05}); }
     else if(kind === 'apple'){ tone(880, .1, {type:'triangle', gain:.08}); tone(1320, .12, {type:'sine', gain:.05, delay:.06}); noise(.12, {freq:4200, gain:.04}); }
@@ -17649,58 +17692,81 @@ function knSnd(kind){
   }catch(e){}
 }
 
-/* ---------- разметка и показ экранов ---------- */
+/* ---------- HUD ---------- */
 function knEl(id){ return document.getElementById(id); }
 function knShow(id, on){
   const e = knEl(id); if(!e) return;
   e.classList.toggle('on', !!on);
 }
-function knPaintTries(){
-  const box = knEl('knTries'); if(!box) return;
-  box.innerHTML = '';
-  for(let i = 0; i < KN_SESSIONS; i++){
-    const s = document.createElement('i');
-    if(i < knLeft()) s.className = 'on';
-    box.appendChild(s);
+function knOvr(){
+  const on = ['knStart','knPause','knLevelDone','knResult'].some(function(id){
+    const e = knEl(id); return e && e.classList.contains('on');
+  });
+  const m = knEl('knifeModal');
+  if(m) m.classList.toggle('kn-ovr', !!on);
+  return on;
+}
+function knPaint(){
+  /* столбик ножей слева: сколько осталось воткнуть */
+  const box = knEl('knBoxList');
+  if(box){
+    const left = kn.active ? Math.max(0, KN_THROWS - kn.throwIdx) : KN_THROWS;
+    if(box.childNodes.length !== KN_THROWS){
+      box.innerHTML = '';
+      for(let i = 0; i < KN_THROWS; i++) box.appendChild(document.createElement('i'));
+    }
+    for(let i = 0; i < KN_THROWS; i++){
+      const el = box.childNodes[i];
+      el.className = i < left ? (i === left - 1 ? 'next' : '') : 'used';
+    }
+    const c = knEl('knBoxCount');
+    if(c) c.textContent = left;
   }
-  const lvl = knEl('knLevel');
-  if(lvl) lvl.textContent = kn.active ? ('УР. ' + (kn.level + 1)) : 'УР. —';
   const sc = knEl('knScore'); if(sc) sc.textContent = kn.score;
-  const ap = knEl('knApplesLeft'); if(ap) ap.textContent = kn.active ? knApplesLeft() : 0;
-  const thr = knEl('knThrowsLeft'); if(thr) thr.textContent = kn.active ? Math.max(0, KN_THROWS - kn.throwIdx) : KN_THROWS;
+  const lv = knEl('knLevelVal'); if(lv) lv.textContent = kn.active ? ('УР. ' + (kn.level + 1)) : 'УР. 1';
+  const goal = knEl('knGoal');
+  if(goal){
+    const a = kn.active ? knApplesLeft() : (KN_APPLES[0] || 0);
+    goal.hidden = !(kn.active && kn.apples.length);
+    goal.textContent = '🍎 ' + a + '/' + (kn.apples.length || 0);
+  }
+  const tr = knEl('knTriesBox');
+  if(tr){
+    if(tr.childNodes.length !== KN_SESSIONS){
+      tr.innerHTML = '';
+      for(let i = 0; i < KN_SESSIONS; i++) tr.appendChild(document.createElement('i'));
+    }
+    const left = knLeft();
+    for(let i = 0; i < KN_SESSIONS; i++) tr.childNodes[i].className = i < left ? 'on' : '';
+  }
+  const st = knEl('knStartLeft'); if(st) st.textContent = knLeft();
+  const bs = knEl('knStartBest'); if(bs) bs.textContent = (state.knBest | 0).toLocaleString('ru-RU');
+  knOvr();
 }
 
 function openKnife(){
-  knLoadArt();
-  knPaintTries();
+  knLoadSkin();
+  kn.active = false; kn.running = false;
   knShow('knResult', false);
   knShow('knPause', false);
+  knShow('knLevelDone', false);
   knShow('knStart', true);
   const go = knEl('knGo');
   if(go){
-    const left = knLeft();
-    go.disabled = left <= 0;
-    go.textContent = left > 0 ? 'Играть' : 'Сегодня всё';
+    go.disabled = knLeft() <= 0;
+    go.textContent = knLeft() > 0 ? 'Играть' : 'Сессий больше нет';
   }
-  const st = knEl('knStartLeft');
-  if(st) st.textContent = knLeft() + '/' + KN_SESSIONS;
-  const bs = knEl('knStartBest');
-  if(bs) bs.textContent = (state.knBest | 0).toLocaleString('ru-RU');
-  const s1 = knEl('knStartSkin');
-  if(s1) s1.textContent = (kn.skin && kn.skin.n) ? kn.skin.n : 'Нож';
+  knPaint();
   const b = document.getElementById('knifeModal');
   if(b && !b.classList.contains('on')) b.classList.add('on');
 }
 
 /* ---------- уровень ---------- */
-function knApplesLeft(){
-  return kn.apples.filter(function(a){ return !a.hit; }).length;
-}
+function knApplesLeft(){ return kn.apples.filter(function(a){ return !a.hit; }).length; }
 function knStartSession(){
   if(knLeft() <= 0){ toast('Сессий на сегодня не осталось'); openKnife(); return; }
   knTakeOnce();
-  kn.score = 0; kn.level = 0; kn.bestCombo = 0;
-  knPaintTries();
+  kn.score = 0; kn.bestCombo = 0; kn.applesHit = 0;
   knStartLevel(0);
 }
 function knStartLevel(i){
@@ -17720,19 +17786,22 @@ function knStartLevel(i){
   knShow('knStart', false);
   knShow('knPause', false);
   knShow('knResult', false);
+  knShow('knLevelDone', false);
 
   kn.active = true; kn.running = true; kn.paused = false;
   kn.lastT = 0;
   cancelAnimationFrame(kn.raf);
   kn.raf = requestAnimationFrame(knLoop);
 
+  const h = knEl('knHint');
+  if(h) h.textContent = 'Тапни по экрану, чтобы бросить';
   const b = knEl('knBanner');
   if(b){
-    b.innerHTML = '<b>Уровень ' + (i + 1) + '</b><span>' + (nA ? (nA === 1 ? 'ОДНО ЯБЛОКО' : 'ДВА ЯБЛОКА') : 'ДЕСЯТЬ НОЖЕЙ') + '</span>';
+    b.innerHTML = '<b>Уровень ' + (i + 1) + '</b><span>' + (nA === 0 ? 'ДЕСЯТЬ НОЖЕЙ' : (nA === 1 ? 'ОДНО ЯБЛОКО' : 'ДВА ЯБЛОКА')) + '</span>';
     b.classList.add('show');
-    setTimeout(function(){ b.classList.remove('show'); }, 1400);
+    setTimeout(function(){ b.classList.remove('show'); }, 1300);
   }
-  knPaintTries();
+  knPaint();
   knSnd('level');
 }
 function knResize(){
@@ -17746,14 +17815,14 @@ function knResize(){
   kn.ctx.setTransform(kn.DPR, 0, 0, kn.DPR, 0, 0);
 }
 function knCX(){ return kn.W / 2; }
-function knCY(){ return kn.H * 0.335; }
-function knR(){ return Math.min(kn.W * 0.325, kn.H * 0.155); }
+function knCY(){ return kn.H * 0.315; }
+function knR(){ return Math.min(kn.W * 0.345, kn.H * 0.16); }
 
 /* ---------- бросок ---------- */
 function knThrow(){
   if(!kn.running || kn.paused || kn.flying) return;
   if(kn.throwIdx >= KN_THROWS) return;
-  kn.flying = { p: 0, fromY: kn.H + 70, toY: knCY() };
+  kn.flying = { p: 0, fromY: kn.H + 80, toY: knCY() };
   knSnd('throw');
   const now = performance.now();
   if(kn.lastThrowAt && now - kn.lastThrowAt > KN_COMBO_MS){ kn.combo = 0; kn.mult = 1; }
@@ -17765,20 +17834,18 @@ function knLand(){
 
   const local = mod(Math.PI / 2 - kn.rot, Math.PI * 2);
 
-  /* попал в свой нож — сессия кончилась */
   for(let i = 0; i < kn.stuck.length; i++){
     if(Math.abs(angDiff(local, kn.stuck[i].ang)) < KN_COLLIDE){
-      kn.shake = SRSET.shake ? 1 : 0;
-      kn.flash = 1;
+      kn.shake = 1; kn.flash = 1;
       kn.running = false;
       knSnd('fail');
       try{ if(SRSET.haptic) SR_VIBRATE.play([40, 30, 60]); }catch(e){}
+      knPaint();
       setTimeout(function(){ knFinish('Клинок в клинок — все ножи выпали'); }, 620);
       return;
     }
   }
 
-  /* яблоко? */
   let appleHit = false;
   for(let i = 0; i < kn.apples.length; i++){
     const a = kn.apples[i];
@@ -17798,40 +17865,38 @@ function knLand(){
   kn.stuck.push({ ang: local, crit: appleHit });
 
   kn.score += (appleHit ? 60 : 10) * kn.mult;
-  if(SRSET.haptic) { try{ SR_VIBRATE.play([8]); }catch(e){} }
+  try{ if(SRSET.haptic) SR_VIBRATE.play([8]); }catch(e){}
   knSnd('stick');
   kn.flash = appleHit ? 1 : 0.4;
   kn.throwIdx++;
-  knPaintTries();
+  knPaint();
 
-  if(appleHit && knApplesLeft() === 0 && kn.throwIdx >= KN_THROWS){
-    setTimeout(function(){ knLevelDone(); }, 300);
-    return;
-  }
   if(kn.throwIdx >= KN_THROWS){
     setTimeout(function(){
       if(knApplesLeft() > 0) knFinish('Яблоко осталось целым');
       else knLevelDone();
-    }, 320);
+    }, 340);
   }
 }
 function knLevelDone(){
   kn.running = false; kn.active = false;
   cancelAnimationFrame(kn.raf);
   knSnd('level');
+  kn.score += 150;
   if(kn.level + 1 >= KN_LEVELS){ knFinish(null, true); return; }
-  kn.score += 150;                       /* бонус за пройденный уровень */
-  knShow('knLevelDone', true);
   const b = knEl('knLevelBody');
   if(b){
+    const nextN = KN_APPLES[kn.level + 1];
     b.innerHTML = '<div class="rr-badge">уровень пройден</div>' +
       '<h4>Уровень ' + (kn.level + 1) + ' <span>чисто</span></h4>' +
       '<p>Очков: <b>' + kn.score + '</b>. Дальше — ' +
-      (KN_APPLES[kn.level + 1] ? (KN_APPLES[kn.level + 1] === 1 ? 'одно яблоко' : 'два яблока') : 'десять ножей') + '.</p>' +
+      (nextN === 0 ? 'десять ножей' : (nextN === 1 ? 'одно яблоко' : 'два яблока')) + '.</p>' +
       '<button class="rr-btn" id="knNext">Дальше ▶</button>';
     const nb = knEl('knNext');
     if(nb) nb.addEventListener('click', function(){ knShow('knLevelDone', false); knStartLevel(kn.level + 1); });
   }
+  knShow('knLevelDone', true);
+  knPaint();
 }
 
 /* ---------- финал ---------- */
@@ -17849,8 +17914,7 @@ function knFinish(reason, win){
     coins = tier.coins;
     dust = Math.min(20, kn.applesHit * 4);
     if(tier.skin && !(tier.oncePerDay && state.knDaySkin === todayKey())){
-      const rar = tier.skin;
-      const pool = SKINS.filter(function(s){ return s.r === rar && !s.excl; });
+      const pool = SKINS.filter(function(s){ return s.r === tier.skin && !s.excl; });
       if(pool.length){
         const sk = pool[Math.floor(Math.random() * pool.length)];
         const item = makeItem(sk);
@@ -17886,11 +17950,14 @@ function knFinish(reason, win){
           '<div><span>Очки</span><b>' + score + '</b></div>' +
           '<div><span>Яблок</span><b>' + kn.applesHit + '</b></div>' +
           '<div><span>Серия</span><b>' + kn.bestCombo + '</b></div>' +
-          '<div><span>Попыток</span><b>' + knLeft() + '/' + KN_SESSIONS + '</b></div>' +
+          '<div><span>Сессий</span><b>' + knLeft() + '/' + KN_SESSIONS + '</b></div>' +
         '</div>' +
-        (coins ? '<div class="rr-drop"><div class="rr-art" style="font-size:24px">🪙</div><div><div class="rr-nm">Кредиты</div><div class="rr-vl">+' + coins + (dust ? ' · пыль +' + dust : '') + '</div></div></div>' : '') +
+        (coins ? '<div class="rr-drop"><div class="rr-art" style="font-size:22px">🪙</div><div><div class="rr-nm">Кредиты</div><div class="rr-vl">+' + coins + (dust ? ' · пыль +' + dust : '') + '</div></div></div>' : '') +
         art +
-        '<button class="rr-btn" id="knAgain">' + (knLeft() > 0 ? 'Ещё раз · осталось ' + knLeft() : 'Закрыть') + '</button>' +
+        (knLeft() > 0
+          ? '<button class="rr-btn" id="knAgain">Ещё раз · осталось ' + knLeft() + '</button>'
+          : '<button class="rr-btn" id="knAgain">Закрыть</button>') +
+        '<button class="rr-btn rr-ghost" id="knToMenu">В меню</button>' +
       '</div>';
     knShow('knResult', true);
     const ag = knEl('knAgain');
@@ -17898,48 +17965,96 @@ function knFinish(reason, win){
       knShow('knResult', false);
       if(knLeft() > 0) knStartSession(); else openKnife();
     });
+    const tm = knEl('knToMenu');
+    if(tm) tm.addEventListener('click', function(){ knShow('knResult', false); openKnife(); });
   }
   if(win){
     try{ if(typeof FX !== 'undefined' && FX.confetti) FX.confetti({ count: 70 }); }catch(e){}
   }
-  knPaintTries();
+  knPaint();
 }
 
-/* ---------- отрисовка ---------- */
-function knHandleColor(){
-  try{
-    const r = kn.skin && kn.skin.r;
-    const c = r && RAR[r] && RAR[r].color;
-    return c || '#2f3644';
-  }catch(e){ return '#2f3644'; }
+/* ---------- рисование ---------- */
+/* тонкий нож: остриё в x=0, дальше клинок, гарда, рукоять */
+function knBlade(ctx, len, thick, handle){
+  const blade = len * 0.62, gh = thick * 0.5;
+  const g = ctx.createLinearGradient(0, -thick / 2, 0, thick / 2);
+  g.addColorStop(0, '#f4f8ff');
+  g.addColorStop(.45, '#c3cddd');
+  g.addColorStop(1, '#7e8b9f');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-len * 0.10, 0);
+  ctx.lineTo(blade * 0.94, -gh * 0.62);
+  ctx.lineTo(blade, -gh * 0.10);
+  ctx.lineTo(blade * 0.9, gh * 0.55);
+  ctx.lineTo(-len * 0.10, gh * 0.16);
+  ctx.closePath();
+  ctx.fill();
+  /* дол — светлая линия по клинку */
+  ctx.strokeStyle = 'rgba(255,255,255,.75)';
+  ctx.lineWidth = Math.max(1, thick * 0.10);
+  ctx.beginPath();
+  ctx.moveTo(blade * 0.1, -gh * 0.06);
+  ctx.lineTo(blade * 0.78, -gh * 0.12);
+  ctx.stroke();
+  /* гарда */
+  ctx.fillStyle = '#39424f';
+  ctx.fillRect(blade - thick * 0.10, -gh * 0.9, Math.max(2, thick * 0.26), gh * 1.8);
+  /* рукоять */
+  const hx = blade + thick * 0.16, hw = len * 0.34, hh = gh * 0.92;
+  const hg = ctx.createLinearGradient(0, -hh, 0, hh);
+  hg.addColorStop(0, '#4a5464');
+  hg.addColorStop(.5, handle || '#2f3644');
+  hg.addColorStop(1, '#1c222c');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(hx, -hh, hw, hh * 2, hh);
+  else ctx.rect(hx, -hh, hw, hh * 2);
+  ctx.fill();
+  /* клёпки */
+  ctx.fillStyle = 'rgba(220,232,248,.45)';
+  const rv = Math.max(1, hh * 0.22);
+  for(let i = 0; i < 2; i++){
+    ctx.beginPath();
+    ctx.arc(hx + hw * (0.32 + i * 0.38), 0, rv, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
+
 function knRender(){
   const ctx = kn.ctx;
   if(!ctx) return;
   const W = kn.W, H = kn.H;
   ctx.save();
-  if(kn.shake > 0 && SRSET.shake) ctx.translate((Math.random() - .5) * kn.shake * 12, (Math.random() - .5) * kn.shake * 12);
+  if(kn.shake > 0 && SRSET.shake) ctx.translate((Math.random() - .5) * kn.shake * 14, (Math.random() - .5) * kn.shake * 14);
 
-  /* фон: тёмный цех */
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#10141d');
-  bg.addColorStop(.55, '#0b0e15');
-  bg.addColorStop(1, '#05070b');
-  ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+  /* стена */
+  const fy = H * KN_FLOOR;
+  const bg = ctx.createLinearGradient(0, 0, 0, fy);
+  bg.addColorStop(0, '#241a12');
+  bg.addColorStop(.45, '#2b2016');
+  bg.addColorStop(1, '#191209');
+  ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, fy + 20);
 
-  /* конус света */
-  const lampY = H * 0.05;
-  const cg = ctx.createRadialGradient(W / 2, lampY, 0, W / 2, H * 0.45, H * 0.6);
-  cg.addColorStop(0, 'rgba(255,176,46,.16)');
-  cg.addColorStop(1, 'rgba(255,176,46,0)');
-  ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H);
+  /* пятно света от лампы сверху */
+  const cg = ctx.createRadialGradient(W / 2, 0, 0, W / 2, H * 0.28, H * 0.62);
+  cg.addColorStop(0, 'rgba(255,190,110,.16)');
+  cg.addColorStop(1, 'rgba(255,190,110,0)');
+  ctx.fillStyle = cg; ctx.fillRect(0, 0, W, fy);
+
+  /* доски стены */
+  ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = 1;
+  for(let y = 40; y < fy; y += 46){
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
 
   /* пол */
-  const fy = H * 0.72;
   const fg = ctx.createLinearGradient(0, fy, 0, H);
-  fg.addColorStop(0, '#161a23'); fg.addColorStop(1, '#07090d');
+  fg.addColorStop(0, '#141a24');
+  fg.addColorStop(1, '#080a0f');
   ctx.fillStyle = fg; ctx.fillRect(0, fy, W, H - fy);
-  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(120,180,255,.20)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, fy); ctx.lineTo(W, fy); ctx.stroke();
 
   /* мишень */
@@ -17948,67 +18063,58 @@ function knRender(){
   ctx.translate(X, Y);
   ctx.rotate(kn.rot);
 
-  /* полено */
-  const wood = ctx.createRadialGradient(-R * .3, -R * .3, R * .1, 0, 0, R);
-  wood.addColorStop(0, '#8a5a34');
-  wood.addColorStop(.6, '#6b4326');
-  wood.addColorStop(1, '#402815');
+  const wood = ctx.createRadialGradient(-R * .3, -R * .35, R * .08, 0, 0, R);
+  wood.addColorStop(0, '#9a6636');
+  wood.addColorStop(.55, '#7d4e29');
+  wood.addColorStop(1, '#4d3018');
   ctx.fillStyle = wood;
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
-  /* годовые кольца */
-  ctx.strokeStyle = 'rgba(30,16,6,.35)'; ctx.lineWidth = 1.2;
-  for(let i = 1; i <= 5; i++){
-    ctx.beginPath(); ctx.arc(0, 0, R * i / 6, 0, Math.PI * 2); ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(42,24,8,.42)'; ctx.lineWidth = Math.max(1, R * 0.012);
+  for(let i = 1; i <= 6; i++){
+    ctx.beginPath(); ctx.arc(0, 0, R * i / 7, 0, Math.PI * 2); ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(20,10,4,.6)'; ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(28,16,6,.75)'; ctx.lineWidth = Math.max(2, R * 0.03);
   ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
 
   /* яблоки */
   kn.apples.forEach(function(a){
     if(a.hit) return;
-    const ax = Math.cos(a.ang) * R * 0.62, ay = Math.sin(a.ang) * R * 0.62;
-    const rr2 = R * 0.15;
-    const ap = ctx.createRadialGradient(ax - rr2 * .35, ay - rr2 * .35, rr2 * .15, ax, ay, rr2);
-    if(SRSET.cb){ ap.addColorStop(0, '#ffffff'); ap.addColorStop(1, '#00c2ff'); }
-    else { ap.addColorStop(0, '#ff8a6a'); ap.addColorStop(1, '#c62a1f'); }
+    const ax = Math.cos(a.ang) * R * 0.60, ay = Math.sin(a.ang) * R * 0.60;
+    const rr2 = R * 0.155;
+    const ap = ctx.createRadialGradient(ax - rr2 * .35, ay - rr2 * .4, rr2 * .12, ax, ay, rr2);
+    if(SRSET.cb){ ap.addColorStop(0, '#ffffff'); ap.addColorStop(1, '#0a84c8'); }
+    else { ap.addColorStop(0, '#ff8f6d'); ap.addColorStop(1, '#bd2418'); }
     ctx.fillStyle = ap;
     ctx.beginPath(); ctx.arc(ax, ay, rr2, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(ax, ay, rr2, 0, Math.PI * 2); ctx.stroke();
-    /* листик */
     ctx.fillStyle = '#3fa14a';
-    ctx.beginPath(); ctx.ellipse(ax + rr2 * .5, ay - rr2 * .95, rr2 * .45, rr2 * .22, -.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ax + rr2 * .5, ay - rr2 * .95, rr2 * .46, rr2 * .22, -.6, 0, Math.PI * 2); ctx.fill();
   });
 
-  /* воткнутые ножи */
-  const art = kn.img;
+  /* воткнутые ножи: радиально, остриё в мишени */
+  const len = R * 0.72, thick = R * 0.115;
   kn.stuck.forEach(function(k){
-    const a = k.ang;
     ctx.save();
-    ctx.rotate(a);
-    const room = Math.max(40, kn.W / 2 - R * 0.9 - 4);
-    const w = Math.min(R * 0.62, room * 1.02), h = w * 0.34;
-    ctx.shadowColor = k.crit ? 'rgba(255,215,106,.9)' : 'rgba(0,0,0,.8)';
-    ctx.shadowBlur = k.crit ? 16 : 6;
-    ctx.translate(R * 0.9, 0);
-    if(art && art.complete && art.naturalWidth){
-      ctx.drawImage(art, 0, -h / 2, w, h);
-    } else {
-      knDrawVector(ctx, w, h, knHandleColor());
-    }
+    ctx.rotate(k.ang);
+    ctx.translate(R * 0.72, 0);
+    ctx.shadowColor = k.crit ? 'rgba(255,215,106,.85)' : 'rgba(0,0,0,.65)';
+    ctx.shadowBlur = k.crit ? 14 : 6;
+    knBlade(ctx, len, thick, kn.handle);
     ctx.restore();
   });
   ctx.restore();
 
-  /* расколотые половинки яблока летят */
+  /* раскол яблока */
   kn.split.forEach(function(s){
-    const t = s.t / 620;
-    const d = R * 0.62 + t * R * 0.9;
+    const t = s.t / 640;
+    const d = R * 0.6 + t * R * 0.95;
     const ax = X + Math.cos(s.ang + kn.rot) * d;
-    const ay = Y + Math.sin(s.ang + kn.rot) * d + t * t * 90;
+    const ay = Y + Math.sin(s.ang + kn.rot) * d + t * t * 110;
     ctx.globalAlpha = Math.max(0, 1 - t);
-    ctx.fillStyle = SRSET.cb ? '#00c2ff' : '#d8402f';
-    ctx.beginPath(); ctx.arc(ax, ay, R * 0.13, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = SRSET.cb ? '#0a84c8' : '#c93a28';
+    ctx.beginPath(); ctx.arc(ax, ay, R * 0.13 * (1 - t * .3), 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   });
 
@@ -18016,29 +18122,27 @@ function knRender(){
   if(kn.flying){
     const f = kn.flying;
     const y = f.fromY + (f.toY - f.fromY) * f.p;
-    const w = Math.min(R * 1.05, kn.W * 0.42), h = w * 0.34;
+    const flen = R * 0.95, fth = R * 0.115;
     ctx.save();
     ctx.translate(X, y);
     ctx.rotate(-Math.PI / 2);
-    ctx.shadowColor = '#ffd06a'; ctx.shadowBlur = 12;
-    if(art && art.complete && art.naturalWidth) ctx.drawImage(art, -w * 0.86, -h / 2, w, h);
-    else knDrawVector(ctx, w, h, knHandleColor());
+    ctx.shadowColor = 'rgba(255,208,106,.7)'; ctx.shadowBlur = 10;
+    knBlade(ctx, flen, fth, kn.handle);
     ctx.restore();
-    /* след */
-    const tr = ctx.createLinearGradient(X, y, X, y + 90);
-    tr.addColorStop(0, 'rgba(255,208,106,.6)');
+    const tr = ctx.createLinearGradient(X, y, X, y + 110);
+    tr.addColorStop(0, 'rgba(255,208,106,.45)');
     tr.addColorStop(1, 'rgba(255,208,106,0)');
     ctx.strokeStyle = tr; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(X, y); ctx.lineTo(X, y + 90); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X, y + flen * 0.2); ctx.lineTo(X, y + 110); ctx.stroke();
   }
 
-  /* линия броска */
+  /* пунктир прицела */
   if(kn.running && !kn.flying && kn.throwIdx < KN_THROWS){
-    const y0 = Y + R + 16;
-    ctx.setLineDash([5, 6]);
-    ctx.strokeStyle = 'rgba(255,176,46,.28)';
+    const y0 = Y + R + 18;
+    ctx.setLineDash([6, 8]);
+    ctx.strokeStyle = 'rgba(255,176,46,.30)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(X, y0); ctx.lineTo(X, H * 0.95); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X, y0); ctx.lineTo(X, H * 0.97); ctx.stroke();
     ctx.setLineDash([]);
   }
   ctx.restore();
@@ -18068,7 +18172,7 @@ function knLoop(t){
   kn.shake = Math.max(0, kn.shake - dt / 320);
   kn.flash = Math.max(0, kn.flash - dt / 380);
   kn.split.forEach(function(s){ s.t += dt; });
-  kn.split = kn.split.filter(function(s){ return s.t < 640; });
+  kn.split = kn.split.filter(function(s){ return s.t < 660; });
 
   knRender();
   kn.raf = requestAnimationFrame(knLoop);
@@ -18085,18 +18189,32 @@ function knPause(){
   if(!kn.active || !kn.running) return;
   kn.paused = true;
   knShow('knPause', true);
+  knPaint();
 }
 function knResume(){
   if(!kn.paused) return;
   kn.paused = false;
   knShow('knPause', false);
   kn.lastT = 0;
+  knPaint();
 }
 function knQuit(){
+  const was = kn.active && kn.running;
   kn.paused = false; kn.active = false; kn.running = false;
   cancelAnimationFrame(kn.raf);
   knShow('knPause', false);
-  knFinish('Вы вышли из боя');
+  if(was) knFinish('Вы вышли из боя');
+  else { knShow('knResult', false); openKnife(); }
+}
+function knClose(){
+  kn.paused = false; kn.active = false; kn.running = false;
+  cancelAnimationFrame(kn.raf);
+  knShow('knPause', false);
+  knShow('knResult', false);
+  knShow('knLevelDone', false);
+  const m = document.getElementById('knifeModal');
+  if(m) m.classList.remove('on');
+  try{ SRSET.paint(); }catch(e){}
 }
 
 /* ---------- привязка ---------- */
@@ -18105,38 +18223,46 @@ function knQuit(){
   if(!b) return;
   new MutationObserver(function(){
     if(!b.classList.contains('on') && kn.active){ kn.active = false; kn.running = false; cancelAnimationFrame(kn.raf); }
+    knOvr();
   }).observe(b, {attributes:true, attributeFilter:['class']});
 
   const cv = document.getElementById('knifeCanvas');
   if(cv){
     cv.addEventListener('pointerdown', knPointer);
-    window.addEventListener('resize', function(){ if(kn.active){ knResize(); } });
+    window.addEventListener('resize', function(){ if(kn.active){ knResize(); knRender(); } });
   }
-  const go = document.getElementById('knGo');
-  if(go) go.addEventListener('click', function(){ SFX.click(); knStartSession(); });
-  const rs = document.getElementById('knResume');
-  if(rs) rs.addEventListener('click', function(){ SFX.click(); knResume(); });
-  const qt = document.getElementById('knQuit');
-  if(qt) qt.addEventListener('click', function(){ SFX.click(); knQuit(); });
-  const pa = document.getElementById('knPauseBtn');
-  if(pa) pa.addEventListener('click', function(){ SFX.click(); knPause(); });
+  const on = function(id, fn){ const e = document.getElementById(id); if(e) e.addEventListener('click', function(ev){ ev.stopPropagation(); try{ SFX.click(); }catch(err){} fn(); }); };
+  on('knGo', knStartSession);
+  on('knResume', knResume);
+  on('knQuit', knQuit);
+  on('knPauseBtn', knPause);
+  on('knClose', knClose);
+  on('knSetBtn', openSettings);
+  on('knMenuSet', openSettings);
+  on('knMenuClose', knClose);
+  on('knMenuBtn', function(){
+    knShow('knPause', false); knShow('knResult', false); knShow('knLevelDone', false);
+    kn.active = false; kn.running = false; cancelAnimationFrame(kn.raf);
+    openKnife();
+  });
 
   document.addEventListener('visibilitychange', function(){
     if(!document.hidden) return;
     if(kn.active && kn.running && !kn.paused) knPause();
   });
   document.addEventListener('keydown', function(e){
-    if(e.code === 'Space' && kn.active){
+    if(e.code === 'Space' && kn.active && !knOvr()){
       e.preventDefault();
-      if(kn.paused) knResume(); else knPointer(null);
+      if(kn.paused) knResume(); else knThrow();
     }
+    if(e.code === 'Escape' && kn.active){ knPause(); }
   });
 })();
 
 /* =========================================================
    4.31.0 · НАСТРОЙКИ (общие для тира, «Ритм-Штурма» и ножей)
-   Хранятся отдельно от сейва: это настройки устройства, а не прогресс,
-   и подписанный сейв из-за них трогать нельзя.
+   Хранятся отдельно от сейва: это настройки устройства, а не
+   прогресс, и подписанный сейв из-за них трогать нельзя.
    ========================================================= */
 const SRSET = (function(){
   const KEY = 'sr.mini.set';
@@ -18151,9 +18277,7 @@ const SRSET = (function(){
   function saveSet(){
     try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){}
   }
-
   function apply(){
-    /* звук и музыка живут в своей шине — настройки лишь отражают их состояние */
     try{ if(typeof sfxIsMuted === 'function' && sfxIsMuted() === v.sfx) sfxMute(!v.sfx); }catch(e){}
     try{ if(typeof musIsOn === 'function' && musIsOn() !== v.music) musToggle(v.music); }catch(e){}
     try{ if(typeof SR_VIBRATE !== 'undefined') SR_VIBRATE.set(!!v.haptic); }catch(e){}
@@ -18161,7 +18285,6 @@ const SRSET = (function(){
     paintFps();
     paintSwitches();
   }
-
   function paintSwitches(){
     document.querySelectorAll('[data-set]').forEach(function(b){
       b.classList.toggle('on', !!v[b.dataset.set]);
@@ -18170,15 +18293,9 @@ const SRSET = (function(){
       b.classList.toggle('on', b.dataset.v === v.quality);
     });
   }
-
   function set(k, val){
-    v[k] = val;
-    saveSet();
-    apply();
-    paintSwitches();
+    v[k] = val; saveSet(); apply(); paintSwitches();
   }
-
-  /* FPS-плашка: считается по rAF, обновляется дважды в секунду */
   let fpsRaf = 0, lastT = 0, frames = 0, acc = 0;
   function paintFps(){
     const el = document.getElementById('fpsBadge');
@@ -18188,18 +18305,14 @@ const SRSET = (function(){
     if(fpsRaf) return;
     lastT = 0; frames = 0; acc = 0;
     const tick = function(t){
-      if(!lastT){ lastT = t; }
+      if(!lastT) lastT = t;
       const dt = t - lastT; lastT = t;
       frames++; acc += dt;
-      if(acc > 500){
-        el.textContent = Math.round(frames * 1000 / acc) + ' FPS';
-        frames = 0; acc = 0;
-      }
+      if(acc > 500){ el.textContent = Math.round(frames * 1000 / acc) + ' FPS'; frames = 0; acc = 0; }
       fpsRaf = requestAnimationFrame(tick);
     };
     fpsRaf = requestAnimationFrame(tick);
   }
-
   return {
     get sfx(){ return v.sfx; },
     get music(){ return v.music; },
@@ -18212,37 +18325,50 @@ const SRSET = (function(){
   };
 })();
 
-/* разметка настроек: свайпы и сегменты */
 (function(){
   const m = document.getElementById('setModal');
   if(!m) return;
   m.addEventListener('click', function(e){
     const sw = e.target.closest ? e.target.closest('[data-set]') : null;
-    if(sw){
-      const k = sw.dataset.set;
-      SRSET.set(k, !SRSET[k]);
-      try{ SFX.click(); }catch(err){}
-      return;
-    }
+    if(sw){ SRSET.set(sw.dataset.set, !SRSET[sw.dataset.set]); try{ if(SRSET.sfx) SFX.click(); }catch(err){} return; }
     const seg = e.target.closest ? e.target.closest('[data-seg="quality"] button') : null;
-    if(seg){
-      SRSET.set('quality', seg.dataset.v);
-      try{ SFX.click(); }catch(err){}
-      return;
-    }
+    if(seg){ SRSET.set('quality', seg.dataset.v); try{ if(SRSET.sfx) SFX.click(); }catch(err){} return; }
   });
   SRSET.apply();
 })();
 
+/* 4.32.0: настройки — окно поверх игры. Чтобы бой не шёл за спиной,
+   на входе ставим паузу, а после закрытия возвращаем к тому же месту. */
+let srSetReturn = null;
 function openSettings(){
-  try{ SFX.click(); }catch(e){}
+  try{ if(SRSET.sfx) SFX.click(); }catch(e){}
+  srSetReturn = null;
+  try{
+    if(typeof kn !== 'undefined' && kn.active && kn.running && !kn.paused){
+      knPause(); srSetReturn = 'kn';
+    } else if(typeof rr !== 'undefined' && rr.active && rr.running && !rr.paused){
+      rrPauseGame(); srSetReturn = 'rr';
+    }
+  }catch(e){}
   SRSET.paint();
   const m = document.getElementById('setModal');
   if(m) m.classList.add('on');
 }
+function srSettingsClosed(){
+  /* паузу не снимаем сами: игрок должен увидеть «Пауза» и нажать «Продолжить»,
+     иначе бой пойдёт, пока он ещё читает */
+  srSetReturn = null;
+}
+(function(){
+  const m = document.getElementById('setModal');
+  if(!m || !window.MutationObserver) return;
+  new MutationObserver(function(){
+    if(!m.classList.contains('on')) srSettingsClosed();
+  }).observe(m, {attributes:true, attributeFilter:['class']});
+})();
 
 (function(){
-  ['knSetBtn', 'runSetBtn', 'tirSetBtn'].forEach(function(id){
+  ['runSetBtn', 'tirSetBtn'].forEach(function(id){
     const b = document.getElementById(id);
     if(b) b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openSettings(); });
   });
@@ -18927,13 +19053,16 @@ function rrStop(){
     if(!m.classList.contains('on') && rr.active) rrStop();
   }).observe(m, {attributes:true, attributeFilter:['class']});
 })();
-document.addEventListener('visibilitychange', function(){
-  if(!document.hidden) return;
+function rrPauseGame(){
   if(!rr.active || rr.paused) return;
   rr.paused = true; rr.active = false;
   rrBeatStop();
   cancelAnimationFrame(rr.raf);
   rrShow('runPause', true);
+}
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) return;
+  rrPauseGame();
 });
 
 /* ---------- финал ---------- */
@@ -20832,6 +20961,20 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.32.0 · «Меткий нож» как в макете</b><br>
+      <b>Вид боя переделан.</b> Мишень — деревянное полено с годовыми кольцами, стена уходит
+      в глубину, пол внизу. Ножи — тонкие клинки со светлым долом, втыкаются радиально,
+      остриём в мишень; рукоять в цвете редкости скина.<br>
+      <b>Счётчик ножей слева, столбиком.</b> Погасший — уже брошен, золотой — следующий.<br>
+      <b>Кнопка выхода на виду.</b> Справа сверху ✕ (раньше её не было видно и она не работала),
+      рядом ⚙. В меню — «⚙ Настройки» и «✕ Выйти в игру».<br>
+      <b>Меню влезает в экран.</b> Раньше карточка уезжала за край — теперь прокручивается
+      и на 360 точках помещается целиком.<br>
+      <b>Скорость выше.</b> Мишень начинает с 1,05 об/с и доходит до 1,67 к десятому броску.<br>
+      <b>Настройки не выкидывают из игры.</b> Раньше ⚙ поднималось в общий стек окон и закрывало
+      игру под собой — после «Назад» ты оказывался в «Испытаниях». Теперь это окно поверх:
+      бой встаёт на паузу, после закрытия — «Продолжить» с того же места. Касается и
+      «Ритм-Штурма», и тира, и ножей.<br>
       <b style="color:#ffd166">Что нового в 4.31.0 · «Меткий нож» вместо «Баттла»</b><br>
       <b>Новый режим в «Испытаниях».</b> «Меткий нож»: вращающаяся мишень, десять ножей,
       три уровня подряд. На первом надо просто воткнуть все ножи, на втором — ещё и расколоть
@@ -25547,6 +25690,7 @@ window.__sr = {
   SR_NOTIFY, rewMark, rewLeft, REW_MS, SR_VIBRATE, FX,
   openCraft, craftDo, renderCraft, renderMiniModes,
   openKnife, knLeft, knStartSession, knFinish, openSettings, SRSET, kn,
+  rr, rrPauseGame,
   /* 4.29.0: Ритм-Штурм вместо старого забега */
   openRun, runBegin, runStep, runPick, runFinish, runEntry, runLeft, runUsed,
   get run(){ return rr; }, RUN_TRIES, PHASES, BOSS_HP_MAX, PLAYER_HP_MAX, runCasesList,
