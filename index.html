@@ -2150,7 +2150,9 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   border:1px solid rgba(255,255,255,.13);border-radius:14px;
   background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
 .mini-card:hover{border-color:rgba(255,255,255,.28);color:#fff}
-.mini-ic{font-size:var(--fs-18, 18px);line-height:1}
+.mini-ic{width:22px;height:22px;line-height:0;display:block;color:#ffd08a;
+  filter:drop-shadow(0 0 8px rgba(255,176,46,.35))}
+.mini-ic svg{width:22px;height:22px;display:block}
 .mini-t{font-weight:900;font-size:var(--fs-14, 14px);letter-spacing:-.005em;
   background:linear-gradient(92deg,#ffd76a,#ff8a3d 55%,#ff2d9b);
   -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -5916,24 +5918,24 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
   </div>
   <div class="mini2" id="miniModesTrials">
     <button class="mini-card" id="openSniperTrial">
-      <span class="mini-ic">🎯</span>
+      <span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2"/><path d="M12 1.6v4.2M12 18.2v4.2M1.6 12h4.2M18.2 12h4.2"/></svg></span>
       <span class="mini-t">Тир · стрельба по карточкам</span>
-      <span class="mini-d" id="snipLeft">2 сессии в день · 5 выстрелов · 18 секунд · очки 150–300 по редкости</span>
+      <span class="mini-d" id="snipLeft">2 сессии в день · 5 выстрелов · 18 секунд</span>
     </button>
     <button class="mini-card" id="openKnifeTrial">
-      <span class="mini-ic">🔪</span>
+      <span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 15.5 15 4.5l4.5 4.5L8.5 20H4z"/><path d="M12.5 7 17 11.5"/></svg></span>
       <span class="mini-t">Меткий нож · три уровня</span>
       <span class="mini-d" id="knifeLeft">3 сессии в день · 10 ножей, яблоки, серия</span>
     </button>
     <button class="mini-card" id="openRunTrial">
-      <span class="mini-ic">🎵</span>
+      <span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 12h2.5l2-5 3 10 2.5-7 2 4H21"/></svg></span>
       <span class="mini-t mini-t-rr">Ритм-Штурм · танк дня</span>
       <span class="mini-d" id="runLeft">3 забега в день · ритм-бой на 42 секунды</span>
     </button>
-    <button class="mini-card" id="openTowerTrial">
-      <span class="mini-ic">🗼</span>
-      <span class="mini-t">Башня · 5 этажей</span>
-      <span class="mini-d" id="towerLeft">10 сессий в день · 5 этажей · за вершину ⭐ звезда и 100 пыли</span>
+    <button class="mini-card" id="openObsTrial">
+      <span class="mini-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9.5" width="10" height="10" rx="1.6"/><path d="M13.5 12.5h3.2l4 3.2v3.8h-7.2"/><circle cx="7" cy="20.4" r="1.5"/><circle cx="16.6" cy="20.4" r="1.5"/><path d="M8 6.2 12 3"/></svg></span>
+      <span class="mini-t mini-t-rr">Забег 3D · четыре локации</span>
+      <span class="mini-d" id="obsLeft">3 сессии в день · 100 % полосы = эпический кейс</span>
     </button>
   </div>
 </section>
@@ -6437,6 +6439,48 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       <div class="tir-name" id="tirName">Пять выстрелов, восемнадцать секунд</div>
       <div class="tir-res" id="snipRes"></div>
     </div>
+  </div>
+</div>
+
+<!-- 4.34.0: ЗАБЕГ 3D (вместо «Башни») -->
+<div class="modal" id="obsModal">
+  <div class="sheet" id="obsSheet">
+    <canvas id="obsCanvas"></canvas>
+
+    <div id="obsHud">
+      <div class="obs-prog"><div class="obs-bar" id="obsBar"></div></div>
+      <div id="obsLives"></div>
+      <div class="obs-hudrow">
+        <span class="obs-pill" id="obsMode">КУБ</span>
+        <span class="obs-pill"><b id="obsScore">0</b> очк</span>
+        <span class="obs-pill" id="obsMult">×1</span>
+        <span class="obs-pill"><b id="obsProg">0%</b></span>
+      </div>
+      <button class="obs-ic-btn" id="obsPauseBtn" aria-label="Пауза">❚❚</button>
+      <button class="obs-ic-btn" id="obsSetBtn" aria-label="Настройки">⚙</button>
+    </div>
+    <div id="obsBanner"></div>
+
+    <div class="obs-screen on" id="obsStart">
+      <div class="obs-logo">SKIN RUSH</div>
+      <div class="obs-sub">· ЗАБЕГ 3D ·</div>
+      <div class="obs-tx">Куб бежит по полосе, корабль летит, шар катится.<br>
+        Тап — прыжок, двойной тап — рывок,<br>попал в бит — ×2 к очкам.</div>
+      <div class="obs-stats">
+        <div><span>Сессий</span><b id="obsStartLeft">3</b></div>
+        <div><span>Рекорд</span><b id="obsStartBest">0%</b></div>
+      </div>
+      <button class="obs-btn" id="obsGo">Играть</button>
+      <button class="obs-btn ghost" id="obsMenuClose">Закрыть</button>
+    </div>
+
+    <div class="obs-screen" id="obsPause">
+      <div class="obs-logo small">ПАУЗА</div>
+      <button class="obs-btn" id="obsResume">Продолжить</button>
+      <button class="obs-btn ghost" id="obsQuit">Завершить забег</button>
+    </div>
+
+    <div class="obs-screen" id="obsOver"></div>
   </div>
 </div>
 
@@ -8690,7 +8734,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.33.0';
+const VERSION = '4.34.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -8711,6 +8755,8 @@ let state = {coins:0, inv:[], opened:0, best:0, lastBonus:0, freeCase:1,
              tut:{step:0, on:1, trialsAt:0},
              week:{start:0, n:0, done:0},
              snip:{date:'', n:0}, bat:{hour:'', n:0}, dustEx:{date:'', c:0}, hist:[],
+             /* 4.34.0: забег 3D — сессии в день, рекорд, разовая награда */
+             obsDay:{d:'', n:0}, obsBest:0, obsReward:'', dayAll:'',
              tokens:0, cd:{drum:0, hour:0, day:0}, xp:0, lvl:1,
              sold:0, bossTotal:0, ach:[], seen:[], seenW:[],
              fails:0, upOk:0, upFail:0,
@@ -17222,7 +17268,7 @@ document.addEventListener('click', (e)=>{
 /* 4.32.0: настройки — всплывающее окно ПОВЕРХ игры (тир/ритм/ножи). Раньше оно
    поднималось в общий стек и закрывало игру под собой: нажал ⚙ → «назад» →
    выкинуло в «Испытания». Теперь оно стек не трогает. */
-const SR_MODAL_EXEMPT = ['achModal','tutModal','tutMap','tutHint','feedModal','bootCover','setModal'];
+const SR_MODAL_EXEMPT = ['achModal','tutModal','tutMap','tutHint','feedModal','bootCover','setModal','obsModal'];
 let srModalStack = [];
 
 function srModalOn(el){
@@ -17455,6 +17501,13 @@ function batTakeOnce(){
 
 function renderMiniModes(){
   const s = $('#snipLeft'), d = $('#knifeLeft'), r = $('#runLeft'), tw = $('#towerLeft');
+  const ob = $('#obsLeft');
+  if(ob){
+    const left = obsLeft();
+    ob.textContent = left > 0
+      ? `Сессий сегодня: ${left} · 100 % полосы = эпический кейс · рекорд ${(state.obsBest|0)}%`
+      : 'На сегодня всё — три сессии израсходованы, приходите завтра';
+  }
   if(tw){
     const left = towerLeft();
     tw.textContent = left > 0
@@ -18529,6 +18582,8 @@ function openSettings(){
       knPause(); srSetReturn = 'kn';
     } else if(typeof rr !== 'undefined' && rr.active && rr.running && !rr.paused){
       rrPauseGame(); srSetReturn = 'rr';
+    } else if(typeof obs !== 'undefined' && obs.active && obs.running && !obs.paused){
+      obsPause(); srSetReturn = 'obs';
     }
   }catch(e){}
   SRSET.paint();
@@ -20907,7 +20962,7 @@ $$('.modal').forEach(m=>m.addEventListener('click', e=>{
   if(e.target === m && m.id !== 'winModal') m.classList.remove('on');
 }));
 document.addEventListener('keydown', e=>{
-  if(e.key === 'Escape') $$('.modal').forEach(m=>{ if(m.id !== 'winModal') m.classList.remove('on'); });
+  if(e.key === 'Escape') $$('.modal').forEach(m=>{ if(m.id !== 'winModal' && m.id !== 'obsModal') m.classList.remove('on'); });
 });
 
 $('#btnOpen').addEventListener('click', ()=>openCase(false));
@@ -20918,6 +20973,7 @@ $('#tirTrainBtn')?.addEventListener('click', ()=>openSniper(true));
 $('#openKnifeTrial')?.addEventListener('click', openKnife);
 $('#openRunTrial')?.addEventListener('click', openRun);
 $('#openTowerTrial')?.addEventListener('click', openTower);
+$('#openObsTrial')?.addEventListener('click', function(){ try{ SFX.click(); }catch(e){} openObs(); });
 /* 4.4.1: стрельба тапом В ТОЧКУ сцены (кнопок «ВЫСТРЕЛ» и «Пропуск» больше нет) */
 (function(){
   const strip = $('#snipStrip');
@@ -21142,6 +21198,17 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.34.0 · «Забег 3D» вместо «Башни»</b><br>
+      <b>Новая мини-игра.</b> Вместо пяти этажей башни — бег по полосе в четырёх локациях:
+      пыль, посёлок, военбаза, школа. Пройти 100 % — значит дойти до конца.<br>
+      <b>Три формы на одной полосе.</b> Куб прыгает по тапу, корабль летит, пока держишь
+      палец, шар катится по потолку. Форма меняется сама по ходу полосы.<br>
+      <b>Рывок двойным тапом</b> — скорость ×2,4 на полсекунды. Попал в удар бита — очки ×2.<br>
+      <b>Три жизни, три сессии в день.</b> Ящики можно ломать сверху, конусы и бочки — нет,
+      а груз с парашютом даёт сто очков.<br>
+      <b>Награды.</b> Полоса пройдена — эпический кейс, раз в день. Все четыре мини-игры
+      за сутки — «Эрангель» бесплатно.<br>
+      <b>Иконки в «Испытаниях» без эмодзи</b> — теперь линейные символы в стиле игры.<br>
       <b style="color:#ffd166">Что нового в 4.33.0 · «Меткий нож» — вид один в один из макета</b><br>
       <b>Мишень как в оригинале:</b> красно-белые кольца поверх дерева, тёмный обод, блик
       и тень — всё из присланного прототипа, не своё.<br>
@@ -25736,7 +25803,569 @@ function storyChapterClosed(k){
   try{ SFX.bonus(); }catch(e){}
 }
 
+/* =========================================================
+   4.34.0 · «ЗАБЕГ 3D» — вместо «Башни»
+   Механика из присланного прототипа v8.0: куб/корабль/шар,
+   прыжок по тапу, рывок по двойному тапу, ритм-бонус x2,
+   3 жизни, прогресс полосы до 100 %, четыре локации.
+   ========================================================= */
+const OBS_LEN = 12000;           /* длина полосы в пикселях мира */
+const OBS_SPEED = 380;
+const OBS_SESSIONS = 3;
+const OBS_GRAV = 2200;
+const OBS_LOCS = [
+  {name:'ПЫЛЬ II',     s:0,    e:3000,  sky:'#3a2b1e', ground:'#c19a6b', accent:'#8b6f47'},
+  {name:'ПОЧИНКИ',     s:3000, e:6000,  sky:'#20262e', ground:'#4a3520', accent:'#2d3748'},
+  {name:'ВОЕНБАЗА',    s:6000, e:9000,  sky:'#1b2631', ground:'#3d4a1f', accent:'#1a252f'},
+  {name:'ШКОЛА',       s:9000, e:12000, sky:'#1c2833', ground:'#6b5344', accent:'#2c3e50'}
+];
+
+const obs = {
+  cv:null, ctx:null, W:0, H:0, DPR:1,
+  x:0, y:0, vy:0, rot:0, mode:'cube', onGround:false, gdir:1,
+  holding:false, dash:0, invuln:0,
+  camX:0, groundY:0, ceilY:0,
+  prog:0, lives:3, dead:false, finished:false,
+  items:[], zones:[], parts:[],
+  score:0, mult:1, bestCombo:0,
+  lastTap:0, t:0, shake:0,
+  active:false, running:false, paused:false, raf:0, lastT:0,
+  loc:-1, seed:0, startAt:0
+};
+
+function obsDPR(){
+  const q = (typeof SRSET !== 'undefined') ? SRSET.quality : 'auto';
+  const d = window.devicePixelRatio || 1;
+  if(q === 'low') return 1;
+  if(q === 'high') return Math.min(3, d);
+  return Math.min(2, d);
+}
+function obsUsed(){
+  const t = todayKey();
+  if(!state.obsDay || state.obsDay.d !== t) return 0;
+  return state.obsDay.n | 0;
+}
+function obsLeft(){ return Math.max(0, OBS_SESSIONS - obsUsed()); }
+function obsTakeOnce(){
+  const t = todayKey();
+  if(!state.obsDay || state.obsDay.d !== t) state.obsDay = {d:t, n:0};
+  state.obsDay.n = (state.obsDay.n | 0) + 1;
+  save();
+}
+/* генератор уровня по сиду: у всех в один час полоса одинаковая */
+function obsRng(){
+  obs.seed = (obs.seed * 1664525 + 1013904223) & 0x7fffffff;
+  return obs.seed / 0x7fffffff;
+}
+function obsBuild(){
+  obs.seed = (Math.floor(srNow() / 3600000) % 2147483647) ^ 0x5f3759df;
+  obs.items = []; obs.zones = [];
+  const kinds = ['crate','barrel','cone','car','airdrop'];
+  let x = 720, phase = 'cube';
+  while(x < OBS_LEN - 900){
+    const seg = 400 + obsRng() * 200;
+    if(phase === 'cube'){
+      const k = kinds[Math.floor(obsRng() * kinds.length)];
+      const dim = k === 'car' ? [120, 50] : k === 'barrel' ? [45, 60] : k === 'airdrop' ? [60, 50]
+                : k === 'cone' ? [35, 40] : [50, 50];
+      obs.items.push({k:k, x:x + 60 + obsRng() * 60, w:dim[0], h:dim[1], dir:1});
+      if(obsRng() < 0.3){
+        const k2 = ['crate','barrel','cone'][Math.floor(obsRng() * 3)];
+        const d2 = k2 === 'barrel' ? [45,60] : k2 === 'cone' ? [35,40] : [50,50];
+        obs.items.push({k:k2, x:x + 220, w:d2[0], h:d2[1], dir:1});
+      }
+      if(obsRng() < 0.3 && x > 2000){ obs.zones.push({x:x + seg, mode:'ship'}); phase = 'ship'; }
+    } else if(phase === 'ship'){
+      for(let i = 0; i < 2; i++){
+        const up = obsRng() < 0.5;
+        obs.items.push({k: up ? 'barrel' : 'cone', x:x + i * 200, w: up ? 45 : 35, h: up ? 70 : 50,
+                        dir: obsRng() < 0.5 ? -1 : 1});
+      }
+      if(obsRng() < 0.4 && x > 3500){ obs.zones.push({x:x + seg, mode:'ball'}); phase = 'ball'; }
+      else if(obsRng() < 0.3){ obs.zones.push({x:x + seg, mode:'cube'}); phase = 'cube'; }
+    } else {
+      for(let i = 0; i < 2; i++)
+        obs.items.push({k:'cone', x:x + i * 180, w:35, h:45, dir: i % 2 ? 1 : -1});
+      if(obsRng() < 0.4){ obs.zones.push({x:x + seg, mode:'cube'}); phase = 'cube'; }
+    }
+    x += seg;
+  }
+  obs.items.sort(function(a,b){ return a.x - b.x; });
+}
+
+/* ---------- звук через общую шину ---------- */
+function obsSnd(kind){
+  try{
+    if(!SRSET.sfx) return;
+    if(kind === 'jump') tone(520, .1, {type:'square', gain:.05, slide:820});
+    else if(kind === 'dash') tone(600, .18, {type:'sine', gain:.06, slide:1300});
+    else if(kind === 'hit'){ tone(220, .3, {type:'sawtooth', gain:.09, slide:60}); noise(.22, {freq:900, gain:.06}); }
+    else if(kind === 'bonus'){ [523,659,784].forEach(function(f,i){ tone(f, .18, {type:'sine', gain:.05, delay:i*.06}); }); }
+    else if(kind === 'win'){ [523,659,784,1046].forEach(function(f,i){ tone(f, .3, {type:'triangle', gain:.07, delay:i*.09}); }); }
+  }catch(e){}
+}
+
+/* ---------- частицы ---------- */
+function obsBurst(x, y, col, n){
+  const cap = (typeof SRSET !== 'undefined' && SRSET.quality === 'low') ? 40 : 90;
+  for(let i = 0; i < n && obs.parts.length < cap * 3; i++){
+    const a = Math.random() * Math.PI * 2, s = 90 + Math.random() * 320;
+    obs.parts.push({x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 90,
+                    life:.5 + Math.random()*.6, max:1.1, size:2 + Math.random()*4, col:col});
+  }
+}
+
+/* ---------- экраны ---------- */
+function obsEl(id){ return document.getElementById(id); }
+function obsShow(id, on){ const e = obsEl(id); if(e) e.classList.toggle('on', !!on); }
+function obsOvr(){
+  const on = ['obsStart','obsOver'].some(function(id){
+    const e = obsEl(id); return e && e.classList.contains('on');
+  });
+  const m = obsEl('obsModal');
+  if(m) m.classList.toggle('kn-ovr', !!on);
+}
+function obsPaint(){
+  const p = obsEl('obsProg'); if(p) p.textContent = Math.round(obs.prog * 100) + '%';
+  const b = obsEl('obsBar'); if(b) b.style.width = (obs.prog * 100).toFixed(1) + '%';
+  const lv = obsEl('obsLives');
+  if(lv){
+    if(!lv.childNodes.length) for(let i = 0; i < 3; i++) lv.appendChild(document.createElement('i'));
+    for(let i = 0; i < 3; i++) lv.childNodes[i].className = i < obs.lives ? 'on' : '';
+  }
+  const md = obsEl('obsMode');
+  if(md) md.textContent = obs.mode === 'cube' ? 'КУБ' : (obs.mode === 'ship' ? 'КОРАБЛЬ' : 'ШАР');
+  const sc = obsEl('obsScore'); if(sc) sc.textContent = obs.score;
+  const mu = obsEl('obsMult'); if(mu) mu.textContent = '×' + obs.mult;
+  const st = obsEl('obsStartLeft'); if(st) st.textContent = obsLeft();
+  const bs = obsEl('obsStartBest'); if(bs) bs.textContent = (state.obsBest | 0) + '%';
+  obsOvr();
+}
+
+function obsReset(play){
+  obs.x = 0; obs.y = 0; obs.vy = 0; obs.rot = 0;
+  obs.mode = 'cube'; obs.onGround = false; obs.gdir = 1;
+  obs.holding = false; obs.dash = 0; obs.invuln = 0;
+  obs.camX = 0; obs.prog = 0; obs.lives = 3;
+  obs.dead = false; obs.finished = false;
+  obs.score = 0; obs.mult = 1; obs.bestCombo = 0;
+  obs.parts = []; obs.shake = 0; obs.lastTap = 0;
+  obs.loc = -1; obs.t = 0;
+  obsBuild();
+  obs.groundY = obs.H * 0.78;
+  obs.ceilY = obs.H * 0.18;
+  obs.x = obs.W * 0.25;
+  obs.y = obs.groundY - 21;
+}
+
+function openObs(){
+  obs.active = false; obs.running = false; obs.paused = false;
+  cancelAnimationFrame(obs.raf);
+  obsShow('obsOver', false);
+  obsShow('obsStart', true);
+  const go = obsEl('obsGo');
+  if(go){
+    go.disabled = obsLeft() <= 0;
+    go.textContent = obsLeft() > 0 ? 'Играть' : 'Сессий больше нет';
+  }
+  obsPaint();
+  try{ if(typeof renderMiniModes === 'function') renderMiniModes(); }catch(e){}
+  const m = document.getElementById('obsModal');
+  if(m && !m.classList.contains('on')) m.classList.add('on');
+}
+
+function obsResize(){
+  if(!obs.cv) return;
+  const r = obs.cv.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  obs.W = r.width; obs.H = r.height;
+  obs.DPR = obsDPR();
+  obs.cv.width = Math.floor(obs.W * obs.DPR);
+  obs.cv.height = Math.floor(obs.H * obs.DPR);
+  obs.ctx.setTransform(obs.DPR, 0, 0, obs.DPR, 0, 0);
+  obs.groundY = obs.H * 0.78;
+  obs.ceilY = obs.H * 0.18;
+}
+
+function obsStart(){
+  if(obsLeft() <= 0){ toast('Сессий на сегодня не осталось'); openObs(); return; }
+  obsTakeOnce();
+  obs.cv = obsEl('obsCanvas');
+  obs.ctx = obs.cv.getContext('2d');
+  obsResize();
+  obsReset();
+  obsShow('obsStart', false);
+  obsShow('obsOver', false);
+  obs.active = true; obs.running = true; obs.paused = false;
+  obs.lastT = 0;
+  cancelAnimationFrame(obs.raf);
+  obs.raf = requestAnimationFrame(obsLoop);
+  obsPaint();
+}
+
+/* ---------- ввод ---------- */
+function obsTap(){
+  if(!obs.running || obs.paused || obs.dead) return;
+  const now = performance.now();
+  const dtTap = now - obs.lastTap;
+  obs.lastTap = now;
+  if(dtTap < 300 && obs.dash <= 0){ obs.dash = 0.4; obsSnd('dash'); obsBurst(obs.x, obs.y, '#ffd166', 18); return; }
+  if(obs.mode === 'cube'){
+    if(obs.onGround){
+      obs.vy = -720; obs.onGround = false;
+      obsSnd('jump');
+      obsBurst(obs.x, obs.y + 10, '#22e6ff', 8);
+      /* ритм-бонус: попал в удар бита — x2 к очкам */
+      obs.mult = (obs.t % 0.468) < 0.12 ? 2 : 1;
+    }
+  } else if(obs.mode === 'ship'){ obs.holding = true; }
+  else { obs.gdir *= -1; obs.vy = obs.gdir * -320; obsSnd('jump'); }
+}
+function obsRelease(){ obs.holding = false; }
+function obsPause(){
+  if(!obs.active || !obs.running) return;
+  obs.paused = true;
+  obsShow('obsPause', true);
+}
+function obsResume(){
+  if(!obs.paused) return;
+  obs.paused = false; obsShow('obsPause', false); obs.lastT = 0;
+}
+function obsClose(){
+  obs.active = false; obs.running = false; obs.paused = false;
+  cancelAnimationFrame(obs.raf);
+  obsShow('obsPause', false); obsShow('obsOver', false); obsShow('obsStart', false);
+  const m = document.getElementById('obsModal');
+  if(m) m.classList.remove('on');
+}
+
+/* ---------- шаг ---------- */
+function obsStep(dt){
+  const speed = OBS_SPEED * (obs.dash > 0 ? 2.4 : 1);
+  obs.t += dt;
+  obs.x += speed * dt;
+  obs.dash = Math.max(0, obs.dash - dt);
+  obs.invuln = Math.max(0, obs.invuln - dt);
+  obs.shake = Math.max(0, obs.shake - dt * 3);
+  obs.camX = obs.x - obs.W * 0.25;
+  obs.prog = Math.min(1, obs.x / OBS_LEN);
+  if(obs.prog >= 1 && !obs.finished){ obs.finished = true; obsFinish(true); return; }
+
+  /* режимы по зонам */
+  for(let i = 0; i < obs.zones.length; i++){
+    const z = obs.zones[i];
+    if(!z.done && obs.x >= z.x){
+      z.done = true;
+      obs.mode = z.mode; obs.vy = 0; obs.gdir = 1; obs.rot = 0;
+      obsBurst(obs.x, obs.y, '#e05cff', 16);
+    }
+  }
+
+  /* локация */
+  let li = 0;
+  for(let i = 0; i < OBS_LOCS.length; i++) if(obs.x >= OBS_LOCS[i].s) li = i;
+  if(li !== obs.loc){
+    obs.loc = li;
+    const b = obsEl('obsBanner');
+    if(b){ b.textContent = OBS_LOCS[li].name; b.classList.add('show'); setTimeout(function(){ b.classList.remove('show'); }, 1500); }
+  }
+
+  /* физика */
+  const size = 21;
+  if(obs.mode === 'cube'){
+    obs.vy += OBS_GRAV * dt; obs.y += obs.vy * dt;
+    if(obs.y + size/2 >= obs.groundY){ obs.y = obs.groundY - size/2; obs.vy = 0; obs.onGround = true; }
+    else obs.onGround = false;
+    obs.rot += speed * dt / 60;
+  } else if(obs.mode === 'ship'){
+    obs.vy += (obs.holding ? -2600 : 1800) * dt;
+    obs.vy = Math.max(-650, Math.min(650, obs.vy));
+    obs.y += obs.vy * dt;
+    obs.rot = Math.max(-.5, Math.min(.5, obs.vy / 650));
+    if(obs.y + size/2 >= obs.groundY){ obs.y = obs.groundY - size/2; obs.vy = 0; }
+    if(obs.y - size/2 <= obs.ceilY){ obs.y = obs.ceilY + size/2; obs.vy = 0; }
+  } else {
+    obs.vy += OBS_GRAV * obs.gdir * dt; obs.y += obs.vy * dt;
+    obs.rot += 12 * dt * obs.gdir;
+    if(obs.gdir > 0 && obs.y + size/2 >= obs.groundY){ obs.y = obs.groundY - size/2; obs.vy = 0; }
+    if(obs.gdir < 0 && obs.y - size/2 <= obs.ceilY){ obs.y = obs.ceilY + size/2; obs.vy = 0; }
+  }
+
+  /* столкновения */
+  const hb = size * 0.34;
+  for(let i = 0; i < obs.items.length; i++){
+    const o = obs.items[i];
+    if(o.hit || o.x < obs.x - 200 || o.x > obs.x + 400) continue;
+    const ox = o.x, oy = o.dir > 0 ? obs.groundY - o.h : obs.ceilY;
+    if(obs.x + hb > ox - o.w/2 && obs.x - hb < ox + o.w/2 &&
+       obs.y + hb > oy && obs.y - hb < oy + o.h){
+      if(o.k === 'airdrop'){
+        o.hit = true; obs.score += 100; obsSnd('bonus'); obsBurst(ox, oy, '#ffd166', 20);
+        continue;
+      }
+      if(o.k === 'crate' && obs.vy > 0 && obs.y < oy - o.h * 0.2){
+        o.hit = true; obs.score += 50; obsSnd('bonus'); obsBurst(ox, oy, '#ff8a3d', 18);
+        continue;
+      }
+      if(obs.invuln > 0) continue;
+      obs.lives--;
+      obs.invuln = 1.4;
+      obs.shake = 1;
+      obsSnd('hit');
+      obsBurst(obs.x, obs.y, '#ff3366', 26);
+      try{ if(SRSET.haptic) SR_VIBRATE.play([30, 20, 40]); }catch(e){}
+      obsPaint();
+      if(obs.lives <= 0){ obsFinish(false); return; }
+    }
+  }
+
+  /* очки за пройденный путь */
+  obs.score = Math.max(obs.score, Math.round(obs.prog * 1000) + (obs.score % 1));
+
+  /* частицы */
+  for(let i = obs.parts.length - 1; i >= 0; i--){
+    const p = obs.parts[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 400 * dt;
+    p.life -= dt;
+    if(p.life <= 0) obs.parts.splice(i, 1);
+  }
+  obsPaint();
+}
+
+/* ---------- рисование ---------- */
+function obsBox(ctx, x, y, w, h, col, depth){
+  depth = depth || 8;
+  ctx.fillStyle = col;
+  ctx.fillRect(x - w/2, y, w, h);
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.fillRect(x - w/2 + w, y + 4, depth, h - 4);
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  ctx.fillRect(x - w/2, y, w, 3);
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1;
+  ctx.strokeRect(x - w/2, y, w, h);
+}
+function obsDrawObs(ctx){
+  for(let i = 0; i < obs.items.length; i++){
+    const o = obs.items[i];
+    if(o.hit) continue;
+    const sx = o.x - obs.camX;
+    if(sx < -160 || sx > obs.W + 160) continue;
+    const oy = o.dir > 0 ? obs.groundY - o.h : obs.ceilY;
+    if(o.k === 'crate'){ obsBox(ctx, sx, oy, o.w, o.h, '#b3763a', 10); ctx.strokeStyle = 'rgba(60,35,10,.7)'; ctx.beginPath(); ctx.moveTo(sx-o.w/2, oy); ctx.lineTo(sx+o.w/2, oy+o.h); ctx.moveTo(sx+o.w/2, oy); ctx.lineTo(sx-o.w/2, oy+o.h); ctx.stroke(); }
+    else if(o.k === 'barrel'){ obsBox(ctx, sx, oy, o.w, o.h, '#c4402c', 8); ctx.fillStyle = '#ffd24a'; ctx.fillRect(sx-o.w/2+3, oy+o.h*0.4, o.w-6, 4); }
+    else if(o.k === 'cone'){ ctx.fillStyle = '#ff8a3d'; ctx.beginPath(); ctx.moveTo(sx, oy); ctx.lineTo(sx+o.w/2, oy+o.h); ctx.lineTo(sx-o.w/2, oy+o.h); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(sx-o.w/3, oy+o.h*0.55, o.w*0.66, 4); }
+    else if(o.k === 'car'){ obsBox(ctx, sx, oy, o.w, o.h, '#4a8fd6', 12); ctx.fillStyle = '#cfe6ff'; ctx.fillRect(sx-o.w/2+8, oy+6, o.w-24, o.h*0.4); }
+    else if(o.k === 'airdrop'){ obsBox(ctx, sx, oy, o.w, o.h, '#ff8a3d', 10); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx, oy); ctx.lineTo(sx, oy-26); ctx.stroke(); ctx.beginPath(); ctx.arc(sx, oy-30, 14, Math.PI, 0); ctx.stroke(); }
+  }
+}
+function obsRender(){
+  const ctx = obs.ctx;
+  if(!ctx) return;
+  const W = obs.W, H = obs.H;
+  const L = OBS_LOCS[obs.loc < 0 ? 0 : obs.loc];
+  ctx.save();
+  if(obs.shake > 0 && SRSET.shake){
+    ctx.translate((Math.random()-.5) * obs.shake * 16, (Math.random()-.5) * obs.shake * 16);
+  }
+  /* небо */
+  const sky = ctx.createLinearGradient(0, 0, 0, obs.groundY);
+  sky.addColorStop(0, L.sky);
+  sky.addColorStop(1, '#0b0e14');
+  ctx.fillStyle = sky; ctx.fillRect(-20, -20, W + 40, obs.groundY + 20);
+
+  /* дальние дома */
+  ctx.fillStyle = L.accent;
+  for(let i = 0; i < 26; i++){
+    const bx = ((i * 173 - obs.camX * 0.35) % (W + 200)) - 100;
+    const bh = 40 + ((i * 37) % 120);
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(bx, obs.groundY - bh, 46 + (i % 3) * 14, bh);
+  }
+  ctx.globalAlpha = 1;
+
+  /* пол */
+  const gg = ctx.createLinearGradient(0, obs.groundY, 0, H);
+  gg.addColorStop(0, L.ground);
+  gg.addColorStop(1, '#07090d');
+  ctx.fillStyle = gg; ctx.fillRect(0, obs.groundY, W, H - obs.groundY);
+  ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, obs.groundY); ctx.lineTo(W, obs.groundY); ctx.stroke();
+  /* линии скорости на полу */
+  ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.lineWidth = 1;
+  for(let i = 0; i < 14; i++){
+    const lx = ((i * 97 - obs.camX) % (W + 100)) - 50;
+    ctx.beginPath(); ctx.moveTo(lx, obs.groundY + 14); ctx.lineTo(lx - 30, H); ctx.stroke();
+  }
+  /* потолок для корабля/шара */
+  if(obs.mode !== 'cube'){
+    ctx.fillStyle = 'rgba(255,255,255,.06)';
+    ctx.fillRect(0, 0, W, obs.ceilY);
+    ctx.strokeStyle = 'rgba(34,230,255,.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, obs.ceilY); ctx.lineTo(W, obs.ceilY); ctx.stroke();
+  }
+
+  obsDrawObs(ctx);
+
+  /* частицы */
+  for(let i = 0; i < obs.parts.length; i++){
+    const p = obs.parts[i];
+    ctx.globalAlpha = Math.max(0, p.life / p.max);
+    ctx.fillStyle = p.col;
+    ctx.fillRect(p.x - obs.camX - p.size/2, p.y - p.size/2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+
+  /* игрок */
+  const px = obs.x - obs.camX, py = obs.y;
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(obs.rot);
+  ctx.shadowColor = obs.dash > 0 ? '#ffd166' : '#22e6ff';
+  ctx.shadowBlur = 24;
+  const g = ctx.createLinearGradient(-12, -12, 12, 12);
+  g.addColorStop(0, obs.dash > 0 ? '#fff3c4' : '#9cf6ff');
+  g.addColorStop(.5, obs.dash > 0 ? '#ffd166' : '#22e6ff');
+  g.addColorStop(1, obs.dash > 0 ? '#ff8a3d' : '#0a8ea3');
+  ctx.fillStyle = g;
+  if(obs.mode === 'cube'){ ctx.fillRect(-11, -11, 22, 22); }
+  else { ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI*2); ctx.fill(); }
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#06121a';
+  ctx.fillRect(-5, -3, 3, 3); ctx.fillRect(2, -3, 3, 3);
+  ctx.restore();
+
+  /* мерцание неуязвимости */
+  if(obs.invuln > 0){
+    ctx.fillStyle = 'rgba(60,255,120,' + (obs.invuln * 0.12) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  ctx.restore();
+}
+
+function obsLoop(t){
+  if(!obs.active) return;
+  if(!obs.lastT) obs.lastT = t;
+  const dt = Math.min(0.045, (t - obs.lastT) / 1000);
+  obs.lastT = t;
+  if(obs.running && !obs.paused && !obs.dead) obsStep(dt);
+  obsRender();
+  obs.raf = requestAnimationFrame(obsLoop);
+}
+
+/* ---------- финал и награды ---------- */
+function obsAllGamesDone(){
+  try{
+    const a = dayUsedCount('snip') > 0;
+    const b = (typeof knUsedToday === 'function') && knUsedToday() > 0;
+    const c = (typeof runUsed === 'function') && runUsed() > 0;
+    const d = obsUsed() > 0;
+    return a && b && c && d;
+  }catch(e){ return false; }
+}
+function obsFinish(win){
+  obs.running = false; obs.dead = !win;
+  cancelAnimationFrame(obs.raf);
+  const pct = Math.round(obs.prog * 100);
+  if(pct > (state.obsBest | 0)) state.obsBest = pct;
+
+  const rows = [];
+  /* 100 % — эпический кейс, раз в день */
+  if(win){
+    obsSnd('win');
+    try{ if(FX && FX.confetti) FX.confetti({count:80}); }catch(e){}
+    if(state.obsReward !== todayKey()){
+      state.obsReward = todayKey();
+      rows.push({ic:'🎁', nm:'Эпический кейс', vl:'бесплатное открытие ≤1200', case:1200});
+    }
+  }
+  /* испытание дня: все четыре мини-игры за сутки — «Эрангель» */
+  if(obsAllGamesDone() && state.dayAll !== todayKey()){
+    state.dayAll = todayKey();
+    rows.push({ic:'🏆', nm:'Испытание дня', vl:'кейс «Эрангель» бесплатно', cid:'erangel'});
+  }
+  save();
+  try{ if(typeof renderMiniModes === 'function') renderMiniModes(); }catch(e){}
+
+  const box = obsEl('obsOver');
+  if(box){
+    box.innerHTML = '<div class="kn-card">' +
+      '<div class="rr-grade ' + (win ? 'S' : 'C') + '">' + (win ? 'S' : 'C') + '</div>' +
+      '<div class="rr-verdict" style="color:#ffd08a">' + (win ? 'ПОЛОСА ПРОЙДЕНА' : 'ЗАБЕГ ОКОНЧЕН') + '</div>' +
+      '<div class="rr-sub">Пройдено ' + pct + ' % · рекорд ' + (state.obsBest | 0) + ' %</div>' +
+      '<div class="rr-stats">' +
+        '<div><span>Очки</span><b>' + obs.score + '</b></div>' +
+        '<div><span>Жизни</span><b>' + obs.lives + '</b></div>' +
+        '<div><span>Сессий</span><b>' + obsLeft() + '/' + OBS_SESSIONS + '</b></div>' +
+        '<div><span>Локаций</span><b>' + ((obs.loc < 0 ? 0 : obs.loc) + 1) + '/4</b></div>' +
+      '</div>' +
+      rows.map(function(r){
+        return '<div class="rr-drop"><div class="rr-art" style="font-size:22px">' + r.ic + '</div>' +
+          '<div style="min-width:0"><div class="rr-nm">' + r.nm + '</div><div class="rr-vl">' + r.vl + '</div></div></div>';
+      }).join('') +
+      '<button class="kn-btn" id="obsAgain">' + (obsLeft() > 0 ? 'Ещё раз · осталось ' + obsLeft() : 'В меню') + '</button>' +
+      '<button class="kn-btn ghost" id="obsToMenu">В меню</button>' +
+      '</div>';
+    obsShow('obsOver', true);
+    const ag = obsEl('obsAgain');
+    if(ag) ag.addEventListener('click', function(){
+      obsShow('obsOver', false);
+      if(obsLeft() > 0) obsStart(); else openObs();
+    });
+    const tm = obsEl('obsToMenu');
+    if(tm) tm.addEventListener('click', function(){ obsShow('obsOver', false); openObs(); });
+
+    /* награды выдаём сразу — окно открытия кейса поверх */
+    rows.forEach(function(r, i){
+      setTimeout(function(){
+        try{
+          if(r.cid){ const c = CASES.filter(function(x){ return x.id === r.cid; })[0]; if(c){ selCase = c; openCase(false, {freebie:true}); } }
+          else if(r.case){ tirOpenPend.push(r.case); tirOpenNext(); }
+        }catch(e){}
+      }, 400 + i * 500);
+    });
+  }
+  obsPaint();
+}
+
+/* ---------- привязка ---------- */
+(function(){
+  const m = document.getElementById('obsModal');
+  if(!m) return;
+  new MutationObserver(function(){
+    if(!m.classList.contains('on') && obs.active){
+      obs.active = false; obs.running = false; cancelAnimationFrame(obs.raf);
+    }
+    obsOvr();
+  }).observe(m, {attributes:true, attributeFilter:['class']});
+
+  const cv = document.getElementById('obsCanvas');
+  if(cv){
+    cv.addEventListener('pointerdown', function(e){ e.preventDefault(); obsTap(); });
+    cv.addEventListener('pointerup', obsRelease);
+    cv.addEventListener('pointercancel', obsRelease);
+    window.addEventListener('resize', function(){ if(obs.active){ obsResize(); obsRender(); } });
+  }
+  const on = function(id, fn){ const e = obsEl(id); if(e) e.addEventListener('click', function(ev){ ev.stopPropagation(); try{ if(SRSET.sfx) SFX.click(); }catch(err){} fn(); }); };
+  on('obsGo', obsStart);
+  on('obsAgain2', obsStart);
+  on('obsClose', obsClose);
+  on('obsPauseBtn', obsPause);
+  on('obsResume', obsResume);
+  on('obsQuit', function(){ obsShow('obsPause', false); obsFinish(false); });
+  on('obsSetBtn', openSettings);
+  on('obsMenuClose', obsClose);
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) return;
+    if(obs.active && obs.running && !obs.paused) obsPause();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.code === 'Space' && obs.active && !obs.paused){ e.preventDefault(); obsTap(); }
+    if(e.code === 'Escape' && obs.active) obsPause();
+  });
+})();
+
 window.__sr = {
+  obsLeft, openObs, obsStart, obsFinish, obsState: obs,
   /* 4.8.0: живой state наружу не отдаём. Раньше `__sr.state.coins = 1e9`
      в консоли давало миллиард кредитов в один клик. Теперь без ?dev=1
      отдаётся копия (читать можно, писать бессмысленно). */
@@ -29922,6 +30551,55 @@ window.__sr = {
   0%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 26px rgba(0,0,0,.45), inset 0 0 48px rgba(255,255,255,.04)}
   100%{box-shadow:0 0 0 1px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4), inset 0 0 96px rgba(255,255,255,.10)}
 }
+
+/* ===== 4.34.0: ЗАБЕГ 3D ===== */
+#obsModal .sheet{position:relative;padding:0;overflow:hidden;background:#0a0c11;
+  width:min(96vw,720px);height:min(86dvh,760px)}
+#obsCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#obsHud{position:absolute;inset:0;pointer-events:none;padding:10px 12px;z-index:3}
+.obs-prog{height:6px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;margin:2px 40px 8px 0}
+.obs-bar{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#22e6ff,#ffd166 70%,#ff2d9b);
+  box-shadow:0 0 12px rgba(34,230,255,.5);transition:width .12s linear}
+#obsLives{display:flex;gap:6px;margin-bottom:6px}
+#obsLives i{width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,.16);display:block;
+  transition:background .2s, box-shadow .2s}
+#obsLives i.on{background:#ff2d9b;box-shadow:0 0 10px rgba(255,45,155,.6)}
+.obs-hudrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.obs-pill{font-size:11px;font-weight:700;color:#dfe7f4;background:rgba(10,14,20,.6);
+  border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:3px 9px}
+.obs-pill b{color:#ffd08a}
+.obs-ic-btn{position:absolute;top:10px;width:32px;height:32px;border-radius:10px;pointer-events:auto;
+  font:inherit;font-size:13px;color:#dfe7f4;background:rgba(10,14,20,.62);
+  border:1px solid rgba(255,255,255,.14);cursor:pointer}
+#obsPauseBtn{right:48px}#obsSetBtn{right:10px}
+#obsBanner{position:absolute;top:34%;left:0;right:0;text-align:center;font-weight:900;
+  font-size:20px;letter-spacing:.14em;color:#fff;opacity:0;transform:scale(.9);
+  text-shadow:0 0 20px rgba(34,230,255,.7);transition:opacity .25s, transform .25s;z-index:4;pointer-events:none}
+#obsBanner.show{opacity:1;transform:scale(1)}
+.obs-screen{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:22px 18px;overflow:auto;
+  background:radial-gradient(120% 90% at 50% 0,rgba(34,230,255,.14),rgba(6,8,12,.94) 60%)}
+.obs-screen.on{display:flex}
+.obs-logo{font-weight:900;font-size:26px;letter-spacing:.06em;
+  background:linear-gradient(92deg,#22e6ff,#ffd166 45%,#ff2d9b);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.obs-logo.small{font-size:20px}
+.obs-sub{font-size:12px;font-weight:800;letter-spacing:.32em;color:#8d9ab2;margin-top:-6px}
+.obs-tx{font-size:12px;line-height:1.5;color:#9fb0c8;text-align:center;max-width:320px}
+.obs-stats{display:flex;gap:10px;margin:4px 0}
+.obs-stats>div{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:82px;
+  padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1)}
+.obs-stats span{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#7c8899}
+.obs-stats b{font-size:16px;color:#ffd08a}
+.obs-btn{font:inherit;font-weight:800;font-size:14px;color:#08121a;cursor:pointer;
+  padding:11px 26px;border:0;border-radius:12px;min-width:190px;
+  background:linear-gradient(92deg,#22e6ff,#7fe0ff);box-shadow:0 6px 18px rgba(34,230,255,.28)}
+.obs-btn.ghost{background:rgba(255,255,255,.07);color:#cbd6e6;border:1px solid rgba(255,255,255,.14);
+  box-shadow:none;font-weight:700;font-size:13px;padding:9px 22px}
+.obs-btn:disabled{opacity:.45;filter:saturate(.4);cursor:default}
+#obsOver .kn-card{max-width:340px;width:100%}
+#obsModal.kn-ovr #obsHud{opacity:0;pointer-events:none;transition:opacity .18s}
 </style>
 
 <script>
