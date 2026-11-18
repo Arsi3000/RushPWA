@@ -5283,6 +5283,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 <canvas id="bgfx"></canvas>
 <canvas id="confetti"></canvas>
 <div id="flash"></div>
+<div id="giftFly" aria-hidden="true"></div>
   <!-- 4.3.1: заставка (при каждом запуске, тап — пропуск) -->
 <div id="srIntro" class="off" aria-hidden="true">
   <div class="in-rays"></div>
@@ -6181,20 +6182,44 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 
 <!-- 4.2.0: стартовый набор «Новичок» -->
 <div class="modal" id="giftModal">
-  <div class="sheet" style="width:min(92vw,380px)">
-    <header><h3>Набор новичка</h3></header>
-    <div class="body" style="text-align:center">
-      <div style="font-size:44px;line-height:1;margin:6px 0 10px">🎁</div>
-      <div style="font-size:13px;color:#c6cfdd;line-height:1.5;margin-bottom:12px">
-        Это твой стартовый набор — он выдаётся один раз.
+  <div class="sheet gift-sheet" id="giftSheet" style="width:min(92vw,380px)">
+    <div class="gift-scene">
+      <div class="gs-rays"></div>
+      <div class="gs-glow"></div>
+      <div class="gs-sparks" id="gsSparks"></div>
+      <div class="gs-crate" id="gsCrate">
+        <div class="gsc-lid">
+          <i class="gsc-hi"></i>
+          <i class="gsc-band l"></i><i class="gsc-band r"></i>
+        </div>
+        <div class="gsc-body">
+          <i class="gsc-band l"></i><i class="gsc-band r"></i>
+          <div class="gsc-panel"><b>SKIN RUSH</b><span>НАБОР НОВИЧКА</span></div>
+        </div>
+        <div class="gsc-lock"><i></i></div>
+        <div class="gsc-light"></div>
       </div>
-      <div class="gift-cards">
-        <div class="gift-card"><div class="rr-badge" style="justify-content:flex-start">💰 5 000 кредитов</div></div>
-        <div class="gift-card"><div class="rr-badge" style="justify-content:flex-start">🎟 3 жетона — бесплатные кейсы до 400 кредитов</div></div>
-        <div class="gift-card"><div class="rr-badge" style="justify-content:flex-start">✨ 100 пыли</div></div>
-      </div>
-      <button class="btn-primary" id="giftTake" style="width:100%">Забрать</button>
     </div>
+
+    <div class="gift-head">Набор новичка</div>
+    <div class="gift-tx">Выдаётся один раз — стартовый капитал на первые кейсы.</div>
+
+    <div class="gift-cards">
+      <div class="gift-card" data-k="coins">
+        <span class="gc-ic gc-coins">₡</span>
+        <span class="gc-tx"><b>5 000</b> кредитов</span>
+      </div>
+      <div class="gift-card" data-k="tokens">
+        <span class="gc-ic gc-tok">✦</span>
+        <span class="gc-tx"><b>3</b> жетона · кейсы до 400</span>
+      </div>
+      <div class="gift-card" data-k="dust">
+        <span class="gc-ic gc-dust">✧</span>
+        <span class="gc-tx"><b>100</b> пыли на крафт</span>
+      </div>
+    </div>
+
+    <button class="btn-primary gift-take" id="giftTake">Забрать набор</button>
   </div>
 </div>
 
@@ -8734,7 +8759,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.34.0';
+const VERSION = '4.35.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -12271,6 +12296,9 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   var fromScene = !!window.__srFrameOff;
   var wm = $('#winModal');
   if(fromScene){ wm.style.animation = 'none'; }
+  /* 4.35.0: фон окна дропа подкрашивается редкостью — epic и выше */
+  wm.classList.remove('wash-epic','wash-legend','wash-myth');
+  if(['epic','legend','myth'].indexOf(skin.r) >= 0){ void wm.offsetWidth; wm.classList.add('wash-' + skin.r); }
   wm.classList.add('on');
   try{
     /* копия в сцене стоит ровно на месте карточки и содержит то же самое,
@@ -13333,18 +13361,156 @@ function showGift(){
   m.querySelectorAll('.gift-card').forEach(c => {
     c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
   });
+  $('#giftSheet')?.classList.remove('open');
+  const t = $('#giftTake');
+  if(t){ t.disabled = false; t.textContent = 'Забрать набор'; }
+  giftSparks();
   m.classList.add('on');
 }
+
+/* 4.35.0: искры вокруг кейса — восемь точек, живут на CSS, без единого кадра JS */
+function giftSparks(){
+  const box = $('#gsSparks');
+  if(!box || box.childElementCount) return;
+  const spots = [[38,26],[63,14],[86,22],[62,42],[34,52],[90,50],[48,8],[74,38]];
+  spots.forEach(function(p, i){
+    const s = document.createElement('i');
+    s.style.left = p[0] + '%';
+    s.style.top  = p[1] + '%';
+    s.style.animationDelay = (i * 0.37).toFixed(2) + 's';
+    s.style.animationDuration = (2.6 + (i % 3) * 0.45).toFixed(2) + 's';
+    box.appendChild(s);
+  });
+}
+
+/* счётчик «набегает» от старого значения к новому */
+function giftCountTo(el, from, to, dur, fmt){
+  if(!el) return;
+  const t0 = performance.now();
+  (function step(now){
+    const p = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(from + (to - from) * e));
+    if(p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+/* монетка/жетон/пылинка летит из кейса в свою плитку по дуге */
+function giftFlyOne(kind, x0, y0, x1, y1, delay, dur){
+  const wrap = document.getElementById('giftFly');
+  if(!wrap) return;
+  const el = document.createElement('div');
+  el.className = 'gf gf-' + kind;
+  if(kind === 'coin') el.textContent = '₡';
+  wrap.appendChild(el);
+  const mx = (x0 + x1) / 2 + (Math.random() - 0.5) * 130;
+  const my = Math.min(y0, y1) - 60 - Math.random() * 70;
+  const anim = el.animate([
+    { transform:'translate(' + x0 + 'px,' + y0 + 'px) scale(.35)', opacity:0 },
+    { transform:'translate(' + mx + 'px,' + my + 'px) scale(1.1)', opacity:1, offset:.45 },
+    { transform:'translate(' + x1 + 'px,' + y1 + 'px) scale(.55)', opacity:.2 }
+  ], { duration: dur, delay: delay, easing:'cubic-bezier(.3,.75,.4,1)', fill:'both' });
+  anim.onfinish = function(){ el.remove(); };
+  anim.oncancel = function(){ el.remove(); };
+}
+
+function giftChipIn(id){
+  const c = document.getElementById(id);
+  if(!c) return;
+  c.classList.remove('chip-in'); void c.offsetWidth; c.classList.add('chip-in');
+  setTimeout(function(){ c.classList.remove('chip-in'); }, 700);
+}
+
 function takeGift(){
   if(state.gift) return;
+  const sheet = $('#giftSheet');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const old = {
+    coins: state.coins | 0,
+    tokens: state.tokens | 0,
+    dust: (state.dust | 0)
+  };
+  const add = { coins: 5000, tokens: 3, dust: 100 };
+
   state.gift = 'novice';
-  state.coins = (state.coins | 0) + 5000;
-  state.tokens = (state.tokens | 0) + 3;
-  state.dust = (state.dust | 0) + 100;
-  $('#giftModal').classList.remove('on');
-  renderBalance(true); renderTokens(); renderDust(); save();
-  toast('Набор получен: 5 000 ₡, 3 жетона, 100 пыли');
-  SFX.bonus();
+  state.coins = old.coins + add.coins;
+  state.tokens = old.tokens + add.tokens;
+  state.dust = old.dust + add.dust;
+  save();
+
+  const btn = $('#giftTake');
+  if(btn){ btn.disabled = true; btn.textContent = 'Открываем…'; }
+  try{ SFX.bonus(); }catch(e){}
+
+  if(reduce || !sheet || !sheet.animate){
+    SIMPLE_GIFT_FINISH(old, add);
+    return;
+  }
+
+  /* 1. крышка кейса открывается, из него бьёт свет */
+  sheet.classList.add('open');
+  try{ FX.flash('#ffd76a'); SFX.success && SFX.success(); }catch(e){}
+  try{ FX.vibrate([12, 26, 18]); }catch(e){}
+
+  /* 2. считаем, откуда и куда лететь (координаты окна) */
+  const scene = sheet.querySelector('.gs-crate').getBoundingClientRect();
+  const sx = scene.left + scene.width / 2;
+  const sy = scene.top + scene.height * 0.55;
+
+  const targets = {};
+  [['coins','balance'],['tokens','tokens'],['dust','dustChip']].forEach(function(p){
+    const c = document.getElementById(p[1]);
+    if(!c) return;
+    const r = c.getBoundingClientRect();
+    targets[p[0]] = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+
+  const plan = [
+    { k:'coin', n:16, dx:26, to:'coins',  delay:0.10 },
+    { k:'tok',  n:6,  dx:22, to:'tokens', delay:0.26 },
+    { k:'dust', n:12, dx:34, to:'dust',   delay:0.42 }
+  ];
+  let last = 0;
+  plan.forEach(function(p){
+    const t = targets[p.to];
+    if(!t) return;
+    for(let i = 0; i < p.n; i++){
+      const jx = sx + (Math.random() - 0.5) * p.dx * 2;
+      const jy = sy + (Math.random() - 0.5) * p.dx;
+      const d = p.delay + i * 0.035;
+      const dur = 620 + Math.random() * 220;
+      giftFlyOne(p.k, jx, jy, t.x, t.y, d * 1000, dur);
+      last = Math.max(last, (d * 1000) + dur);
+    }
+  });
+
+  /* 3. на прилёте — толчок плитки и счётчик набегает */
+  const coinsEl = $('#coins'), tokEl = $('#tokCount'), dustEl = $('#dustCount');
+  setTimeout(function(){ giftChipIn('balance'); }, 900);
+  setTimeout(function(){ giftChipIn('tokens'); }, 1080);
+  setTimeout(function(){ giftChipIn('dustChip'); }, 1300);
+
+  /* счётчики стартуют, когда первые монеты уже долетели до плиток */
+  setTimeout(function(){ giftCountTo(coinsEl, old.coins, state.coins, 720, fmtMoneyShort); }, 620);
+  setTimeout(function(){ giftCountTo(tokEl, old.tokens, state.tokens, 620, function(v){ return String(v); }); }, 760);
+  setTimeout(function(){ giftCountTo(dustEl, old.dust, state.dust, 620, function(v){ return v.toLocaleString('ru-RU'); }); }, 900);
+
+  setTimeout(function(){ SIMPLE_GIFT_FINISH(old, add, false); }, Math.max(1500, last + 260));
+}
+
+/* закрыть сцену, привести все виджеты к настоящим числам */
+function SIMPLE_GIFT_FINISH(old, add, hide){
+  const m = $('#giftModal');
+  if(hide !== false && m) m.classList.remove('on');
+  setTimeout(function(){
+    if(m) m.classList.remove('on');
+    const fly = document.getElementById('giftFly');
+    if(fly) fly.textContent = '';
+    renderBalance(true); renderTokens(); renderDust(); save();
+    try{ renderWallet && renderWallet(); }catch(e){}
+    toast('Набор получен: 5 000 ₡, 3 жетона, 100 пыли');
+  }, hide === false ? 0 : 120);
 }
 
 /* кнопки квеста */
@@ -21158,9 +21324,11 @@ document.addEventListener('click', function(e){
   var b = e.target && e.target.closest ? e.target.closest('#aboutChlogBtn') : null;
   if(!b) return;
   var box = document.getElementById('aboutChlogOld');
-  if(!box) return;
-  var open = !box.hidden;
-  box.hidden = open;
+  var box2 = document.getElementById('aboutChlogOld2');
+  if(!box && !box2) return;
+  var open = !(box ? box.hidden : box2.hidden);
+  if(box)  box.hidden  = open;
+  if(box2) box2.hidden = open;
   b.textContent = open ? (b.dataset.closed || 'Вся история версий ▾') : 'Свернуть историю ▴';
 });
 
@@ -21198,6 +21366,18 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.35.0 · Набор новичка и мелкие анимации</b><br>
+      <b>Подарок новичка стал сценой.</b> Вместо эмодзи 🎁 — кейс в стиле игры: тёмный корпус,
+      янтарные ленты, замок, лучи и искры. По «Забрать» крышка откидывается, из кейса бьёт свет.<br>
+      <b>Монеты, жетоны и пыль летят в шапку.</b> Каждая валюта — своим потоком, по дуге,
+      и падает точно в свою плитку. Счётчики в это время набегают от старого значения
+      к новому: кредиты считаются вверх, жетоны и пыль тоже.<br>
+      <b>Плитка валюты вспыхивает</b> в момент прилёта — короткий импульс свечением своего цвета.<br>
+      <b>Недорогие анимации по игре.</b> Скин в инвентаре приподнимается и чуть увеличивается
+      под курсором, цена кейса мягко пульсирует, а окно дропа от эпического и выше подкрашивается
+      цветом редкости и один раз ловит блик по карточке.<br>
+      <b>«О игре» больше не простыня.</b> Видны только две последние версии, остальные —
+      за кнопкой «Вся история версий».<br>
       <b style="color:#ffd166">Что нового в 4.34.0 · «Забег 3D» вместо «Башни»</b><br>
       <b>Новая мини-игра.</b> Вместо пяти этажей башни — бег по полосе в четырёх локациях:
       пыль, посёлок, военбаза, школа. Пройти 100 % — значит дойти до конца.<br>
@@ -21209,6 +21389,13 @@ function renderAbout(){
       <b>Награды.</b> Полоса пройдена — эпический кейс, раз в день. Все четыре мини-игры
       за сутки — «Эрангель» бесплатно.<br>
       <b>Иконки в «Испытаниях» без эмодзи</b> — теперь линейные символы в стиле игры.<br>
+    </div>
+    <button id="aboutChlogBtn" type="button" style="width:100%;margin:10px 0 0;padding:11px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#c9d4e6;
+      font:900 12.5px/1 inherit;cursor:pointer">Вся история версий ▾</button>
+    <div id="aboutChlogOld" hidden>
+    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.12)">
+      <b style="color:#ffd166;font-size:12.5px">Архив версий 4.29.1 – 4.33.0</b><br>
       <b style="color:#ffd166">Что нового в 4.33.0 · «Меткий нож» — вид один в один из макета</b><br>
       <b>Мишень как в оригинале:</b> красно-белые кольца поверх дерева, тёмный обод, блик
       и тень — всё из присланного прототипа, не своё.<br>
@@ -21261,10 +21448,6 @@ function renderAbout(){
       а подпись честно говорит, что забегов три в день и сколько осталось.<br>
 
     </div>
-    <button id="aboutChlogBtn" type="button" style="width:100%;margin:10px 0 0;padding:11px;border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#c9d4e6;
-      font:900 12.5px/1 inherit;cursor:pointer">Вся история версий ▾</button>
-    <div id="aboutChlogOld" hidden>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(125,255,155,.14),rgba(40,140,90,.045));border:1px solid rgba(125,255,155,.34)">
       <b style="color:#7dff9b">Что нового в 4.28.1 · Апгрейд больше не обманывает</b><br>
       <b>Во время прокрутки сцену не сдвинуть.</b> Пока колесо крутится, ставку, цель,
@@ -21480,6 +21663,7 @@ function renderAbout(){
       Кейсы со шансами, инвентарь и апгрейд. Шанс апгрейда = стоимость ставки ÷ цена цели;
       при промахе ставка сгорает, но каждая неудача повышает шанс. Баланс, инвентарь, миссии
       и шкала удачи хранятся в этом браузере.
+<div id="aboutChlogOld2" hidden>
                         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)">
         <b style="color:var(--accent)">Что нового в 4.4.4</b><br>
         <b>Башня стоит прямо.</b> Наклон изометрии убран — этажи ровные, один над другим,
@@ -21806,6 +21990,7 @@ function renderAbout(){
         босс дня, лента побед, графики цен в инвентаре.
 
       </div>
+</div>
     </div>
     <div class="sx-card">
       <div class="sx-h">Перенос прогресса</div>
@@ -30600,6 +30785,137 @@ window.__sr = {
 .obs-btn:disabled{opacity:.45;filter:saturate(.4);cursor:default}
 #obsOver .kn-card{max-width:340px;width:100%}
 #obsModal.kn-ovr #obsHud{opacity:0;pointer-events:none;transition:opacity .18s}
+
+/* ===== 4.35.0: НАБОР НОВИЧКА — сцена с кейсом и полётом валюты ===== */
+#giftModal .gift-sheet{position:relative;padding:0;overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 0,#22293a 0%,#141a25 55%,#0d1119 100%);
+  border:1px solid rgba(255,176,46,.28);box-shadow:0 30px 80px -30px #000,0 0 40px -18px rgba(255,176,46,.5)}
+.gift-scene{position:relative;height:186px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.gs-rays{position:absolute;width:340px;height:340px;left:50%;top:52%;margin:-170px 0 0 -170px;
+  background:conic-gradient(from 0deg,rgba(255,207,106,.32),transparent 22deg,
+    rgba(255,207,106,.32) 44deg,transparent 66deg,rgba(255,207,106,.32) 88deg,transparent 110deg,
+    rgba(255,207,106,.32) 132deg,transparent 154deg,rgba(255,207,106,.32) 176deg,transparent 198deg,
+    rgba(255,207,106,.32) 220deg,transparent 242deg,rgba(255,207,106,.32) 264deg,transparent 286deg,
+    rgba(255,207,106,.32) 308deg,transparent 330deg,rgba(255,207,106,.32) 352deg,transparent 360deg);
+  -webkit-mask-image:radial-gradient(circle,#000 18%,transparent 62%);
+  mask-image:radial-gradient(circle,#000 18%,transparent 62%);
+  opacity:.35;animation:gsSpin 26s linear infinite;pointer-events:none}
+@keyframes gsSpin{to{transform:rotate(360deg)}}
+.gs-glow{position:absolute;width:190px;height:150px;left:50%;top:58%;margin:-80px 0 0 -95px;
+  background:radial-gradient(circle,rgba(255,176,46,.55),rgba(255,176,46,0) 68%);
+  filter:blur(6px);opacity:.55;animation:gsBreathe 3.4s ease-in-out infinite;pointer-events:none}
+@keyframes gsBreathe{0%,100%{opacity:.4;transform:scale(.94)}50%{opacity:.75;transform:scale(1.06)}}
+.gs-crate{position:relative;width:208px;height:150px;z-index:2;
+  filter:drop-shadow(0 16px 22px rgba(0,0,0,.6))}
+.gsc-body{position:absolute;left:0;right:0;bottom:0;height:96px;border-radius:12px;
+  background:linear-gradient(180deg,#46536f 0%,#2a3345 45%,#151c29 100%);
+  border:2px solid #ffb02e;box-shadow:inset 0 6px 12px -6px rgba(255,255,255,.35),
+    inset 0 -14px 20px -12px #000, 0 0 22px -8px rgba(255,176,46,.9);overflow:hidden}
+.gsc-panel{position:absolute;left:16px;right:16px;top:16px;bottom:16px;border-radius:7px;
+  background:linear-gradient(180deg,rgba(6,10,16,.78),rgba(6,10,16,.5));
+  border:1px solid rgba(255,207,106,.22);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px}
+.gsc-panel b{font:900 15px/1 "Arial Black",Arial,sans-serif;letter-spacing:1.4px;color:#ffcf6a;
+  text-shadow:0 0 12px rgba(255,176,46,.55)}
+.gsc-panel span{font:700 6.5px/1 Arial,sans-serif;letter-spacing:2.6px;color:#8fa3bd}
+.gsc-lid{position:absolute;left:-2px;right:-2px;top:14px;height:38px;border-radius:11px;
+  background:linear-gradient(180deg,#5f7096 0%,#33405a 55%,#1b2331 100%);
+  border:2px solid #ffb02e;z-index:3;
+  transform-box:border-box;transform-origin:50% 100%;
+  transition:transform .52s cubic-bezier(.18,.9,.28,1);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.22), 0 0 18px -6px rgba(255,176,46,.9)}
+.gsc-hi{position:absolute;left:8px;right:8px;top:4px;height:5px;border-radius:3px;
+  background:rgba(255,255,255,.28)}
+.gsc-band{position:absolute;top:0;bottom:0;width:9px;background:linear-gradient(180deg,#ffe3a3,#ffb02e 55%,#c9700f);
+  opacity:.62}
+.gsc-band.l{left:26px}.gsc-band.r{right:26px}
+.gsc-lock{position:absolute;left:50%;top:44px;width:30px;height:28px;margin-left:-15px;border-radius:7px;
+  background:linear-gradient(180deg,#ffe3a3,#ffb02e 50%,#c9700f);z-index:4;
+  box-shadow:0 0 16px -2px rgba(255,176,46,.95);display:grid;place-items:center;
+  transition:transform .3s ease-in,opacity .3s ease-in}
+.gsc-lock i{width:5px;height:11px;border-radius:2.5px;background:#231506;
+  box-shadow:0 -5px 0 -1px #231506}
+.gsc-light{position:absolute;left:14px;right:14px;top:52px;height:44px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,240,190,.95),rgba(255,207,106,.35) 45%,rgba(255,176,46,0) 72%);
+  opacity:0;transition:opacity .35s .08s;z-index:1}
+.gift-sheet.open .gsc-lid{transform:translateY(-30px) rotate(-11deg) scaleY(.72)}
+.gift-sheet.open .gsc-light{opacity:1}
+.gift-sheet.open .gsc-lock{transform:translateY(10px) scale(.75);opacity:0}
+.gs-sparks i{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffd76a;
+  box-shadow:0 0 8px 2px rgba(255,215,106,.7);opacity:0;animation:gsSpark 3.2s ease-in-out infinite}
+@keyframes gsSpark{0%{opacity:0;transform:translateY(10px) scale(.5)}
+  35%{opacity:.9}70%{opacity:.5}100%{opacity:0;transform:translateY(-42px) scale(1.1)}}
+.gift-head{font-weight:900;font-size:17px;letter-spacing:.01em;text-align:center;padding:0 16px;
+  background:linear-gradient(92deg,#ffd76a,#ff8a3d 60%,#ff2d9b);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.gift-tx{font-size:11.5px;line-height:1.45;color:#93a1b8;text-align:center;padding:5px 22px 12px}
+#giftModal .gift-cards{display:grid;gap:7px;padding:0 16px}
+#giftModal .gift-card{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;
+  background:linear-gradient(100deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.1);opacity:0;transform:translateY(14px) scale(.94);
+  animation:giftPop .5s cubic-bezier(.2,.9,.25,1) forwards}
+#giftModal .gift-card:nth-child(1){animation-delay:.12s}
+#giftModal .gift-card:nth-child(2){animation-delay:.28s}
+#giftModal .gift-card:nth-child(3){animation-delay:.44s}
+.gc-ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  font-weight:900;font-size:15px;color:#1a1206}
+.gc-coins{background:linear-gradient(160deg,#ffe9a8,#ffb02e);box-shadow:0 0 14px -4px rgba(255,176,46,.8)}
+.gc-tok{background:linear-gradient(160deg,#d7f1ff,#63b3ff);color:#08243b;box-shadow:0 0 14px -4px rgba(99,179,255,.8)}
+.gc-dust{background:linear-gradient(160deg,#efd7ff,#a970ff);color:#20103b;box-shadow:0 0 14px -4px rgba(169,112,255,.85)}
+.gc-tx{font-size:12px;color:#c9d4e6;line-height:1.25}
+.gc-tx b{color:#fff;font-weight:900}
+#giftModal .gift-take{width:calc(100% - 32px);margin:14px 16px 16px}
+.gift-sheet.open .gift-take{opacity:.5;pointer-events:none}
+
+/* полёт валюты в шапку */
+#giftFly{position:fixed;inset:0;z-index:210;pointer-events:none;contain:strict}
+.gf{position:absolute;left:0;top:0;will-change:transform,opacity}
+.gf-coin{width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff2c4,#ffb02e 55%,#a85f06);
+  box-shadow:0 0 10px rgba(255,176,46,.85);display:grid;place-items:center;
+  font:900 9px/1 Arial;color:#3a2404}
+.gf-tok{width:20px;height:13px;border-radius:3px;
+  background:linear-gradient(160deg,#d7f1ff,#63b3ff);box-shadow:0 0 10px rgba(99,179,255,.85);
+  border:1px dashed rgba(8,36,59,.55)}
+.gf-dust{width:12px;height:12px;background:radial-gradient(circle at 50% 50%,#fff,#b98bff 60%,rgba(169,112,255,0));
+  border-radius:50%;box-shadow:0 0 12px rgba(169,112,255,.9)}
+.gf-plus{font:900 12px/1 inherit;color:#8affc0;text-shadow:0 0 10px rgba(138,255,192,.8);white-space:nowrap}
+
+#balance{--chip-glow:rgba(255,176,46,.95)}
+#tokens{--chip-glow:rgba(99,179,255,.95)}
+#dustChip{--chip-glow:rgba(169,112,255,.95)}
+/* вспышка-импульс на плитке валюты при получении */
+#balance.chip-in,#tokens.chip-in,#dustChip.chip-in{animation:chipIn .55s cubic-bezier(.2,.9,.25,1)}
+@keyframes chipIn{0%{transform:scale(1)}35%{transform:scale(1.14);
+  box-shadow:0 0 22px -2px var(--chip-glow,rgba(255,176,46,.9))}100%{transform:scale(1)}}
+
+
+/* ===== 4.35.0: недорогие анимации по всей игре ===== */
+/* 1) скин «берётся в руку» — увеличение только там, где есть мышь */
+@media (hover:hover) and (pointer:fine){
+  .card{transition:transform .2s cubic-bezier(.2,.9,.25,1), box-shadow .2s, background .2s}
+  .card:hover{transform:translateY(-3px) scale(1.035);z-index:2}
+  .case{transition:transform .22s cubic-bezier(.2,.9,.25,1), box-shadow .22s}
+  .case:hover{transform:translateY(-3px) scale(1.02)}
+  /* 2) цена «оживает» — мягкий пульс, без скачков раскладки */
+  .case:hover .price{animation:pricePulse 1.1s ease-in-out infinite}
+  @keyframes pricePulse{0%,100%{transform:scale(1);color:#ffd08a}
+    50%{transform:scale(1.08);color:#fff2c4}}
+}
+/* 3) градиентный фон под окном дропа — по редкости, гаснет сам */
+#winModal::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
+  transition:opacity .35s ease-out}
+#winModal.wash-epic::before,#winModal.wash-legend::before,#winModal.wash-myth::before{opacity:1}
+#winModal.wash-epic::before{background:radial-gradient(circle at 50% 42%,rgba(174,89,255,.30),rgba(174,89,255,0) 62%)}
+#winModal.wash-legend::before{background:radial-gradient(circle at 50% 42%,rgba(255,77,109,.34),rgba(255,77,109,0) 62%)}
+#winModal.wash-myth::before{background:radial-gradient(circle at 50% 42%,rgba(255,60,60,.42),rgba(255,60,60,0) 64%)}
+/* 4) «блеск» по редкой карточке дропа — один градиент, один проход */
+#winModal.wash-epic::after,#winModal.wash-legend::after,#winModal.wash-myth::after{
+  content:'';position:absolute;left:-40%;top:0;width:40%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);
+  animation:sheen 1.5s ease-out .15s 1 both}
+@keyframes sheen{from{transform:translateX(0)}to{transform:translateX(360%)}}
+
 </style>
 
 <script>
