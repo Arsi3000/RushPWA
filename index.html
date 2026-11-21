@@ -36,6 +36,7 @@ body{
     color:#e8ecf5;
     font-family:"Segoe UI",Roboto,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
     user-select:none;-webkit-user-select:none;overflow:hidden;
+    touch-action:manipulation;
     transition: background-color .8s ease;
   }
 #app{display:flex;flex-direction:column;height:100dvh;max-width:1180px;margin:0 auto}
@@ -445,7 +446,8 @@ to{opacity:1;transform:none}
 /* ---------- МОДАЛКИ ---------- */
   .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
     padding:calc(16px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
-    background:rgba(6,8,13,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+    background:rgba(6,8,13,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    overscroll-behavior:contain}
 .modal.on{display:flex;animation:fin .18s}
 /* 4.4.4: ЗАМЕР FPS. Модалка размывала ВСЮ страницу позади (backdrop-filter: blur(7px)),
    и пока внутри идёт анимация, браузер пересчитывает это размытие каждый кадр.
@@ -931,7 +933,8 @@ nav{gap:8px;padding-top:12px}
 /* ---------- МОДАЛКИ ---------- */
   .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
     padding:calc(16px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
-    background:rgba(6,8,13,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+    background:rgba(6,8,13,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    overscroll-behavior:contain}
 .modal.on{display:flex;animation:fin .18s}
 /* 4.4.4: ЗАМЕР FPS. Модалка размывала ВСЮ страницу позади (backdrop-filter: blur(7px)),
    и пока внутри идёт анимация, браузер пересчитывает это размытие каждый кадр.
@@ -1585,6 +1588,7 @@ body[data-tut="1"] #mainNav, body[data-tut="1"] .hud, body[data-tut="1"] #casesL
 .srL-field input::placeholder{color:#5a667c;font-weight:600}
 .srL-field input:focus{outline:0;border-color:rgba(255,176,46,.75);
   box-shadow:0 0 0 3px rgba(255,176,46,.14)}
+.srL-field input:focus-visible{outline:2px solid rgba(255,176,46,.85);outline-offset:1px}
 .srL-field input.has-val{border-color:rgba(255,176,46,.5)}
 .srL-field .srL-dice{position:absolute;right:6px;top:50%;transform:translateY(-50%);
   width:38px;height:34px;border:0;border-radius:10px;cursor:pointer;font-size:var(--fs-16, 16px);
@@ -2395,6 +2399,7 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   background:rgba(6,10,14,.72);border:1px solid rgba(255,255,255,.14);color:#cfe0f5;
   font:600 10.5px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
 .sx-area:focus{outline:none;border-color:rgba(110,231,160,.55)}
+.sx-area:focus-visible{outline:2px solid rgba(110,231,160,.85);outline-offset:1px}
 .sx-msg{font-size:var(--fs-11, 11px);font-weight:800;min-height:14px;margin-top:5px;color:#8ff0b8}
 .sx-msg.bad{color:#ff8f9f}
 .tirr-gun.awp{right:-22px;width:min(62%,280px)}
@@ -2925,7 +2930,7 @@ header .ver::after{content:"";position:absolute;inset:-8px -5px}
   display: flex;
   align-items: center;
   gap: 5px;
-  transition: all .18s ease;
+  transition: background-color .18s ease, border-color .18s ease, transform .18s ease, color .18s ease, box-shadow .18s ease;
   box-shadow: 0 6px 20px -8px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.08);
   animation: skipIn .28s cubic-bezier(.25,1,.5,1);
   -webkit-tap-highlight-color: transparent;
@@ -3248,7 +3253,7 @@ to{ opacity: 1; transform: none; }
   background: rgba(255,255,255,.04);
   color: #9aa7b8;
   cursor: pointer;
-  transition: all .2s;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease, color .2s ease, box-shadow .2s ease;
   min-height: 38px;
 }
 .case-filter button:hover{
@@ -3815,7 +3820,7 @@ html.sr-zast{height:100%;overflow:hidden}
   font-size:var(--fs-11, 11px);
   letter-spacing: .02em;
   cursor: pointer;
-  transition: all .2s;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease, color .2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 .inv-nav-item:active{ transform: scale(.97); }
@@ -3859,7 +3864,7 @@ html.sr-zast{height:100%;overflow:hidden}
   color: #93a0b8;
   white-space: nowrap;
   cursor: pointer;
-  transition: all .15s;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease, color .15s ease;
   min-height: 34px;
 }
 .inv-rarity-filters button.on{
@@ -4316,7 +4321,7 @@ header.hud .ver{ display: none !important; }
   padding:8px 2px;border:1px solid transparent;border-radius:14px;
   background:rgba(255,255,255,.025);color:#7d8ba3;
   font:inherit;font-weight:700;font-size:var(--fs-11, 11px);letter-spacing:.02em;
-  cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;
+  cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;-webkit-tap-highlight-color:transparent;
 }
 .prof-nav-item:hover{color:#c3d0e2;background:rgba(255,255,255,.05)}
 .prof-nav-item.active{
@@ -5338,10 +5343,10 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <svg class="case-body" viewBox="0 0 200 200" id="caseBody"></svg>
       </div>
       <div class="in-weapons" id="inWeapons">
-        <div class="in-w in-w-karambit"><img alt="Изогнутый клинок «Коготь»" draggable="false"></div>
-        <div class="in-w in-w-ak"><img alt="Штурмовик «Калаш»" draggable="false"></div>
-        <div class="in-w in-w-glock"><img alt="Пистолет «G-18»" draggable="false"></div>
-        <div class="in-w in-w-usp"><img alt="Пистолет «ЮС-Тактик»" draggable="false"></div>
+        <div class="in-w in-w-karambit"><img alt="Изогнутый клинок «Коготь»" draggable="false" width="120" height="120"></div>
+        <div class="in-w in-w-ak"><img alt="Штурмовик «Калаш»" draggable="false" width="140" height="120"></div>
+        <div class="in-w in-w-glock"><img alt="Пистолет «G-18»" draggable="false" width="120" height="120"></div>
+        <div class="in-w in-w-usp"><img alt="Пистолет «ЮС-Тактик»" draggable="false" width="120" height="120"></div>
       </div>
     </div>
   </div>
@@ -5461,7 +5466,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
     <i class="dot"></i><div id="tkIn">Лента дропов: тут появятся лучшие находки игроков</div>
   </div>
 
-  <nav class="tab-bar" id="mainNav" role="tablist" aria-label="Основная навигация">
+  <nav class="tab-bar" id="mainNav" role="tablist" aria-label="Основная навигация" data-kbd="1">
   <!-- Кейсы -->
   <button class="tab-item active" data-tab="cases" role="tab" aria-selected="true">
     <span class="tab-icon">
@@ -5847,7 +5852,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       <div class="rew-header">
         <div class="rew-daily-summary">
           <div class="rds-info">
-            <h2>Награды</h2>
+            <h2 style="text-wrap:balance">Награды</h2>
             <p id="rewAvailText">Доступно наград: <b>0</b></p>
           </div>
           <button class="btn-primary" id="btnClaimAll" style="padding: 10px 16px; font-size:13px" disabled>Забрать всё</button>
@@ -5942,7 +5947,7 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 <!-- ИСПЫТАНИЯ -->
 <section class="panel" id="panel-trials">
   <div class="rew-lead" style="margin-bottom:12px">
-    <h2>Испытания</h2>
+    <h2 style="text-wrap:balance">Испытания</h2>
     <p>Мини-игры, где решает не только удача. Каждая — со своими лимитами и наградами.</p>
   </div>
   <div class="mini2" id="miniModesTrials">
@@ -6676,12 +6681,12 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
     <div class="body" style="flex:1;padding:0;overflow:hidden;position:relative">
       <div id="canvas3d-container" style="width:100%;height:100%"></div>
       <div class="m3d-hint">Крутите пальцем или мышью · модель вращается сама</div>
-      <div id="loading3d" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,20,.88);color:#ffb02e;font-weight:800;font-size:13px;text-align:center;padding:0 18px;line-height:1.5;z-index:10">Загрузка...</div>
+      <div id="loading3d" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,20,.88);color:#ffb02e;font-weight:800;font-size:13px;text-align:center;padding:0 18px;line-height:1.5;z-index:10" role="status" aria-live="polite">Загрузка…</div>
     </div>
   </div>
 </div>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 (function(){
@@ -7933,7 +7938,7 @@ window.__wpngFail = function(img){
 };
 
 function artImgHtml(url, skin, key){
-  return `<img src="${url}" class="weapon-img"` +
+  return `<img src="${url}" class="weapon-img" width="160" height="80"` +
     ` alt="${skin.n}" data-sid="${skin.id}" data-art="${key}" loading="lazy"` +
     ` onerror="window.__wpngFail&&window.__wpngFail(this)">`;
 }
@@ -8787,7 +8792,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.37.0';
+const VERSION = '4.38.0';
 const BUILD   = '2026-11-16';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
@@ -11368,7 +11373,7 @@ function crateHtml(c, big){
     return `<div class="crate" data-decal="${c.id}">${crateSvg(c, {big})}${tag}</div>`;
   }
   return `<div class="crate" data-decal="${c.id}" data-big="${big ? 1 : 0}">` +
-    `<img class="crate-art" src="${caseArtUrl(c)}" alt="" loading="lazy" decoding="async"` +
+    `<img class="crate-art" src="${caseArtUrl(c)}" alt="" width="160" height="160" loading="lazy" decoding="async"` +
     ` onerror="crateArtFail(this)">${tag}</div>`;
 }
 
@@ -12444,9 +12449,22 @@ $('#winKeep').addEventListener('click', ()=>{
   renderInv(); renderSlots();
   try{ tutEvent('win_close'); }catch(e){}
 });
-$('#winSell').addEventListener('click', ()=>{
+$('#winSell').addEventListener('click', async ()=>{
   if(!pendingWin) return;
-  const v = itemVal(pendingWin.item);
+  /* 4.38.0: продажа необратима — спрашиваем подтверждение.
+     Карточку запоминаем до вопроса: пока окно открыто, награда может смениться.
+     Первый скин квеста не спрашиваем — там продажа учебный шаг. */
+  const _pw = pendingWin, _it = pendingWin.item;
+  const v = itemVal(_it);
+  try{
+    if(!(_it && _it.first) && typeof srAsk === 'function'){
+      const ok = await srAsk(
+        'Продать «' + _it.n + '» за ' + v.toLocaleString('ru-RU') + ' кредитов?\n' +
+        'Скин исчезнет из инвентаря, вернуть его нельзя.',
+        { title:'Продать скин?', ok:'Продать', cancel:'Оставить', danger:true });
+      if(!ok || pendingWin !== _pw) return;
+    }
+  }catch(e){}
   /* 4.7.2: если продан первый скин квеста — запоминаем сумму, чтобы тренировочная
      ставка на шаге апгрейда была сопоставимой, а не за 4 кредита */
   try{ if(pendingWin.item && pendingWin.item.first) questState().soldVal = v; }catch(e){}
@@ -13423,10 +13441,19 @@ function giftCountTo(el, from, to, dur, fmt){
   })(t0);
 }
 
+/* 4.38.0: уважение к «уменьшить движение» для JS-анимаций (el.animate):
+   при включённом режиме элемент появляется сразу на месте, без полёта */
+function srReducedMotion(){
+  try{ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch(e){ return false; }
+}
+
 /* монетка/жетон/пылинка летит из кейса в свою плитку по дуге */
 function giftFlyOne(kind, x0, y0, x1, y1, delay, dur){
   const wrap = document.getElementById('giftFly');
   if(!wrap) return;
+  /* в режиме «уменьшить движение» валюту не гоняем по экрану */
+  if(srReducedMotion()) return;
   const el = document.createElement('div');
   el.className = 'gf gf-' + kind;
   if(kind === 'coin') el.textContent = '₡';
@@ -15495,6 +15522,8 @@ function markSection(sec){
 }
 
 function switchTab(name){
+  /* 4.38.0: после смены вкладки пересчитываем tabindex полосы */
+  try{ if(window.SRT_TABS_PAINT) setTimeout(window.SRT_TABS_PAINT, 0); }catch(e){}
   /* 4.37.0: фон-карта едет первой — ещё до проверки, открыта ли вкладка,
      иначе закрытые разделы («Награды», «Испытания») оставались со старым фоном */
   try{ if(window.SRMap) SRMap.tab(name); }catch(e){}
@@ -20789,8 +20818,8 @@ function renderTower() {
      покажем картинку вместо CSS-пламени (проверяем один раз за сессию). */
   function torchHtml(){
     if(window.__torchPic){
-      return '<div class="twr-torch l"><img src="' + WEAPON_IMG_BASE + 'torch.png?v=' + WEAPON_IMG_V + '" alt=""></div>' +
-             '<div class="twr-torch r"><img src="' + WEAPON_IMG_BASE + 'torch.png?v=' + WEAPON_IMG_V + '" alt=""></div>';
+      return '<div class="twr-torch l"><img src="' + WEAPON_IMG_BASE + 'torch.png?v=' + WEAPON_IMG_V + '" alt="" width="40" height="72" loading="lazy" decoding="async"></div>' +
+             '<div class="twr-torch r"><img src="' + WEAPON_IMG_BASE + 'torch.png?v=' + WEAPON_IMG_V + '" alt="" width="40" height="72" loading="lazy" decoding="async"></div>';
     }
     let one = '<div class="twr-brk"></div><div class="twr-flame"><b></b><b></b><b></b></div>';
     for(let k = 0; k < 5; k++){
@@ -21399,20 +21428,22 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
         <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
-      <b style="color:#ffd166">Что нового в 4.37.0 · Фон в правильном порядке и стекло</b><br>
-      <b>Фон поделён на четыре части — по разделу меню.</b> «Играть» — площадка у ящиков,
-      «Коллекция» — ворота с машиной, «Награды» — арка «B», «Рейтинг» — башня с куполом.
-      Раньше частей было шесть, и третья точка приходилась на награды, а на рейтинг
-      обзора не хватало вовсе.<br>
-      <b>Апгрейд и альбом</b> стоят на части своего раздела: апгрейд — там же, где кейсы,
-      альбом — там же, где коллекция. Испытания — на части наград.<br>
-      <b>Фон стал резче.</b> Картинка увеличена и пересчитана заново: контуры зданий,
-      купола и надпись «B» читаются, а не мылятся.<br>
-      <b>«Жидкое стекло» как в iOS, на половину силы.</b> Шапка, нижнее меню, карточки
-      и чипы валют теперь полупрозрачные, с подсветкой по верхней кромке и мягким бликом —
-      сквозь них видно фон, но текст остаётся читаемым.<br>
+      <b style="color:#ffd166">Что нового в 4.38.0 · Доступность и аккуратность</b><br>
+      <b>Игра слушается клавиатуры.</b> У каждой вкладки нижнего меню теперь видно фокус,
+      а стрелки ←/→ водят по разделам, Home и End прыгают к краям, Enter открывает.
+      Раньше подсветка фокуса была ровно у одной сцены — тира.<br>
+      <b>Скринридер слышит сообщения.</b> Всплывающие подсказки, тосты и надпись
+      «Загрузка…» объявляются голосом, а не молчат.<br>
+      <b>Модалки больше не «резинят».</b> Прокрутка страницы под окном гасится,
+      окно не уезжает вместе с пальцем.<br>
+      <b>Продажу скина надо подтвердить.</b> Покупка спрашивала разрешения давно,
+      а продажа — нет. Теперь спрашивает: скин необратимо.<br>
+      <b>Мелкая аккуратность:</b> карточки и кнопки анимируют только нужные свойства
+      (никаких «анимируем всё»), у картинок заданы размеры — вёрстка не прыгает при
+      загрузке, текст можно выделять и копировать, а при «уменьшить движение» не летает
+      даже валюта из кейса.<br>
     </div>
-    <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+        <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
       <b style="color:#ffd166">Что нового в 4.35.0 · Набор новичка и мелкие анимации</b><br>
       <b>Подарок новичка стал сценой.</b> Вместо эмодзи 🎁 — кейс в стиле игры: тёмный корпус,
       янтарные ленты, замок, лучи и искры. По «Забрать» крышка откидывается, из кейса бьёт свет.<br>
@@ -21431,7 +21462,21 @@ function renderAbout(){
       font:900 12.5px/1 inherit;cursor:pointer">Вся история версий ▾</button>
     <div id="aboutChlogOld" hidden>
     <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.12)">
-      <b style="color:#ffd166;font-size:12.5px">Архив версий 4.29.1 – 4.36.0</b><br><div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166;font-size:12.5px">Архив версий 4.29.1 – 4.37.0</b><br><div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
+      <b style="color:#ffd166">Что нового в 4.37.0 · Фон в правильном порядке и стекло</b><br>
+      <b>Фон поделён на четыре части — по разделу меню.</b> «Играть» — площадка у ящиков,
+      «Коллекция» — ворота с машиной, «Награды» — арка «B», «Рейтинг» — башня с куполом.
+      Раньше частей было шесть, и третья точка приходилась на награды, а на рейтинг
+      обзора не хватало вовсе.<br>
+      <b>Апгрейд и альбом</b> стоят на части своего раздела: апгрейд — там же, где кейсы,
+      альбом — там же, где коллекция. Испытания — на части наград.<br>
+      <b>Фон стал резче.</b> Картинка увеличена и пересчитана заново: контуры зданий,
+      купола и надпись «B» читаются, а не мылятся.<br>
+      <b>«Жидкое стекло» как в iOS, на половину силы.</b> Шапка, нижнее меню, карточки
+      и чипы валют теперь полупрозрачные, с подсветкой по верхней кромке и мягким бликом —
+      сквозь них видно фон, но текст остаётся читаемым.<br>
+    </div>
+<div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
       <b style="color:#ffd166">Что нового в 4.36.0 · Фон-карта</b><br>
       <b>Под панелями теперь двор — ваша фотография.</b> Она шире экрана, и каждая вкладка
       смотрит на свой кусок: кейсы — на площадку у ящиков, апгрейд — на ворота с машиной,
@@ -30637,7 +30682,7 @@ window.__sr = {
   border-radius:20px;box-shadow:0 8px 24px -12px #000, inset 0 1px 0 rgba(255,255,255,.06)}
 #panel-diary .dtab{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;padding:8px 2px 7px;border:1px solid transparent;border-radius:14px;background:rgba(255,255,255,.025);
-  color:#7d8ba3;font:inherit;font-weight:700;font-size:11px;letter-spacing:.02em;cursor:pointer;transition:all .2s}
+  color:#7d8ba3;font:inherit;font-weight:700;font-size:11px;letter-spacing:.02em;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease}
 #panel-diary .dtab:hover{color:#c3d0e2;background:rgba(255,255,255,.05)}
 #panel-diary .dtab:active{transform:scale(.97)}
 #panel-diary .dtab.active{color:#ffb02e;background:linear-gradient(150deg,rgba(255,176,46,.22),rgba(255,176,46,.06));
@@ -30650,7 +30695,7 @@ window.__sr = {
 #panel-diary .d-pills{display:flex;gap:8px;overflow-x:auto;padding:0 0 6px;margin-bottom:14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #panel-diary .d-pills::-webkit-scrollbar{display:none}
 #panel-diary .dpill{flex:0 0 auto;min-height:38px;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:800;
-  white-space:nowrap;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#9aa7b8;cursor:pointer;transition:all .2s}
+  white-space:nowrap;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#9aa7b8;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease}
 #panel-diary .dpill:hover{color:#e0e8f5;border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08)}
 #panel-diary .dpill.on{color:#10151d;background:linear-gradient(160deg,#ffb02e,#ff8a28);border-color:transparent;box-shadow:0 4px 12px -4px rgba(255,138,40,.4)}
 
@@ -33412,5 +33457,83 @@ header.hud{
   .case, .card{background-image:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03))}
 }
 </style>
+
+<style id="a11yFocus">
+/* ===== 4.38.0: видимый фокус для клавиатуры и ТВ-пульта =====
+   Раньше правило :focus-visible было ровно одно — на сцену тира.
+   Остальные 240+ кнопок при работе с клавиатуры не подсвечивались. */
+:focus{outline:none}
+:focus-visible{
+  outline:2px solid rgba(255,176,46,.95);
+  outline-offset:2px;
+  border-radius:inherit;
+}
+.tab-item:focus-visible, .card:focus-visible, .case:focus-visible,
+.prof-nav-item:focus-visible, .hud-cell:focus-visible{
+  outline:2px solid #ffd166; outline-offset:2px;
+  box-shadow:0 0 0 4px rgba(255,176,46,.20), 0 12px 26px -18px #000;
+}
+/* копирование: код восстановления, ники, поля и моноширинные блоки — можно выделять */
+input, textarea, .sx-area, .mono, .sr-code, .rk-row, #aboutChlogOld, #aboutChlogOld2,
+.modal p, .sheet p, .about p{
+  user-select:text; -webkit-user-select:text;
+}
+/* поле ввода: контур заменён цветной рамкой и свечением */
+.srL-field input:focus-visible, .sx-area:focus-visible{
+  outline:2px solid rgba(255,176,46,.85); outline-offset:1px;
+}
+</style>
+
+<script>
+/* =========================================================
+   4.38.0 · ВКЛАДКИ С КЛАВИАТУРЫ
+   role="tablist" без стрелок — ловушка: экранный диктор обещает вкладки,
+   а Tab уводит из полосы и обратно. Учим полосу стрелкам: ←/→ водят
+   выделение, Home/End прыгают к краям, Enter/Space открывают вкладку.
+   ========================================================= */
+(function(){
+  var nav = document.getElementById('mainNav');
+  if(!nav) return;
+  var items = function(){
+    return [].slice.call(nav.querySelectorAll('.tab-item')).filter(function(b){
+      return b.offsetParent !== null;
+    });
+  };
+  function paint(){
+    var list = items(), cur = list.findIndex(function(b){ return b.classList.contains('active'); });
+    list.forEach(function(b, i){
+      b.setAttribute('tabindex', i === cur ? '0' : '-1');
+      var tab = b.dataset.tab;
+      if(tab && document.getElementById('panel-' + tab)){
+        b.setAttribute('aria-controls', 'panel-' + tab);
+      }
+    });
+  }
+  function focusTo(i){
+    var list = items(); if(!list.length) return;
+    i = (i + list.length) % list.length;
+    list[i].focus();
+  }
+  nav.addEventListener('keydown', function(e){
+    var list = items(); if(!list.length) return;
+    var i = list.indexOf(document.activeElement);
+    if(i < 0) return;
+    var k = e.key;
+    if(k === 'ArrowRight' || k === 'ArrowDown'){ e.preventDefault(); focusTo(i + 1); }
+    else if(k === 'ArrowLeft' || k === 'ArrowUp'){ e.preventDefault(); focusTo(i - 1); }
+    else if(k === 'Home'){ e.preventDefault(); focusTo(0); }
+    else if(k === 'End'){ e.preventDefault(); focusTo(list.length - 1); }
+    else if(k === 'Enter' || k === ' '){ e.preventDefault(); list[i].click(); }
+  });
+  /* перекрашиваем tabindex после любой смены вкладки и разблокировки */
+  document.addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('#mainNav')) setTimeout(paint, 0);
+  }, true);
+  document.addEventListener('sr:profclosed', function(){ setTimeout(paint, 0); });
+  setTimeout(paint, 400);
+  setInterval(paint, 2500);
+  window.SRT_TABS_PAINT = paint;
+})();
+</script>
 </body>
 </html>
