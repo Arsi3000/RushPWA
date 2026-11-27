@@ -8793,7 +8793,7 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
    2. СОСТОЯНИЕ
    ========================================================= */
 const VERSION = '4.39.0';
-const BUILD   = '2026-11-16';
+const BUILD   = '2026-11-27';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -9610,7 +9610,7 @@ function musCanPlay(type){
    и игра всегда падала на этот замороженный адрес: в APK звучал старый трек
    при любом обновлении на сайте. Теперь подстраховка — живой адрес сайта,
    а версия в ?v= сбивает десятиминутный кэш GitHub Pages. */
-const MUS_VER = '4380';
+const MUS_VER = '20261127';
 function musSourceList(){
   const live = 'https://arsi3000.github.io/RushPWA/music/Skin-rush.';
   const ogg = ['music/Skin-rush.ogg', 'Skin-rush.ogg',
@@ -10320,6 +10320,15 @@ const FX = (function(){
     confc = conf.getContext('2d');
     size();
   }
+  /* R1 · БЮДЖЕТ ЧАСТИЦ (27.11.2026).
+     Раньше каждая пачка считалась отдельно: мифический дроп зовёт burst(90) и
+     сразу cannons() — ещё 120, а между ними летит вспышка окна. В кадре
+     оказывалось 300+ светящихся звёзд, каждая с ореолом, и телефон проседал
+     именно в тот момент, ради которого всё и рисовалось.
+     Теперь у частиц общий потолок: 120 живых на экран. Новая пачка получает
+     только свободные места и молча урезается — лучше 40 звёзд на 60 fps,
+     чем 300 на 20. */
+  const MAX_PARTS = 120;
   function burst(opts){
     opts = opts || {};
     if(!confc) return;
@@ -10327,7 +10336,9 @@ const FX = (function(){
     const cx = opts.x != null ? opts.x : w/2;
     const cy = opts.y != null ? opts.y : h*0.42;
     /* звёзды со свечением дороже прямоугольников — держим пачку в разумных рамках */
-    const count = Math.min(opts.count || 70, 90);
+    const room = Math.max(0, MAX_PARTS - confParts.length);
+    const count = Math.min(opts.count || 70, 90, room);
+    if(count <= 0) return;
     for(let i=0;i<count;i++){
       const ang = Math.random()*Math.PI*2;
       const sp = 2 + Math.random()*9;
@@ -10389,9 +10400,17 @@ const FX = (function(){
     else { confRaf = 0; confc.clearRect(0,0,w,h); }
   }
 
+  /* R1 · не больше двух вспышек в секунду. Вспышка — это заливка на весь
+     экран: три подряд (дроп + окно + награда) сливаются в мигание и стоят
+     тех же кадров, что и частицы. Лишняя просто не показывается. */
+  let flashTimes = [];
   function flash(color){
     const f = document.getElementById('flash');
     if(!f) return;
+    const nowF = performance.now();
+    flashTimes = flashTimes.filter(t => nowF - t < 1000);
+    if(flashTimes.length >= 2) return;
+    flashTimes.push(nowF);
     f.style.setProperty('--fc', color || 'var(--accent2)');
     f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
   }
@@ -10403,26 +10422,74 @@ const FX = (function(){
       if(navigator.vibrate) navigator.vibrate(pattern);
     }catch(e){}
   }
+  /* =========================================================
+     R1 · ТРЯСКА И КАМЕРА-ПИНОК — ОДИН КАДР НА ДВОИХ (27.11.2026)
+     Было: shake писал #app.style.transform сам и на время работы
+     отказывал новым вызовам (shakeRaf). Добавить второй эффект на ту же
+     обёртку было нельзя: два rAF-цикла перезаписывали transform друг друга,
+     и побеждал последний — рывок вместо эффекта.
+
+     Стало: оба эффекта копят состояние (ш = смещение, к = масштаб), а
+     transform собирается в одном цикле. Отсюда появился punch —
+     «камера-пинок» из HexGL: scale 1 → 1.035 → 1 за 150 мс, без blur и
+     пост-обработки, то есть почти бесплатно.
+     ========================================================= */
+  const reduceMotionNow = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const sh = {on:false, t0:0, dur:0, amp:0};
+  const kk = {on:false, t0:0, dur:0, amp:0};
+  let animRaf = 0;
+
+  function compose(){
+    const app = document.getElementById('app');
+    if(!app){ animRaf = 0; return; }
+    const now = performance.now();
+    let x = 0, y = 0, r = 0, sc = 1;
+    if(sh.on){
+      const p = (now - sh.t0) / sh.dur;
+      if(p >= 1) sh.on = false;
+      else{
+        const k = (1 - p) * (1 - p) * sh.amp;
+        x = (Math.random() * 2 - 1) * k;
+        y = (Math.random() * 2 - 1) * k * 0.72;
+        r = (Math.random() * 2 - 1) * k * 0.06;
+      }
+    }
+    if(kk.on){
+      const p = (now - kk.t0) / kk.dur;
+      if(p >= 1) kk.on = false;
+      else{
+        /* накат за первые 35 % и плавный возврат остальные 65 % */
+        const t = p < 0.35 ? (p / 0.35) : 1 - (p - 0.35) / 0.65;
+        sc = 1 + kk.amp * t;
+      }
+    }
+    if(!sh.on && !kk.on){ app.style.transform = ''; animRaf = 0; return; }
+    app.style.transform = 'translate(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px) rotate('
+      + r.toFixed(3) + 'deg) scale(' + sc.toFixed(4) + ')';
+    animRaf = requestAnimationFrame(compose);
+  }
+  function kickLoop(){ if(!animRaf) animRaf = requestAnimationFrame(compose); }
+
   /* тряска экрана: сила 0..1, затухает за ~0.4 с */
-  let shakeRaf = 0;
   function shake(power){
     power = Math.max(0, Math.min(1, power || 0.4));
-    const app = document.getElementById('app');
-    if(!app || shakeRaf) return;
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(reduce) return;
-    const amp = 3 + power * 13, dur = 260 + power * 210, t0 = performance.now();
-    const step = (now) => {
-      const p = (now - t0) / dur;
-      if(p >= 1){ app.style.transform = ''; shakeRaf = 0; return; }
-      const k = (1 - p) * (1 - p) * amp;
-      const x = (Math.random() * 2 - 1) * k;
-      const y = (Math.random() * 2 - 1) * k * 0.72;
-      const r = (Math.random() * 2 - 1) * k * 0.06;
-      app.style.transform = `translate(${x.toFixed(2)}px,${y.toFixed(2)}px) rotate(${r.toFixed(3)}deg)`;
-      shakeRaf = requestAnimationFrame(step);
-    };
-    shakeRaf = requestAnimationFrame(step);
+    if(!document.getElementById('app') || reduceMotionNow()) return;
+    /* повторный вызов не игнорируется, а поднимает силу — двойной удар читается */
+    sh.amp = Math.max(sh.amp * 0.6, 3 + power * 13);
+    sh.dur = 260 + power * 210;
+    sh.t0 = performance.now();
+    sh.on = true;
+    kickLoop();
+  }
+  /* камера-пинок: короткий scale обёртки. power 0..1 → +0…3.5 % */
+  function punch(power){
+    power = Math.max(0, Math.min(1, power || 0.5));
+    if(!document.getElementById('app') || reduceMotionNow()) return;
+    kk.amp = Math.max(kk.amp * 0.4, 0.035 * power);
+    kk.dur = 150;
+    kk.t0 = performance.now();
+    kk.on = true;
+    kickLoop();
   }
   /* короткий «взрыв» по краям экрана — для мифических дропов */
   function cannons(colors){
@@ -10432,7 +10499,7 @@ const FX = (function(){
   function onResize(){ size(); }
 
   window.addEventListener('resize', onResize);
-  return { init(){ initBg(); initConf(); }, burst, cannons, flash, vibrate, shake };
+  return { init(){ initBg(); initConf(); }, burst, cannons, flash, vibrate, shake, punch, get parts(){ return confParts.length; } };
 })();
 
 /* =========================================================
@@ -10961,8 +11028,64 @@ function profLetter(name){
   return s ? s.charAt(0).toUpperCase() : 'C';
 }
 window.profLetter = profLetter;   /* блок логина/профиля живёт в отдельном <script> */
+/* =========================================================
+   R1 · ЛЕТЯЩИЕ ЦИФРЫ (27.11.2026, приём из Cookie Clicker)
+   Палец нажал — из точки касания поднимается «+250» и тает. Это самая
+   дешёвая обратная связь: игрок видит, что начисление дошло, ещё до того,
+   как прочитает счётчик.
+   Три правила, чтобы не навредить:
+     1) пул из 8 элементов — в DOM их никогда не больше восьми, никакой
+        мусорки из сотни span;
+     2) цифра берётся из РАЗНИЦЫ баланса, а не из места начисления: так
+        работает и для кейса, и для награды, и для будущих режимов,
+        и не надо править 20 мест со state.coins += ;
+     3) уменьшение баланса молчит — «−2400» в лицо игроку не нужно.
+   ========================================================= */
+const FLY_POOL = [];
+let flyIdx = 0, lastPt = null;
+try{
+  document.addEventListener('pointerdown', function(e){ lastPt = {x:e.clientX, y:e.clientY}; }, {passive:true, capture:true});
+}catch(e){}
+function flyNum(text, color, at){
+  if(!text) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let el;
+  if(FLY_POOL.length < 8){
+    el = document.createElement('span');
+    el.className = 'fly-num';
+    document.body.appendChild(el);
+    FLY_POOL.push(el);
+  } else {
+    el = FLY_POOL[flyIdx++ % FLY_POOL.length];
+  }
+  const x = at && at.x != null ? at.x : (lastPt ? lastPt.x : window.innerWidth / 2);
+  const y = at && at.y != null ? at.y : (lastPt ? lastPt.y : 120);
+  el.textContent = text;
+  el.style.color = color || '#ffd76a';
+  el.style.left = Math.round(x) + 'px';
+  el.style.top = Math.round(y) + 'px';
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+}
+function fmtFly(n){
+  const v = Math.abs(Math.round(n));
+  if(v >= 1000000) return (v / 1000000).toFixed(1).replace('.0', '') + 'M';
+  if(v >= 10000) return (v / 1000).toFixed(1).replace('.0', '') + 'K';
+  return v.toLocaleString('ru-RU');
+}
+
+/* разницу считаем здесь: renderBalance зовут после любого изменения кредитов */
+let srLastCoins = null, srLastDust = null;
+
 function renderBalance(bump){
   const el = $('#coins');
+  /* R1: начисление видно цифрой на месте касания */
+  try{
+    const nowC = state.coins | 0;
+    if(srLastCoins != null && nowC > srLastCoins) flyNum('+' + fmtFly(nowC - srLastCoins));
+    srLastCoins = nowC;
+  }catch(e){}
   el.textContent = fmtMoneyShort(state.coins);
   el.title = state.coins.toLocaleString('ru-RU') + ' кредитов';
   el.dataset.full = state.coins;
@@ -12359,6 +12482,10 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   /* 4.6.0: триумф синтезом — короткий подъём, поверх сцены «меню» */
   if(tier >= RAR_ORDER.indexOf('legend')) try{ musStinger(); }catch(e){}
   FX.flash(R.color);
+  /* R1: пинок камеры — тот самый «вдох» в момент, когда карточка встала.
+     Только для самостоятельного дропа: при приходе из сцены карточка
+     уже стоит на месте копии, двигать нечего. */
+  if(!fromScene) try{ FX.punch(['epic','legend','myth'].indexOf(skin.r) >= 0 ? 1 : 0.45); }catch(e){}
   /* 4.21.1: приход из сцены — трясти нечего: карточка уже стоит на месте копии,
      а FX.shake двигает #app, то есть меню ПОД ней. Это и давало рывок кадра. */
   if(fromScene){
@@ -12412,6 +12539,11 @@ function patSeenAdd(skin, item){
   }
   return p;
 }
+/* R1: uid предметов, которые только что пришли — их карточки появятся
+   с пружинкой (.pop). Множество чистится в renderInv, поэтому анимация
+   играет один раз, а не при каждой перерисовке сетки. */
+const srPopOnce = new Set();
+
 function addSkin(skin, item){
   seenAdd(skin);
   const it = item || makeItem(skin);
@@ -12436,6 +12568,7 @@ function addSkin(skin, item){
   state.newItems.push(it.uid);
   if(state.newItems.length > 20) state.newItems.shift(); // Храним только последние 20
   state.inv.push(rec);
+  try{ srPopOnce.add(it.uid); }catch(e){}
   PRICE_HIST.record(it.id, itemVal(it));
   /* 4.7.5: этап «Арсенал» карты рейда — получен ствол дня */
   try{ raidNoteSkin(skin); }catch(e){}
@@ -12672,6 +12805,7 @@ function renderInv(reset){
     if(invSelectedUid === x.uid) el.classList.add('selected');
     el.dataset.rarity = s.r;
     el.dataset.uid = x.uid;              /* 4.1.0: по нему красим карточку при клике */
+    if(srPopOnce.has(x.uid)) el.classList.add('pop');   /* R1: пружинка один раз */
     if(x.fav) el.classList.add('fav');
     if(invBulk){
       el.classList.add('bulk');
@@ -12769,6 +12903,8 @@ function renderInv(reset){
   }
   /* 4.1.1: счётчики и подсветка капсулы зависят от фильтров — обновляем всегда */
   renderBulkBar();
+  /* R1: метки «новый» отработали — второй раз пружинку не играем */
+  srPopOnce.clear();
 }
 
 /* =========================================================
@@ -15024,9 +15160,11 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
       FX.burst({count: 130, colors:[RAR[target.r].color,'#ffd166','#ffffff']});
       FX.cannons([RAR[target.r].color,'#ffd166','#ffffff']);
       FX.shake(0.9);
+      try{ FX.punch(1); }catch(e){}          /* R1: камера-пинок на легендарке */
     } else {
       FX.burst({count: 80, colors:[RAR[target.r].color,'#ffd166','#ffffff']});
       FX.shake(0.5);
+      try{ FX.punch(0.5); }catch(e){}
     }
     FX.vibrate([20,30,20,30,50]);
     $('#upLast').innerHTML = isCash
@@ -16759,6 +16897,11 @@ function renderDust(){
   const el = $('#dustCount'), chip = $('#dustChip');
   if(!el) return;
   const d = state.dust || 0;
+  /* R1: пыль тоже отвечает цифрой, но своим цветом — чтобы не путать с кредитами */
+  try{
+    if(srLastDust != null && d > srLastDust) flyNum('+' + fmtFly(d - srLastDust) + ' ✨', '#c8a6ff');
+    srLastDust = d;
+  }catch(e){}
   el.textContent = d >= 10000 ? Math.round(d/1000) + 'K' : d.toLocaleString('ru-RU');
   el.title = d.toLocaleString('ru-RU') + ' пыли';
   if(chip) chip.classList.toggle('empty', d <= 0);
@@ -21437,7 +21580,21 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
         <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
-      <b style="color:#ffd166">Что нового в 4.38.0 · Доступность и аккуратность</b><br>
+      <b style="color:#ffd166">Оформление · 27 ноября. Полка и плотные пластины</b><br>
+      <b>Карточки больше не «молоко».</b> Кейсы и все прочие карточки перестали размывать фон
+      под собой: вместо стекла — плотная пластина от #161b25 к #0f131a, кромка на 10 % белого
+      и узкий блик по верхней грани. Текст на них читается спокойно на любом фоне.<br>
+      <b>Фото ушло в верхнюю треть.</b> Снимок виден за шапкой и полкой скинов, а к середине
+      экрана уходит в ровный #0a0d12: контент стоит на глухом фоне, картинка его не просвечивает.<br>
+      <b>Стало вдвое плавнее.</b> Размытие пересчитывалось на каждом кадре прокрутки — на телефоне
+      игра держала 30 кадров вместо 60. Стекло осталось только там, где за ним есть что смотреть:
+      шапка, верхнее меню и нижнее меню.<br>
+      <b>Музыка больше не застревает на старом треке.</b> В APK звучал трек от 10 ноября:
+      адрес подстраховки был прибит к старому коммиту и раздавался как «неизменяемый».
+      Теперь игра берёт трек с сайта по живому адресу и с меткой версии.<br>
+    </div>
+        <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)">
+      <b style="color:#c8d3e4">Что нового в 4.38.0 · Доступность и аккуратность</b><br>
       <b>Игра слушается клавиатуры.</b> У каждой вкладки нижнего меню теперь видно фокус,
       а стрелки ←/→ водят по разделам, Home и End прыгают к краям, Enter открывает.
       Раньше подсветка фокуса была ровно у одной сцены — тира.<br>
@@ -33600,6 +33757,88 @@ body{background-color:#0a0d12}
 #tutMap{background:rgba(4,6,11,.90)}
 .rk2-sheet{background:rgba(6,8,13,.97)}
 #srProfModal{background:rgba(5,8,15,.86)}
+</style>
+
+<style id="r1Polish">
+/* =========================================================
+   R1 · ОТКЛИК. 27.11.2026
+   Ничего нового по смыслу — только отдача. Всё ниже уважает
+   «уменьшить движение»: у анимаций есть @media-выключатель в конце блока.
+   ========================================================= */
+
+/* 1. ПРУЖИНА ПОЯВЛЕНИЯ (2048). Коэффициент .2,1.6,.4,1 больше единицы —
+   элемент чуть перелетает размер и возвращается. Одна строка, ноль JS. */
+@keyframes srPop{
+  0%  {transform:scale(.86); opacity:0}
+  60% {transform:scale(1.035); opacity:1}
+  100%{transform:scale(1); opacity:1}
+}
+.pop{animation:srPop .24s cubic-bezier(.2,1.6,.4,1) both}
+
+/* 2. ПРУЖИНА НАЖАТИЯ. Было scale(.97) с линейным переходом — «как в форме»,
+   стало с перелётом на отпускании: палец чувствует, что кнопка отыграла. */
+.tab-item, .btn-primary, .btn-up, .bat-go, .chip, .case, .card[data-uid],
+.balance, .rew-take, .want-chip, .al-near, .wi-go{
+  transition:transform .16s cubic-bezier(.2,1.6,.4,1), box-shadow .2s, border-color .2s;
+}
+.tab-item:active, .chip:active, .card[data-uid]:active, .want-chip:active{transform:scale(.955)}
+.btn-primary:active, .btn-up:active, .bat-go:active{transform:scale(.97)}
+
+/* 3. КАМЕРА-ПИНОК (HexGL). Не фильтр и не blur — обычный scale обёртки
+   на 120 мс. Класс ставится на #app из JS (FX.punch) и складывается с тряской. */
+@keyframes srKick{
+  0%  {transform:scale(1)}
+  35% {transform:scale(1.035)}
+  100%{transform:scale(1)}
+}
+
+/* 4. ЛЕТЯЩИЕ ЦИФРЫ (Cookie Clicker). Пул из 8 span: создаём один раз,
+   переиспользуем, в DOM больше восьми не бывает. */
+.fly-num{
+  position:fixed; z-index:97; pointer-events:none;
+  font:900 14px/1 inherit; letter-spacing:.02em;
+  color:#ffd76a; text-shadow:0 2px 10px rgba(0,0,0,.75);
+  will-change:transform,opacity;
+  animation:flyUp .9s cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes flyUp{
+  0%  {transform:translate(-50%,0) scale(.8); opacity:0}
+  18% {transform:translate(-50%,-8px) scale(1.06); opacity:1}
+  100%{transform:translate(-50%,-46px) scale(1); opacity:0}
+}
+
+/* 5. ПРАВИЛО 44 px. Замер на 320×568 нашёл 8 элементов ниже нормы.
+   Там, где рост габарита ломает вёрстку (шапка, подсказки гида),
+   расширяем НЕЗРИМУЮ зону касания через ::after — палец попадает, вид не меняется. */
+/* Класс не нужен — целиком на селекторах, разметку не трогаем.
+   Зона касания расширяется невидимым ::after: у #btnSnd кнопка 22×40,
+   у подсказок гида 25 px по высоте, но палец попадает в 44×44.
+   Отступы ::after не влияют на поток — соседние элементы не съезжают. */
+#btnProfile, #btnSnd, .tut-h-go, .tut-h-skip{position:relative}
+#btnProfile::after, #btnSnd::after, .tut-h-go::after, .tut-h-skip::after{
+  content:""; position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  height:max(100%,44px);
+}
+/* по ширине тянем до 44 только там, где соседи не вплотную:
+   у профиля справа стоит «звук», и лишние 8 px перехватывали бы его нажатие */
+#btnSnd::after, .tut-h-go::after, .tut-h-skip::after{width:max(100%,44px)}
+#btnProfile::after{width:100%}
+
+/* главные кнопки: рост настоящий, он не мешает — место есть.
+   У «Открыть» в нижней панели своя высота 40 px с двумя id в селекторе,
+   поэтому одним #btnOpen её не перебить — повторяем путь целиком. */
+#caseActionBar #btnOpen, #caseActionBar #btnOpenTok{height:48px; min-height:48px}
+#caseActionBar .qty-btn{height:44px; min-height:44px}
+#btnUp{min-height:48px}
+.want-chip{min-height:44px}
+.al-near, .wi-go, .wi-skip{min-height:44px}
+
+@media (prefers-reduced-motion: reduce){
+  .pop{animation:none}
+  .spring, .spring:active{transition:none; transform:none}
+  .fly-num{animation:none; opacity:0}
+}
 </style>
 
 <script>
