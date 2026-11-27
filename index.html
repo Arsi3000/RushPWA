@@ -9603,13 +9603,22 @@ function musCanPlay(type){
     return !!(a.canPlayType && a.canPlayType(type));
   }catch(e){ return false; }
 }
+/* 27.11.2026: ТРЕК БОЛЬШЕ НЕ ПРИБИТ К СТАРОМУ КОММИТУ.
+   Здесь стоял адрес jsdelivr с зашитым sha d3010ff — копия трека на 2.6 МБ,
+   навсегда, с заголовком immutable. В APK локальные файлы отсутствуют
+   (в assets лежит только index.html), поэтому оба первых пути давали 404,
+   и игра всегда падала на этот замороженный адрес: в APK звучал старый трек
+   при любом обновлении на сайте. Теперь подстраховка — живой адрес сайта,
+   а версия в ?v= сбивает десятиминутный кэш GitHub Pages. */
+const MUS_VER = '4380';
 function musSourceList(){
-  const ogg = ['music/Skin-rush.ogg', 'Skin-rush.ogg'];
-  const m4a = ['music/Skin-rush.m4a', 'Skin-rush.m4a'];
-  const cdn = ['https://cdn.jsdelivr.net/gh/Arsi3000/RushPWA@' +
-               'd3010ff83aa04a4342b23385988fb5798887219d/Skin-rush.ogg'];
+  const live = 'https://arsi3000.github.io/RushPWA/music/Skin-rush.';
+  const ogg = ['music/Skin-rush.ogg', 'Skin-rush.ogg',
+               live + 'ogg?v=' + MUS_VER];
+  const m4a = ['music/Skin-rush.m4a', 'Skin-rush.m4a',
+               live + 'm4a?v=' + MUS_VER];
   const canOgg = musCanPlay('audio/ogg; codecs="vorbis"');
-  return canOgg ? ogg.concat(m4a, cdn) : m4a.concat(cdn, ogg);
+  return canOgg ? ogg.concat(m4a) : m4a.concat(ogg);
 }
 const MUSIC_SOURCES = musSourceList();
 
