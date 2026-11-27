@@ -33484,6 +33484,115 @@ input, textarea, .sx-area, .mono, .sr-code, .rk-row, #aboutChlogOld, #aboutChlog
 }
 </style>
 
+<style id="shelfPlates">
+/* ===== «полка + плотные пластины» (правка 27.11.2026 поверх 4.38.0) =====
+   Было: .case/.card в lqGlass держали backdrop-filter blur(11px) saturate(150%).
+   Карточка читала фон под собой — отсюда «молоко» вместо текста, а размытие
+   пересчитывалось на каждом кадре прокрутки (замер 4.4.4: модалка с blur(7px)
+   роняла сцену башни с 57 до 21 fps).
+   Стало: стекло осталось только у шапки, #mainNav и #bottomNav — за ними фото,
+   которое и хочется видеть. Всё, что несёт контент, — плотная пластина без
+   размытия: заливка #161b25 → #0f131a, кромка rgba(255,255,255,.10) и блик
+   полоской в 3.5 % сверху — не окно в фон, а отражение на грани. */
+
+/* 1. ФОТО В ВЕРХНЕЙ ТРЕТИ. Один градиент, ноль стоимости: до 26 % снимок
+   виден как есть, к 36 % почти глухо, к 46 % — ровный #0a0d12 под контент. */
+#mapBg{background:#0a0d12}
+#mapBg .mp-scrim{
+  background:linear-gradient(180deg,
+    rgba(10,13,18,0) 0%,
+    rgba(10,13,18,.02) 20%,
+    rgba(10,13,18,.26) 30%,
+    rgba(10,13,18,.86) 37%,
+    rgba(10,13,18,.98) 43%,
+    #0a0d12 46%,
+    #0a0d12 100%);
+}
+body{background-color:#0a0d12}
+
+/* 2. КАРТОЧКИ — ПЛОТНЫЕ ПЛАСТИНЫ, размытия нет вовсе */
+.case, .card, .rl-item, .mini-card, .best-drop, .thm-pt, .roulette{
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+}
+.case, .card{
+  background-color:transparent;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.055) 0, rgba(255,255,255,.018) 3.2%, rgba(255,255,255,0) 3.5%),
+    linear-gradient(158deg, #161b25 0%, #12161f 58%, #0f131a 100%);
+  border-color:rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 12px 26px -20px #000;
+}
+.case:hover, .card:hover{
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.085) 0, rgba(255,255,255,.022) 3.2%, rgba(255,255,255,0) 3.5%),
+    linear-gradient(158deg, #1a2029 0%, #141a24 58%, #10151d 100%);
+  border-color:rgba(255,255,255,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11), 0 14px 30px -20px #000;
+}
+/* выбранный кейс: акцентная кромка на месте, фон просто светлее */
+.case.sel{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent), 0 14px 34px -18px rgba(var(--accent-rgb),.5);
+}
+/* служебная подпись на пластине: #8a97b0 на #12161f давал 5.6:1 — поднимаем до 7:1 */
+.case .sub, .card .nm{color:#9fabc2}
+
+/* полка скинов (лента дропа): предмет — тоже пластина, чуть светлее лотка,
+   иначе он сливается с ним; цветная полоса редкости внизу остаётся */
+.rl-item{
+  background-color:transparent;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.015) 4%, rgba(255,255,255,0) 4.2%),
+    linear-gradient(158deg, #1a202b 0%, #151a24 55%, #11151d 100%);
+  border-color:rgba(255,255,255,.10);
+  border-bottom-color:var(--c);
+}
+.rl-item:hover{border-color:rgba(255,255,255,.18); border-bottom-color:var(--c)}
+
+/* пустое состояние и служебные плашки — на пластине, а не поверх фото:
+   «Инвентарь пуст» лежал прямо на снимке и читался через силу */
+.empty-note{
+  background-color:transparent;
+  background-image:linear-gradient(158deg,#161b25 0%,#12161f 58%,#0f131a 100%);
+  border-color:rgba(255,255,255,.10);
+  color:#9fabc2;
+}
+
+/* 5. Полосы-панели внутри вкладок (фильтры, действия, массовые операции).
+   У них заливка уже .75–.99 — размытие под ней ничего не показывает, только
+   ест кадры. Убираем размытие, заливку делаем плотной, чтобы не светило фото. */
+.case-action-bar, .inv-action-bar, .inv-tools-nav, .bulk-bar, .inv-nav-bar,
+.prof-nav-capsule, #panel-diary .d-tabs, .skip-spin-btn, .top-chance-badge, #tirr-pill{
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+}
+.inv-tools-nav, .inv-nav-bar, .prof-nav-capsule, .case-action-bar, #panel-diary .d-tabs{
+  background-color:#121722;
+}
+.tirr-pill, .top-chance-badge{background-color:rgba(18,20,26,.88)}
+
+/* 3. ЧИПЫ И ВАЛЮТЫ — та же пластина, без окна в фон */
+.balance, .chip, .pill{
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+  background-color:#151a23;
+  border-color:rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 8px 18px -14px #000;
+}
+
+/* 4. ПОЛНОЭКРАННЫЕ ЗАТЕМНЕНИЯ. blur на весь экран — самый дорогой кадр,
+   а читать за ним всё равно нечего: остаётся плотная заливка. */
+.al-modal, .st-modal, #tutMap, .rk2-sheet, #srProfModal{
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+}
+.al-modal, .st-modal{background:rgba(6,8,13,.90)}
+#tutMap{background:rgba(4,6,11,.90)}
+.rk2-sheet{background:rgba(6,8,13,.97)}
+#srProfModal{background:rgba(5,8,15,.86)}
+</style>
+
 <script>
 /* =========================================================
    4.38.0 · ВКЛАДКИ С КЛАВИАТУРЫ
