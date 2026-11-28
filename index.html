@@ -5584,6 +5584,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         </div>
         <div class="rl-spin-cap" id="rlSpinCap"></div>
       </div>
+      <!-- R2: история последних 20 прокруток (CSGORoll) -->
+      <div class="rl-hist" id="rollHist"></div>
       <div class="cases" id="casesList"></div>
       <button class="cases-next" id="casesNext" hidden>
         Дальше <span id="casesNextN"></span> <i>→</i>
@@ -5693,6 +5695,11 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       </div>
       <div class="mod-note" id="modNote"></div>
       <div class="up-last" id="upLast">Выберите скин (можно до 3 — сумма повышает шанс) и цель. При провале ставка сгорает. Колесо остановится само.</div>
+      <!-- R2: мгновенный повтор той же ставки -->
+      <div id="upAgainBox" hidden style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-up" id="upAgain" style="flex:1;min-height:48px">Ещё раз</button>
+        <button class="btn-ghost" id="upAgainX" style="flex:0 0 auto;padding:0 14px" aria-label="Убрать повтор">✕</button>
+      </div>
       <div class="stats" id="upStats"></div>
     </section>
 
@@ -5754,6 +5761,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
 
         </div>
       </div>
+      <!-- R3: чертежи. Появляется, когда у игрока есть хотя бы одна деталь -->
+      <div class="bp-box" id="bpBox" hidden></div>
       <div class="grid" id="invGrid"></div>
       <button class="btn-ghost inv-more" id="invMore" hidden>
         Показать ещё <span id="invMoreN"></span>
@@ -6208,6 +6217,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
         <button class="btn-ghost" id="winKeep">В инвентарь</button>
         <button class="btn-sell" id="winSell">Продать</button>
       </div>
+      <!-- R2: «Ещё» — повтор прокрутки без возврата в меню (Geometry Dash) -->
+      <button class="btn-ghost" id="winAgain" style="margin-top:8px;width:100%">Ещё раз</button>
     </div>
   </div>
 </div>
@@ -6626,6 +6637,8 @@ body[data-sec="coll"] #bottomNav #bnInvDot{ display: none !important; }
       <div class="craft-mode" id="craftMode">
         <button data-mode="melt" class="on">Переплавка 4→1</button>
         <button data-mode="contract">Контракт 4→1 вверх</button>
+        <!-- R3: слияние двух скинов одной редкости в скин другой коллекции -->
+        <button data-mode="merge">Слияние 2→1</button>
       </div>
       <div class="hint" id="craftSub" style="margin-bottom:10px"></div>
       <div class="craft-slots" id="craftSlots"></div>
@@ -8792,8 +8805,8 @@ CASES.sort((a,b) => (b.first === true) - (a.first === true) || a.price - b.price
 /* =========================================================
    2. СОСТОЯНИЕ
    ========================================================= */
-const VERSION = '4.38.0';
-const BUILD   = '2026-11-27';
+const VERSION = '4.39.0';
+const BUILD   = '2026-11-28';
 const SAVE_KEY = 'skinrush_v1';
 /* 4.8.0: отладочный режим. Включается только вручную — ?dev=1 в адресе
    или localStorage.srDev='1'. Без него window.__sr отдаёт копию состояния
@@ -12263,10 +12276,15 @@ function processCaseQueue(){
        шёл в обход, и дроп заканчивался без финального звука */
     if(glassNext){ try{ SFX.reveal(winSkin.r); }catch(e){} }
     if(cheap) setTimeout(() => SFX.bust(), 420);
+    /* R2: помечаем, что дроп пришёл из кейса — окно покажет «Ещё раз» */
+    try{ window.__srFromCase = true; }catch(e){}
+    rollHistPush(winSkin, itemVal(winItem));
     showWin(winSkin, winItem, false, true);
     musSet('menu');
     renderMissions();
     updateOpenBtn();
+    /* R2: пять и десять открытий открывают «Награды» и «Испытания» */
+    try{ srTabsUnlock(); }catch(e){}
   };
 
   const onSceneEnd = () => {
@@ -12450,7 +12468,13 @@ function showWin(skin, item, alreadyOwned, _skipGlass){
   item = item || makeItem(skin);
   /* alreadyOwned: предмет уже добавлен в инвентарь до показа окна (награды по таймерам).
      Так его нельзя потерять, если игрок закроет игру, не нажав кнопку. */
-  pendingWin = {skin, item, owned: !!alreadyOwned};
+  pendingWin = {skin, item, owned: !!alreadyOwned, fromCase: !!window.__srFromCase};
+  try{ window.__srFromCase = false; }catch(e){}
+  /* R2: повторяем только то, что пришло из кейса — награду по таймеру повторять нечем */
+  try{
+    const ga = $('#winAgain');
+    if(ga) ga.hidden = !pendingWin.fromCase;
+  }catch(e){}
   const R = RAR[skin.r];
   const val = itemVal(item);
   fillWinCard(skin, item);
@@ -12590,6 +12614,37 @@ $('#winKeep').addEventListener('click', ()=>{
   toast(wasOwned ? 'Оставлено в инвентаре' : 'Скин добавлен в инвентарь');
   renderInv(); renderSlots();
   try{ tutEvent('win_close'); }catch(e){}
+});
+/* R2: «Ещё раз» — забрать дроп и сразу крутить тот же кейс.
+   Деньги списываются заново обычным путём openCase, поэтому обойти цену нельзя. */
+$('#winAgain').addEventListener('click', ()=>{
+  if(!pendingWin) return;
+  const pw = pendingWin;
+  if(!pw.owned) addSkin(pw.skin, pw.item);
+  const v = itemVal(pw.item);
+  if(v > (state.bestDrop || 0)) state.bestDrop = v;
+  pendingWin = null;
+  $('#winModal').classList.remove('on');
+  save();
+  renderInv(); renderSlots();
+  const c = (typeof selCase !== 'undefined') ? selCase : null;
+  if(!c){
+    toast('Кейс не выбран');
+    switchTab('cases');
+    return;
+  }
+  const affordable = (state.coins | 0) >= c.price || ((state.tokens | 0) >= 1 && tokenCaseOk(c));
+  if(!affordable){
+    toast('Не хватает на повтор — заберите награды на вкладке «Награды»');
+    switchTab('cases');
+    return;
+  }
+  setTimeout(() => {
+    try{
+      if((state.coins | 0) >= c.price) openCase(false);
+      else openCase(true);
+    }catch(e){}
+  }, 140);
 });
 $('#winSell').addEventListener('click', async ()=>{
   if(!pendingWin) return;
@@ -12903,6 +12958,8 @@ function renderInv(reset){
   }
   /* 4.1.1: счётчики и подсветка капсулы зависят от фильтров — обновляем всегда */
   renderBulkBar();
+  /* R3: чертежи живут над сеткой инвентаря */
+  try{ renderBp(); }catch(e){}
   /* R1: метки «новый» отработали — второй раз пружинку не играем */
   srPopOnce.clear();
 }
@@ -15118,6 +15175,14 @@ function resolveUpgrade(win, fee, shield, lucky, isReroll){
     });
   }
   state.mUp = (state.mUp||0) + 1;
+  /* R2: «Ещё раз» доступен, только если ставка цела (например, щит вернул скины).
+     После выигрыша повторять нечего — исходный скин ушёл в цель. */
+  try{
+    const wasUids = (snap && snap.uids) ? snap.uids : [];
+    const alive = wasUids.filter(u => itemByUid(u));
+    if(alive.length && alive.length === wasUids.length) upAgainArm(alive, snap && snap.target ? snap.target.id : null, upMult);
+    else upAgainClear();
+  }catch(e){}
   upStake = []; upSrc = null; upDst = null; upBot = null;
   /* 4.28.1: снимок держим до конца выплаты — он нужен win-ветке ниже
      (цель, ставка и сумма), а замок снимается в общем setTimeout через 1600 мс */
@@ -15706,6 +15771,12 @@ function switchTab(name){
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   $$('.panel').forEach(p=>p.classList.toggle('on', p.id === 'panel-' + name));
+  /* R2: первое открытие вкладки — список проявляется по очереди */
+  try{
+    if(name === 'rewards') fadeUpOnce($('#panel-rewards'));
+    if(name === 'trials')  fadeUpOnce($('#panel-trials'));
+    if(name === 'inv')     fadeUpOnce($('#invGrid'));
+  }catch(e){}
   /* 4.9.1: раздел нижней навигации всегда следует за вкладкой */
   if(typeof SEC_OF !== 'undefined' && SEC_OF[name] && typeof markSection === 'function'){
     markSection(SEC_OF[name]);
@@ -16270,6 +16341,373 @@ function applyPrize(pr, srcName){
   showWin(sk, it, true);
   renderInv();
   return {type:'skin', skin:sk, item:it};
+}
+
+/* =========================================================
+   R2 · ЗОЛОТОЙ КЕЙС (27.11.2026, приём из Cookie Clicker)
+   Раз в 7–12 минут в случайной точке рабочей области появляется кейс и живёт
+   8 секунд. Смысл не в награде, а в том, что игра «подаёт голос»: пока она
+   открыта, в ней что-то может произойти. Это самый дешёвый повод не закрывать
+   вкладку — дешевле любого нового режима.
+
+   Экономика. Награда — 100 кредитов (70 %) или жетон (30 %). Потолок 5
+   появлений в день => максимум 500 кредитов. При бесплатном приходе ~5 400
+   в сутки (барабан + часовой + дневной) это меньше 10 %: RTP не двигается.
+
+   Время берём из srNow(), как всё остальное: перевод часов вперёд не даёт
+   лишних появлений, потому что счётчик суточный, а не «каждые 7 минут».
+   ========================================================= */
+const GOLD = {
+  minMs: 7 * 60 * 1000,
+  maxMs: 12 * 60 * 1000,
+  lifeMs: 8000,
+  dayCap: 5,
+  prizes: [
+    {k:'coins', n:100, w:70, lbl:'100 кр.'},
+    {k:'tok',   n:1,   w:30, lbl:'жетон'}
+  ]
+};
+let goldTimer = 0, goldHideTimer = 0, goldShownAt = 0, goldLive = false;
+
+function goldDayUsed(){
+  const g = state.gold;
+  if(!g || g.date !== todayKey()) return 0;
+  return Math.max(0, g.n | 0);
+}
+function goldRandomDelay(){
+  return Math.round(GOLD.minMs + Math.random() * (GOLD.maxMs - GOLD.minMs));
+}
+function goldEl(){
+  let el = document.getElementById('goldCase');
+  if(el) return el;
+  el = document.createElement('div');
+  el.id = 'goldCase';
+  el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', 'Золотой кейс — заберите награду');
+  /* кейс, а не «посылка»: корпус, крышка со скосом, шов и замок по центру */
+  el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+    + '<path d="M4 9.6h16v8.6a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 18.2Z"/>'
+    + '<path d="M3.4 9.6 5.1 5.4h13.8l1.7 4.2"/>'
+    + '<path d="M4 12.6h16"/>'
+    + '<rect x="10.3" y="11.2" width="3.4" height="4.2" rx=".9"/></svg>'
+    + '<i hidden>0</i>';
+  el.addEventListener('click', goldTake);
+  document.body.appendChild(el);
+  return el;
+}
+function goldSchedule(delay){
+  clearTimeout(goldTimer);
+  /* за сессию не больше, чем осталось по суточному потолку */
+  if(goldDayUsed() >= GOLD.dayCap) return;
+  goldTimer = setTimeout(goldSpawn, delay == null ? goldRandomDelay() : delay);
+}
+function goldSpawn(){
+  let el;
+  try{ el = goldEl(); }catch(e){ return; }
+  if(!el) return;
+  if(goldDayUsed() >= GOLD.dayCap) return;
+  /* если игрок свернул вкладку — не тратим появление впустую */
+  if(document.hidden){ goldSchedule(60000); return; }
+  /* поверх открытого окна кейс не показываем: он закрывал кнопки «В инвентарь /
+     Продать» в окне выигрыша и попадал под палец в момент нажатия */
+  if(document.querySelector('.modal.on, .sheet.on')){ goldSchedule(20000); return; }
+  /* ставим в пределах рабочей области, но не под шапкой и не под нижней капсулой */
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const x = Math.round(vw * (0.12 + Math.random() * 0.72));
+  const y = Math.round(vh * (0.22 + Math.random() * 0.46));
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  const cnt = el.querySelector('i');
+  if(cnt){
+    const left = GOLD.dayCap - goldDayUsed();
+    cnt.hidden = left <= 0;
+    cnt.textContent = left;
+  }
+  el.classList.remove('leaving');
+  el.classList.add('on');
+  goldLive = true;               /* пока true — награда ещё не забрана */
+  /* перезапуск анимации появления на переиспользуемом элементе */
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  goldShownAt = performance.now();
+  SFX.bonus && SFX.bonus();
+  clearTimeout(goldHideTimer);
+  goldHideTimer = setTimeout(goldMissed, GOLD.lifeMs);
+}
+function goldHide(leaving){
+  goldLive = false;              /* забрано или упущено — второй раз не выдаём */
+  const el = document.getElementById('goldCase');
+  if(!el) return;
+  if(leaving){
+    el.classList.add('leaving');
+    setTimeout(() => { el.classList.remove('on', 'leaving'); }, 300);
+  } else {
+    el.classList.remove('on', 'leaving');
+  }
+}
+function goldMissed(){
+  goldHide(true);
+  goldSchedule();
+}
+function goldTake(){
+  const el = document.getElementById('goldCase');
+  if(!el || !el.classList.contains('on')) return;
+  clearTimeout(goldHideTimer);
+  /* защита от двойного тапа: одно появление — одна награда.
+     Флаг, а не время: пока идёт анимация исчезновения (300 мс), класс «on»
+     ещё на месте, и проверка по времени пропускала второй тап. */
+  if(!goldLive) return;
+  if(performance.now() - goldShownAt < 120) return;
+  goldLive = false;
+  const g = state.gold && state.gold.date === todayKey() ? state.gold : {date: todayKey(), n: 0};
+  if((g.n | 0) >= GOLD.dayCap){ goldHide(true); return; }
+  g.n = (g.n | 0) + 1;
+  state.gold = g;
+  goldHide(true);
+  try{
+    const pr = pickWeighted(GOLD.prizes);
+    SFX.click();
+    FX.burst({count: 36, colors:['#ffd76a','#ffe9ae','#ffffff']});
+    FX.punch(0.5);
+    addXp(8);
+    if(pr.k === 'coins'){
+      state.coins += pr.n;
+      renderBalance(true);
+      save();
+    } else {
+      addTokens(pr.n);
+      save();
+    }
+    toast('Золотой кейс: +' + pr.lbl);
+    updateOpenBtn();
+  }catch(e){}
+  goldSchedule();
+}
+
+/* =========================================================
+   R3 · ЧЕРТЕЖИ (27.11.2026)
+   Лечат главную дыру игры: мини-игры давали награды, но не двигали прогрессию,
+   поэтому в них не было смысла играть дважды. Теперь каждая деталь падает
+   ТОЛЬКО из своего режима и ТОЛЬКО по условию, а не по шансу — иначе это был
+   бы второй рандом поверх первого.
+
+     деталь 1 — Тир:   набрать 750 очков за сессию
+     деталь 2 — Башня: забрать выигрыш с этажа 3 и выше
+     деталь 3 — Ритм-штурм: победить танк
+
+   Награда — конкретный скин из каталога, выдаётся один раз за весь аккаунт
+   (state.bp.done). Три чертежа = три скина за всю игру, экономику это не
+   раздувает: в сутки такой приход не повторяется.
+   ========================================================= */
+const BP_PARTS = {
+  1: {mode:'tir',    name:'Тир',         hint:'наберите 750 очков за сессию'},
+  2: {mode:'tower',  name:'Башня',       hint:'заберите выигрыш с этажа 3 и выше'},
+  3: {mode:'rr',     name:'Ритм-штурм',  hint:'победите танк'}
+};
+let BP_DEFS = null;
+function bpDefs(){
+  if(BP_DEFS) return BP_DEFS;
+  /* три самых дорогих легендарки каталога — как «именные» награды за чертёж */
+  const pool = SKINS.filter(s => s.r === 'legend' && !s.excl).sort((a, b) => b.val - a.val);
+  BP_DEFS = pool.slice(0, 3).map((sk, i) => ({
+    id: 'bp' + (i + 1),
+    skin: sk,
+    parts: [1, 2, 3]
+  }));
+  return BP_DEFS;
+}
+function bpState(){
+  if(!state.bp || typeof state.bp !== 'object') state.bp = {parts:{}, done:{}};
+  if(!state.bp.parts || typeof state.bp.parts !== 'object') state.bp.parts = {};
+  if(!state.bp.done || typeof state.bp.done !== 'object') state.bp.done = {};
+  return state.bp;
+}
+function bpHas(bpId, slot){
+  const st = bpState();
+  const list = st.parts[bpId];
+  return Array.isArray(list) && list.indexOf(slot) >= 0;
+}
+function bpCount(bpId){
+  const st = bpState();
+  const list = st.parts[bpId];
+  return Array.isArray(list) ? list.length : 0;
+}
+function bpAnyPart(){
+  const st = bpState();
+  return Object.keys(st.parts).some(k => Array.isArray(st.parts[k]) && st.parts[k].length)
+      || Object.keys(st.done).length > 0;
+}
+/* выдача детали: ищем первый незавершённый чертёж, которому эта деталь нужна */
+function bpDropSlot(slot){
+  const st = bpState();
+  const defs = bpDefs();
+  const bp = defs.filter(d => !st.done[d.id] && !bpHas(d.id, slot))[0];
+  if(!bp) return false;
+  const list = Array.isArray(st.parts[bp.id]) ? st.parts[bp.id] : [];
+  list.push(slot);
+  st.parts[bp.id] = list;
+  save();
+  try{ renderBp(); }catch(e){}
+  const p = BP_PARTS[slot];
+  toast('Деталь чертежа «' + bp.skin.n + '»: ' + p.name + ' (' + list.length + '/3)');
+  try{
+    SFX.bonus && SFX.bonus();
+    FX.burst({count: 26, colors:['#ffd76a','#8df0b4','#ffffff']});
+  }catch(e){}
+  return true;
+}
+function bpClaim(bpId){
+  const st = bpState();
+  const bp = bpDefs().filter(d => d.id === bpId)[0];
+  if(!bp) return;
+  if(st.done[bpId]){ toast('Этот чертёж уже собран'); return; }
+  if(bpCount(bpId) < 3){ toast('Нужны все три детали'); return; }
+  st.done[bpId] = 1;
+  delete st.parts[bpId];
+  const item = makeItem(bp.skin);
+  addSkin(bp.skin, item);
+  const v = itemVal(item);
+  if(v > (state.bestDrop || 0)) state.bestDrop = v;
+  save();
+  try{ FEED.mine(bp.skin, v, 'craft'); }catch(e){}
+  renderInv(); renderBp();
+  showWin(bp.skin, item, false);
+}
+function renderBp(){
+  const box = document.getElementById('bpBox');
+  if(!box) return;
+  if(!bpAnyPart()){ box.hidden = true; return; }
+  const st = bpState();
+  const rows = bpDefs().map(bp => {
+    const done = !!st.done[bp.id];
+    const got = bpCount(bp.id);
+    const slots = [1,2,3].map(sl => {
+      const has = done || bpHas(bp.id, sl);
+      const p = BP_PARTS[sl];
+      return '<div class="bp-slot' + (has ? ' got' : '') + '" title="' +
+        (has ? 'Есть: ' : 'Нужно: ') + p.name + ' — ' + p.hint + '">' + (has ? '✓' : sl) + '</div>';
+    }).join('');
+    return '<div class="bp-row">'
+      + '<div class="bp-art">' + svgWeapon(bp.skin) + '</div>'
+      + '<div class="bp-main">'
+        + '<div class="bp-name">' + bp.skin.n + '</div>'
+        + '<div class="bp-sub">' + RAR[bp.skin.r].name + ' · ' + bp.skin.val.toLocaleString('ru-RU') + '</div>'
+        + '<div class="bp-slots">' + slots
+          + '<span class="bp-cnt">' + (done ? 3 : Math.min(got, 3)) + '/3</span></div>'
+      + '</div>'
+      + (done
+          ? '<div class="bp-done">собран</div>'
+          : '<button class="bp-go" data-bp="' + bp.id + '"' + (got >= 3 ? '' : ' disabled') + '>Собрать</button>')
+      + '</div>';
+  }).join('');
+  box.innerHTML = '<div class="bp-head"><b>Чертежи</b><span>детали падают из мини-игр</span></div>' + rows
+    + '<div class="bp-legend"><b>1</b> — Тир: 750 очков за сессию · <b>2</b> — Башня: забрать с этажа 3+ · '
+    + '<b>3</b> — Ритм-штурм: победить танк</div>';
+  box.hidden = false;
+  box.querySelectorAll('.bp-go').forEach(b => b.addEventListener('click', () => {
+    try{ SFX.click(); }catch(e){}
+    bpClaim(b.dataset.bp);
+  }));
+}
+
+/* =========================================================
+   R2 · МГНОВЕННЫЙ ПОВТОР (Geometry Dash)
+   «Ещё одна попытка» короче паузы на размышление — именно это держит игрока,
+   а не сложность. В мини-играх приём уже был (rrClose/obsAgain/knAgain),
+   здесь он появляется там, где его не было: апгрейд и открытие кейса.
+   ========================================================= */
+let lastUpSetup = null;   /* {uids:[...], dst, mult} — что повторять */
+
+function upAgainArm(uids, dst, mult){
+  lastUpSetup = {uids: uids.slice(), dst: dst, mult: mult};
+  const box = document.getElementById('upAgainBox');
+  if(!box) return;
+  box.hidden = false;
+}
+function upAgainGo(){
+  if(!lastUpSetup) return;
+  const alive = lastUpSetup.uids.filter(u => itemByUid(u));
+  if(!alive.length){ toast('Повторить нечем — эти скины уже ушли'); upAgainClear(); return; }
+  if(upLocked()){ toast('Колесо ещё крутится'); return; }
+  /* восстанавливаем выбор ровно как было и запускаем */
+  upStake = alive.slice();
+  upSrc = alive[0];
+  if(lastUpSetup.dst) upDst = lastUpSetup.dst;
+  if(lastUpSetup.mult) upMult = lastUpSetup.mult;
+  renderSlots();
+  setTimeout(() => { try{ spinUpgrade(); }catch(e){} }, 60);
+}
+function upAgainClear(){
+  lastUpSetup = null;
+  const box = document.getElementById('upAgainBox');
+  if(box) box.hidden = true;
+}
+
+/* история прокруток кейсов: последние 20, только в памяти сессии */
+const SROLLS = [];
+function rollHistPush(skin, val){
+  try{
+    SROLLS.unshift({n: skin.n, v: val, r: skin.r, mine: true});
+    if(SROLLS.length > 20) SROLLS.pop();
+    renderRollHist();
+  }catch(e){}
+}
+/* свой короткий формат: fmtS живёт в другой области видимости и здесь недоступен */
+function srShort(v){
+  v = Math.round(v || 0);
+  if(v >= 1000000) return (v / 1000000).toFixed(1).replace('.0', '') + 'M';
+  if(v >= 10000) return (v / 1000).toFixed(1).replace('.0', '') + 'K';
+  return v.toLocaleString('ru-RU');
+}
+function renderRollHist(){
+  const box = document.getElementById('rollHist');
+  if(!box) return;
+  if(!SROLLS.length){
+    box.innerHTML = '<div class="empty">Здесь появятся последние прокрутки</div>';
+    return;
+  }
+  box.innerHTML = SROLLS.map(x => {
+    const R = RAR[x.r] || RAR.common;
+    return '<div class="hi' + (x.mine ? ' mine' : '') + '" style="--c:' + R.color + '">'
+      + '<div class="v">' + srShort(x.v) + '</div>'
+      + '<div class="n">' + esc(x.n) + '</div></div>';
+  }).join('');
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* =========================================================
+   R2 · РАСКРЫТИЕ ВКЛАДОК ПО ДЕЙСТВИЯМ (A Dark Room)
+   Было: «Награды» открывались по времени (сутки после гида). Игрок, который
+   за вечер открыл двадцать кейсов, всё равно смотрел на замок.
+   Стало: по прогрессу. 5 открытий — «Награды», 10 — «Испытания».
+   ========================================================= */
+const SR_TAB_AT_OPENS = {rewards: 5, trials: 10};
+function srTabsUnlock(){
+  const n = state.opened | 0;
+  let opened = null;
+  for(const tab in SR_TAB_AT_OPENS){
+    const need = SR_TAB_AT_OPENS[tab];
+    if(n < need) continue;
+    const t = document.querySelector('.tab-item[data-tab="' + tab + '"]');
+    if(t && t.getAttribute('data-locked') === '1'){
+      t.removeAttribute('data-locked');
+      t.classList.add('unlocked-bump');
+      setTimeout(() => t.classList.remove('unlocked-bump'), 900);
+      opened = t;
+    }
+  }
+  if(opened){
+    const lbl = opened.querySelector('.tab-label');
+    toast('Открыта вкладка «' + (lbl ? lbl.textContent : '') + '»');
+  }
+}
+
+/* Список появляется по очереди, а не весь сразу.
+   Один раз за сессию: при каждом заходе на вкладку это уже раздражало бы. */
+function fadeUpOnce(el){
+  if(!el || el.dataset.fadeDone) return;
+  el.dataset.fadeDone = '1';
+  el.classList.add('fade-up');
+  setTimeout(() => el.classList.remove('fade-up'), 900);
 }
 
 /* ---------- барабан ---------- */
@@ -19717,6 +20155,8 @@ function rrFinish(){
   }
   const dust = Math.min(20, Math.round(dmgPct*20));
   if(dust > 0){ try{ addDust(dust); }catch(e){} }
+  /* R3: деталь чертежа №3 — только за победу над танком */
+  if(rr.win){ try{ bpDropSlot(3); }catch(e){} }
   save();
 
   const res = document.getElementById('runResult');
@@ -20516,6 +20956,8 @@ function tirEnd(){
   });
   const dust = train ? 0 : tirS.hits * TIR_DUST_PER_HIT;
   if(dust) addDust(dust);
+  /* R3: деталь чертежа №1 — только за настоящую сессию и только с 750 очков */
+  if(!train && sc >= 750) { try{ bpDropSlot(1); }catch(e){} }
 
   const rw = train
     ? { c:'тренировка — без награды', cases:0, cmax:0, tok:0, coins:0, train:true }
@@ -21020,6 +21462,8 @@ function renderTower() {
       state.coins += currentReward;
       SFX.success(); FX.burst({count: 30, colors: ['#43c97a', '#ffffff']});
       toast(`Вы забрали ${currentReward.toLocaleString('ru-RU')} кредитов!`);
+      /* R3: деталь чертежа №2 — с третьего этажа и выше */
+      if(lvl >= 3){ try{ bpDropSlot(2); }catch(e){} }
     }
     towerRun = null; save(); renderBalance(true); renderInv(); renderMiniModes(); updateNavBadges();
     $('#towerModal').classList.remove('on');
@@ -21135,17 +21579,23 @@ function renderCraft(){
   const counts = {};
   inventorySkins().forEach(x => { counts[x.skin.r] = (counts[x.skin.r] | 0) + 1; });
   /* в контракте мифику не предлагаем: выше неё тира нет */
-  const rars = RAR_ORDER.filter(r => (counts[r] | 0) >= 4 &&
-    (craftMode === 'melt' || craftNextRar(r)));
+  /* R3: в слиянии нужно два скина, а не четыре, и следующий тир не требуется */
+  const NEED = craftMode === 'merge' ? 2 : 4;
+  const rars = RAR_ORDER.filter(r => (counts[r] | 0) >= NEED &&
+    (craftMode !== 'contract' || craftNextRar(r)));
   if(!craftRarSel || rars.indexOf(craftRarSel) < 0) craftRarSel = rars[0] || '';
   const sub = $('#craftSub');
   if(sub){
     sub.innerHTML = rars.length
       ? (craftMode === 'melt'
           ? `Выберите редкость и наберите четыре предмета. Взамен — один случайный скин той же редкости.`
+        : craftMode === 'merge'
+          ? `Два скина одной редкости → один скин той же редкости, но из коллекции, которой у вас ещё нет. Без случайности.`
           : `Выберите редкость и наберите четыре предмета. Взамен — скин на тир выше, подобранный под вложенное.`)
       : (craftMode === 'melt'
           ? `Для переплавки нужно четыре скина одной редкости — пока таких наборов нет.`
+        : craftMode === 'merge'
+          ? `Для слияния нужно два скина одной редкости — пока таких пар нет.`
           : `Для контракта нужно четыре скина одной редкости (кроме мифики) — пока таких наборов нет.`);
   }
   const modeBox = $('#craftMode');
@@ -21157,6 +21607,11 @@ function renderCraft(){
       ? `Четыре скина одной редкости уходят в переплавку, выпадает один случайный скин той же редкости.
          Ключевые предметы (🔑) тоже подходят — другого применения у них нет.
          Средний результат дешевле вложенного: это размен дублей на шанс поймать дорогой лот.`
+      : craftMode === 'merge'
+      ? `Два скина одной редкости уходят в слияние, выпадает один скин той же редкости из коллекции,
+         которой у вас ещё нет. Случайности нет: одна и та же пара всегда даёт один и тот же скин,
+         поэтому слияние выгодно ровно тогда, когда нужен конкретный недостающий предмет.
+         Износ наследуется худший из двух.`
       : `Четыре скина одной редкости уходят в контракт, выпадает скин на тир выше.
          Он подбирается под вложенное: берём предмет, ближайший снизу к 80 % суммы ваших четырёх.
          Износ наследуется худший из вложенных, узор — новый. Если в следующем тире нет предмета
@@ -21173,7 +21628,7 @@ function renderCraft(){
   }));
 
   const slots = $('#craftSlots');
-  slots.innerHTML = [0,1,2,3].map(i => {
+  slots.innerHTML = Array.from({length: NEED}, (_, i) => i).map(i => {
     const uid = craftSel[i];
     const it = uid ? itemByUid(uid) : null;
     if(!it) return `<div class="craft-slot">+</div>`;
@@ -21196,7 +21651,7 @@ function renderCraft(){
     </div>`;
   }).join('') : `<div class="hint" style="grid-column:1/-1">${craftRarSel ? 'Все скины этой редкости уже в слотах' : 'Не из чего выбирать'}</div>`;
   grid.querySelectorAll('.craft-it').forEach(el => el.addEventListener('click', ()=>{
-    if(craftSel.length >= 4){ toast('В слотах уже четыре скина'); return; }
+    if(craftSel.length >= NEED){ toast('В слотах уже ' + (NEED === 2 ? 'два скина' : 'четыре скина')); return; }
     craftSel.push(Number(el.dataset.uid));
     renderCraft(); SFX.click();
   }));
@@ -21204,14 +21659,27 @@ function renderCraft(){
   /* предпросмотр: что именно выйдет в контракте */
   const exp = $('#craftExpect');
   if(exp){
-    if(craftMode === 'contract' && craftSel.length === 4){
+    if(craftMode === 'merge' && craftSel.length === 2){
+      const items = craftSel.map(u => itemByUid(u)).filter(Boolean);
+      const res = items.length === 2 ? mergeTarget(items[0], items[1]) : null;
+      exp.hidden = false;
+      if(res){
+        exp.className = 'craft-expect';
+        exp.innerHTML = `Результат — <b>${res.n}</b> (${RAR[res.r].name}, ${res.val.toLocaleString('ru-RU')}). `
+          + `Скины уйдут из инвентаря, назад их не вернуть.`;
+      } else {
+        exp.className = 'craft-expect bad';
+        exp.innerHTML = 'Пары одной редкости, для которой есть незакрытая коллекция, нет.';
+      }
+    } else if(craftMode === 'contract' && craftSel.length === 4){
       const sumIn = craftSel.map(u => itemByUid(u)).filter(Boolean).reduce((a, x) => a + x.val, 0);
       const pick = contractPick(craftRarSel, contractTarget(sumIn));
       exp.hidden = false;
       if(pick){
         exp.className = 'craft-expect';
-        exp.innerHTML = `Вложено ${sumIn.toLocaleString('ru-RU')} · цель ${pick.target.toLocaleString('ru-RU')} · ` +
-          `получите <b>${pick.skin.n}</b> (${pick.skin.val.toLocaleString('ru-RU')}, ${RAR[pick.next].name})`;
+        exp.innerHTML = `Вложено ${sumIn.toLocaleString('ru-RU')} · цель ${pick.target.toLocaleString('ru-RU')} `
+          + `(это 80 % вложенного — потолок контракта) · `
+          + `получите <b>${pick.skin.n}</b> (${pick.skin.val.toLocaleString('ru-RU')}, ${RAR[pick.next].name})`;
       } else {
         exp.className = 'craft-expect bad';
         exp.innerHTML = `Вложено ${sumIn.toLocaleString('ru-RU')} · цель ${contractTarget(sumIn).toLocaleString('ru-RU')}. ` +
@@ -21224,24 +21692,113 @@ function renderCraft(){
     }
   }
   const go = $('#craftGo');
-  const enough = craftSel.length === 4;
+  const enough = craftSel.length === NEED;
   let blocked = false;
+  if(enough && craftMode === 'merge'){
+    const items = craftSel.map(u => itemByUid(u)).filter(Boolean);
+    blocked = items.length !== 2 || !mergeTarget(items[0], items[1]);
+  }
   if(enough && craftMode === 'contract'){
     const sumIn = craftSel.map(u => itemByUid(u)).filter(Boolean).reduce((a, x) => a + x.val, 0);
     blocked = !contractPick(craftRarSel, contractTarget(sumIn));
   }
   go.disabled = !enough || blocked;
-  go.textContent = !enough ? `Скрафтить (${craftSel.length}/4)`
-    : blocked ? 'Слишком дешёвый набор'
-    : (craftMode === 'melt' ? 'Переплавить' : 'Заключить контракт');
+  go.textContent = !enough ? `Скрафтить (${craftSel.length}/${NEED})`
+    : blocked ? (craftMode === 'merge' ? 'Пары нет' : 'Слишком дешёвый набор')
+    : (craftMode === 'melt' ? 'Переплавить' : craftMode === 'merge' ? 'Слить' : 'Заключить контракт');
 }
+/* =========================================================
+   R3 · СЛИЯНИЕ 2 → 1 (Little Alchemy + 2048)
+   Два скина одной редкости дают скин ТОЙ ЖЕ редкости из коллекции, которой
+   у игрока ещё нет. Ключевое отличие от переплавки: результата не выбирает
+   случай — он вычисляется из пары, поэтому один и тот же набор всегда даёт
+   один и тот же скин. Это инструмент добивания альбома, а не ещё одна рулетка.
+
+   Ценность не растёт (редкость та же), поэтому RTP не трогается: игрок
+   обменивает две вещи на одну равного тира, но получает НУЖНУЮ.
+   ========================================================= */
+const MERGE_RECIPES = {};          /* сюда можно вписать курированные пары: 'a+b': 'skinId' */
+function mergeKey(a, b){
+  const ids = [a, b].sort();
+  return ids[0] + '+' + ids[1];
+}
+function mergeTarget(itemA, itemB){
+  if(!itemA || !itemB) return null;
+  const ra = itemA.skin.r;
+  if(ra !== itemB.skin.r) return null;
+  if(itemA.uid === itemB.uid) return null;
+  const key = mergeKey(itemA.skin.id, itemB.skin.id);
+  /* 1. курированное правило, если оно есть */
+  if(MERGE_RECIPES[key]){
+    const s = SKINS.filter(x => x.id === MERGE_RECIPES[key])[0];
+    if(s) return s;
+  }
+  /* 2. иначе — детерминированно выбираем из незакрытой коллекции той же редкости */
+  const pool = SKINS.filter(x => x.r === ra && !x.excl
+    && x.id !== itemA.skin.id && x.id !== itemB.skin.id)
+    .sort((x, y) => (x.id < y.id ? -1 : 1));
+  if(!pool.length) return null;
+  const seen = state.albSeen || {};
+  const fresh = pool.filter(x => !seen[x.id]);
+  const list = fresh.length ? fresh : pool;
+  /* хеш от ключа пары: стабилен между сессиями и устройствами */
+  let h = 0;
+  for(let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return list[Math.abs(h) % list.length];
+}
+/* Копии двух карточек слетаются к центру экрана и вспыхивают.
+   Ноль ассетов: те же svg-скины, что на карточках, и один radial-gradient. */
+function mergeFly(items){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  const els = items.map(it => {
+    const card = document.querySelector('.craft-slot.full[data-uid="' + it.uid + '"]');
+    const box = card ? card.getBoundingClientRect() : null;
+    const el = document.createElement('div');
+    el.className = 'merge-fly';
+    el.innerHTML = svgWeapon(it.skin);
+    el.style.left = (box ? box.left + box.width / 2 : cx) + 'px';
+    el.style.top  = (box ? box.top + box.height / 2 : cy) + 'px';
+    document.body.appendChild(el);
+    return el;
+  });
+  const flash = document.createElement('div');
+  flash.className = 'merge-flash';
+  flash.style.left = cx + 'px';
+  flash.style.top = cy + 'px';
+  requestAnimationFrame(() => {
+    els.forEach(el => {
+      el.style.transform = 'translate(' + (cx - parseFloat(el.style.left)) + 'px,'
+                        + (cy - parseFloat(el.style.top)) + 'px) scale(.7)';
+    });
+    setTimeout(() => {
+      document.body.appendChild(flash);
+      els.forEach(el => { el.style.opacity = '0'; });
+      setTimeout(() => {
+        els.forEach(el => el.remove());
+        flash.remove();
+      }, 380);
+    }, 340);
+  });
+}
+
 function craftDo(){
-  if(craftSel.length !== 4 || !craftRarSel) return;
+  const need = craftMode === 'merge' ? 2 : 4;
+  if(craftSel.length !== need || !craftRarSel) return;
   const items = craftSel.map(u => itemByUid(u)).filter(Boolean);
-  if(items.length !== 4 || items.some(x => x.skin.r !== craftRarSel)){ toast('Нужны четыре скина одной редкости'); return; }
+  if(items.length !== need || items.some(x => x.skin.r !== craftRarSel)){
+    toast(need === 2 ? 'Нужны два скина одной редкости' : 'Нужны четыре скина одной редкости');
+    return;
+  }
   const lost = items.reduce((a,x)=>a + x.val, 0);
   let win = null, pick = null;
-  if(craftMode === 'contract'){
+  if(craftMode === 'merge'){
+    win = mergeTarget(items[0], items[1]);
+    if(!win){ toast('Для этой пары нет свободной коллекции'); return; }
+    /* R3: слёт карточек в центр — копии летят из своих ячеек и гаснут вспышкой.
+       Копии живут 400 мс и удаляются сами; настоящие предметы уже спишутся ниже. */
+    try{ mergeFly(items); }catch(e){}
+  } else if(craftMode === 'contract'){
     pick = contractPick(craftRarSel, contractTarget(lost));
     if(!pick){
       toast('В следующем тире нет предмета под эту сумму — набор слишком дешёвый');
@@ -21254,7 +21811,7 @@ function craftDo(){
     win = pool[Math.floor(Math.random()*pool.length)];
   }
   /* контракт наследует ХУДШИЙ износ: иначе собирают четыре «прямо с завода» ради множителя */
-  const item = craftMode === 'contract'
+  const item = (craftMode === 'contract' || craftMode === 'merge')
     ? makeItem(win, {fl: Math.max.apply(null, items.map(x => x.fl))})
     : makeItem(win);
   /* сначала убираем вложенное, потом выдаём — иначе можно дважды скрафтить один предмет */
@@ -21271,7 +21828,7 @@ function craftDo(){
   renderInv();
   FEED.mine(win, v, 'craft');
   showWin(win, item, true);
-  const verb = craftMode === 'contract' ? 'Контракт' : 'Переплавка';
+  const verb = craftMode === 'contract' ? 'Контракт' : craftMode === 'merge' ? 'Слияние' : 'Переплавка';
   toast(lost > v ? `${verb}: ${win.n} — дешевле вложенного на ${(lost-v).toLocaleString('ru-RU')}`
                  : `${verb}: ${win.n} — плюс ${(v-lost).toLocaleString('ru-RU')} к вложенному`);
   renderMissions();
@@ -21346,6 +21903,13 @@ document.addEventListener('keydown', e=>{
 });
 
 $('#btnOpen').addEventListener('click', ()=>openCase(false));
+/* R2: повтор апгрейда одной кнопкой */
+try{
+  const ua = $('#upAgain');
+  if(ua) ua.addEventListener('click', ()=>upAgainGo());
+  const ux = $('#upAgainX');
+  if(ux) ux.addEventListener('click', ()=>{ SFX.click(); upAgainClear(); });
+}catch(e){}
 /* 3.3.0: испытания и крафт */
 $('#openSniper')?.addEventListener('click', ()=>openSniper());
 $('#openSniperTrial')?.addEventListener('click', ()=>openSniper());
@@ -21580,7 +22144,28 @@ function renderAbout(){
       <b>joshopel</b> (Sketchfab), лицензия CC-BY-4.0, рендер свой.
     </div>
         <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:linear-gradient(150deg,rgba(255,176,46,.16),rgba(255,138,40,.05));border:1px solid rgba(255,176,46,.4)">
-      <b style="color:#ffd166">Оформление · 27 ноября. Полка и плотные пластины</b><br>
+      <b style="color:#ffd166">Что нового в 4.39.0 · Мини-игры начали кормить прогрессию</b><br>
+      <b>Чертежи.</b> Три именные легендарки нельзя купить ни за кредиты, ни выбить из кейса —
+      их собирают по деталям. Каждая деталь падает только из своего режима и только по условию:
+      Тир — 750 очков за сессию, Башня — забрать выигрыш с этажа 3 и выше, Ритм-штурм — добить танк.
+      Блок «Чертежи» появился в Коллекции, как только у вас есть первая деталь.<br>
+      <b>Слияние 2→1.</b> В «Переплавке» появился третий режим: два скина одной редкости дают один
+      скин той же редкости, но из коллекции, которой у вас ещё нет. Без случайности — один и тот же
+      набор всегда даёт один и тот же результат. Это способ добить альбом, а не ещё одна рулетка.<br>
+      <b>Прокрутки теперь видно.</b> Под лентой кейса — история последних 20 дропов с ценой
+      и цветом редкости: видно серию, а не только текущий скин.<br>
+      <b>Вкладки открываются по делу.</b> «Награды» — после пяти открытий, «Испытания» — после
+      десяти. Раньше замок снимался по времени, и тот, кто за вечер открыл двадцать кейсов,
+      всё равно смотрел на замок.<br>
+      <b>Золотой кейс.</b> Раз в 7–12 минут на экране «Играть» появляется кейс за жетон:
+      пять штук в день, живёт 8 секунд. Один тап — одна награда, двойной тап не считается.<br>
+      <b>Кнопка «Ещё раз».</b> В окне выигрыша тот же кейс можно открыть сразу, не возвращаясь
+      к списку, а после апгрейда — повторить последнюю ставку одним нажатием.<br>
+      <b>Контракт говорит правду.</b> В окне крафта видно потолок: цель контракта — 80 % вложенного,
+      без «может повезёт».<br>
+    </div>
+        <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)">
+      <b style="color:#c8d3e4">Оформление · 27 ноября. Полка и плотные пластины</b><br>
       <b>Карточки больше не «молоко».</b> Кейсы и все прочие карточки перестали размывать фон
       под собой: вместо стекла — плотная пластина от #161b25 к #0f131a, кромка на 10 % белого
       и узкий блик по верхней грани. Текст на них читается спокойно на любом фоне.<br>
@@ -21594,7 +22179,7 @@ function renderAbout(){
       Теперь игра берёт трек с сайта по живому адресу и с меткой версии.<br>
     </div>
         <div style="margin-top:10px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)">
-      <b style="color:#c8d3e4">Что нового в 4.38.0 · Доступность и аккуратность</b><br>
+      <b style="color:#ffd166">Что нового в 4.38.0 · Доступность и аккуратность</b><br>
       <b>Игра слушается клавиатуры.</b> У каждой вкладки нижнего меню теперь видно фокус,
       а стрелки ←/→ водят по разделам, Home и End прыгают к краям, Enter открывает.
       Раньше подсветка фокуса была ровно у одной сцены — тира.<br>
@@ -24142,6 +24727,13 @@ function init(){
   try{ renderAchInline(); }catch(e){}
   try{ renderBadgesInline(); }catch(e){}
   try{ idleTrack(); }catch(e){}
+  /* R2: история прокруток, раскрытие вкладок по прогрессу, золотой кейс */
+  try{ renderRollHist(); }catch(e){}
+  /* R3: при запуске блок чертежей собираем сами — renderInv в этот момент
+     ещё не звали, и собранные детали не были видны до первого захода в Коллекцию */
+  try{ renderBp(); }catch(e){}
+  try{ srTabsUnlock(); }catch(e){}
+  try{ goldSchedule(25000); }catch(e){}
   /* первый запуск: короткий туториал и предупреждение о потерянных предметах */
   if(state._lostNotice > 0){
     try{ toast(`В сейве не нашлось ${state._lostNotice} предмет(а) из старых версий — они убраны`); }catch(e){}
@@ -26822,6 +27414,10 @@ function obsFinish(win){
 
 window.__sr = {
   obsLeft, openObs, obsStart, obsFinish, obsState: obs,
+  /* R2/R3: наружу для проверок */
+  goldSpawn, goldTake, goldDayUsed, GOLD, srTabsUnlock, renderRollHist, get rolls(){ return SROLLS.slice(); },
+  bpDefs, bpDropSlot, bpClaim, renderBp, bpState, mergeTarget, mergeKey, MERGE_RECIPES,
+  upAgainArm, upAgainGo, upAgainClear, get upAgainSetup(){ return lastUpSetup; },
   /* 4.8.0: живой state наружу не отдаём. Раньше `__sr.state.coins = 1e9`
      в консоли давало миллиард кредитов в один клик. Теперь без ?dev=1
      отдаётся копия (читать можно, писать бессмысленно). */
@@ -26940,6 +27536,9 @@ window.__sr = {
   grantMainReward, mainQuestDone, mainQuestCheck, uniqueSkin, MAIN_SET,
   get fails(){ return state.fails||0; },
   MISSIONS, CASES, RAR_ORDER, KNIVES, MELEE, floatMult, rollRarity, rollSkin, todayKey, RAR,
+  SKINS, itemByUid, craftDo, renderCraft, openCraft, get craftSel(){ return craftSel.slice(); },
+  set craftMode(m){ craftMode = m; }, get craftMode(){ return craftMode; },
+  set craftRarSel(r){ craftRarSel = r; }, setCraftSel: function(arr){ craftSel = arr.slice(); },
   caseCanPity, caseEV, casePrice, casePoolOf, caseAvgByRarity, rollSkin, rollRarity, makeItem, itemVal, patAvgOfSkin, luckAdd,
   renderMissions, renderSlots, renderInv, renderCases, renderBalance, svgWeapon, weaponArtUrl,
   BADGES, STICKERS, ACH,
@@ -33838,6 +34437,218 @@ body{background-color:#0a0d12}
   .pop{animation:none}
   .spring, .spring:active{transition:none; transform:none}
   .fly-num{animation:none; opacity:0}
+}
+</style>
+
+<style id="r2r3">
+/* =========================================================
+   R2 + R3 · 27.11.2026
+   Две починки, которые человек назвал сам, и стили новых механик.
+   ========================================================= */
+
+/* ---------- ПОЧИНКА 1: нижняя капсула на 320 ----------
+   Замер до правки: капсула 508…562 при экране 568, подпись кончалась
+   на 552 — то есть 10 px до кромки капсулы и 16 до края экрана. На
+   телефоне с жестовой полосой --sab добавлял ещё меньше, чем нужно,
+   и подписи визуально липли к нижней границе.
+   Стало: капсула поднята, внутри больше воздуха, а main освобождает
+   под неё место с учётом --sab — иначе последняя карточка уезжала под неё. */
+#bottomNav{
+  bottom:calc(10px + var(--sab, 0px));
+  padding:6px 6px 7px;
+}
+#bottomNav .bn-item{padding:6px 2px 7px}
+#bottomNav .bn-item span{line-height:1.25; display:block}
+@media (max-width:768px){
+  main{padding-bottom:calc(96px + var(--sab, 0px)) !important}
+}
+@media (max-width:340px){
+  #bottomNav .bn-item{font-size:var(--fs-10, 10px); padding:6px 1px 7px}
+  #bottomNav .bn-item svg{width:19px;height:19px}
+}
+
+/* ---------- ПОЧИНКА 2: пластины на экране апгрейда ----------
+   У .slot стояла заливка rgba(255,255,255,.025) — почти прозрачная, и фото
+   карты просвечивало сквозь «Ваши скины» и «Цель апгрейда» целиком.
+   Теперь те же плотные пластины, что у карточек кейсов. */
+.slot{
+  background-color:transparent;
+  background-image:linear-gradient(158deg,#161b25 0%,#12161f 58%,#0f131a 100%);
+  border-color:rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.slot:hover{
+  background-image:linear-gradient(158deg,#1a2029 0%,#141a24 58%,#10151d 100%);
+  border-color:rgba(255,255,255,.18);
+}
+.slot.filled{
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.015) 4%, rgba(255,255,255,0) 4.2%),
+    linear-gradient(158deg,#1a2029 0%,#141a24 58%,#10151d 100%);
+}
+/* тот же просвет был у чипов-множителей и кнопок модификаторов */
+.want-chip{background-color:#151a23; border-color:rgba(255,255,255,.10)}
+.want-chip.on{background-color:rgba(67,201,122,.16)}
+.mod-btn{background-color:#151a23; border-color:rgba(255,255,255,.10)}
+.mod-btn:hover{background-color:#1b212c}
+.mod-btn.active{background-color:rgba(255,176,46,.10)}
+/* круг шанса и «плюс» на пустом слоте читаются лучше на пластине */
+.slot .cap{color:#8b98b0}
+
+/* =========================================================
+   R2 · ЗОЛОТОЙ КЕЙС (приём из Cookie Clicker)
+   Раз в 7–12 минут в случайной точке рабочей области появляется кейс и
+   живёт 8 секунд. Это не контент, а повод не закрывать игру: бесплатно,
+   с потолком 5 раз в день (<= 500 кредитов — в бюджете при приходе ~5 400).
+   ========================================================= */
+#goldCase{
+  position:fixed; z-index:92; width:64px; height:64px; margin:-32px 0 0 -32px;
+  display:none; align-items:center; justify-content:center;
+  border-radius:16px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  background:linear-gradient(160deg,#ffdf8a,#e9a12c 55%,#a5691a);
+  border:1px solid rgba(255,240,190,.85);
+  box-shadow:0 0 0 2px rgba(255,192,60,.28), 0 14px 34px -10px rgba(255,176,46,.85);
+  animation:goldIn .35s cubic-bezier(.2,1.6,.4,1) both;
+}
+#goldCase.on{display:flex}
+#goldCase svg{
+  width:34px; height:34px; stroke:#3a2405; fill:none; stroke-width:1.9;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+/* пульс на box-shadow, а не на filter — так дешевле в кадре */
+#goldCase::after{
+  content:""; position:absolute; inset:-6px; border-radius:20px;
+  border:2px solid rgba(255,214,122,.55);
+  animation:goldPulse 1.6s ease-in-out infinite;
+}
+@keyframes goldPulse{
+  0%,100%{opacity:.15; transform:scale(.94)}
+  50%    {opacity:.75; transform:scale(1.04)}
+}
+@keyframes goldIn{
+  0%  {transform:scale(.4); opacity:0}
+  70% {transform:scale(1.08); opacity:1}
+  100%{transform:scale(1); opacity:1}
+}
+@keyframes goldOut{
+  to{transform:scale(.6) rotate(12deg); opacity:0}
+}
+#goldCase.leaving{animation:goldOut .3s ease-in forwards}
+/* счётчик остатка — мелким шрифтом, чтобы игрок видел потолок */
+#goldCase i{
+  position:absolute; right:-6px; top:-6px; min-width:18px; height:18px;
+  border-radius:9px; background:#10151d; color:#ffd76a; font-style:normal;
+  font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center;
+  padding:0 4px; border:1px solid rgba(255,214,122,.6);
+}
+
+/* =========================================================
+   R2 · ИСТОРИЯ ПРОКРУТОК (CSGORoll)
+   Под лентой — последние 20 прокруток: видно, что лента не одноразовая.
+   ========================================================= */
+.rl-hist{
+  display:flex; gap:6px; overflow-x:auto; padding:8px 2px 2px;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.rl-hist::-webkit-scrollbar{display:none}
+.rl-hist .hi{
+  flex:0 0 auto; width:74px; text-align:center; border-radius:10px;
+  padding:5px 4px 4px; background:#151a23; border:1px solid rgba(255,255,255,.08);
+  border-bottom-width:2px; border-bottom-color:var(--c,#5b6472);
+}
+.rl-hist .hi .v{font-size:10px; font-weight:800; color:#c8d3e4; line-height:1.15;
+  font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.rl-hist .hi .n{font-size:9px; color:#8b98b0; line-height:1.2; height:2.4em;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; word-break:normal; overflow-wrap:normal; hyphens:none}
+.rl-hist .hi.mine{border-color:rgba(255,176,46,.5); border-bottom-color:var(--c,#5b6472)}
+.rl-hist .empty{font-size:11px; color:#7c89a2; padding:4px 2px}
+
+/* =========================================================
+   R2 · ПОЯВЛЕНИЕ СПИСКОВ ПО ОЧЕРЕДИ (A Dark Room)
+   ========================================================= */
+@keyframes fadeUp{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+.fade-up > *{animation:fadeUp .42s ease-out both}
+.fade-up > *:nth-child(1){animation-delay:.02s}
+.fade-up > *:nth-child(2){animation-delay:.08s}
+.fade-up > *:nth-child(3){animation-delay:.14s}
+.fade-up > *:nth-child(4){animation-delay:.20s}
+.fade-up > *:nth-child(5){animation-delay:.26s}
+.fade-up > *:nth-child(6){animation-delay:.32s}
+.fade-up > *:nth-child(n+7){animation-delay:.38s}
+
+/* =========================================================
+   R3 · ЧЕРТЕЖИ
+   ========================================================= */
+.bp-box{
+  margin:0 0 14px; padding:12px; border-radius:16px;
+  background-image:linear-gradient(158deg,#161b25 0%,#12161f 58%,#0f131a 100%);
+  border:1px solid rgba(255,255,255,.10);
+}
+.bp-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px}
+.bp-head b{font-size:var(--fs-13, 13px); color:#e8ecf5; letter-spacing:.02em}
+.bp-head span{font-size:11px; color:#8b98b0}
+.bp-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(255,255,255,.06)}
+.bp-row:first-of-type{border-top:0}
+.bp-art{flex:0 0 76px; height:52px; display:flex; align-items:center; justify-content:center}
+.bp-art svg{width:100%; height:100%; max-width:76px; max-height:52px}
+.bp-main{flex:1 1 auto; min-width:0}
+.bp-name{font-size:12px; font-weight:800; color:#e8ecf5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.bp-sub{font-size:10.5px; color:#8b98b0; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.bp-slots{display:flex; align-items:center; gap:5px; margin-top:6px}
+.bp-cnt{font-size:10.5px; font-weight:800; color:#9aa7c0; margin-left:2px}
+.bp-legend{margin-top:10px; padding-top:9px; border-top:1px solid rgba(255,255,255,.06);
+  font-size:10px; line-height:1.5; color:#7d8aa2}
+.bp-legend b{color:#9aa7c0; font-weight:800}
+@media (max-width:360px){
+  .bp-art{flex:0 0 58px}
+  .bp-art svg{max-width:58px}
+  .bp-name{white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.25}
+  .bp-go{padding:0 9px; font-size:11px}
+  .bp-box{padding:11px 10px}
+}
+.bp-slot{
+  width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:900; background:rgba(255,255,255,.04);
+  border:1px dashed rgba(255,255,255,.18); color:#5b6472;
+}
+.bp-slot.got{
+  background:rgba(67,201,122,.16); border:1px solid rgba(67,201,122,.55); color:#8df0b4;
+}
+.bp-go{
+  flex:0 0 auto; min-height:44px; padding:0 12px; border-radius:12px; font:inherit;
+  font-size:11.5px; font-weight:800; cursor:pointer;
+  background:linear-gradient(160deg,var(--accent2,#ffb02e),var(--accent,#ff8a28));
+  color:#10151d; border:1px solid rgba(255,220,150,.5);
+}
+.bp-go:disabled{
+  background:rgba(255,255,255,.05); color:#6c7891; border-color:rgba(255,255,255,.10);
+  cursor:default;
+}
+.bp-done{flex:0 0 auto; font-size:11px; font-weight:800; color:#8df0b4}
+
+/* ---------- R3 · слияние: карточки слетаются в центр ---------- */
+.merge-fly{
+  position:fixed; z-index:96; pointer-events:none; width:64px; height:64px;
+  margin:-32px 0 0 -32px; display:flex; align-items:center; justify-content:center;
+  transition:transform .34s cubic-bezier(.3,.9,.2,1), opacity .34s;
+}
+.merge-fly svg{max-width:100%; max-height:100%}
+@keyframes mergeFlash{
+  0%  {opacity:0; transform:scale(.4)}
+  40% {opacity:.9; transform:scale(1.15)}
+  100%{opacity:0; transform:scale(1.6)}
+}
+.merge-flash{
+  position:fixed; z-index:95; width:220px; height:220px; margin:-110px 0 0 -110px;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.85), rgba(255,190,90,.35) 40%, transparent 68%);
+  animation:mergeFlash .5s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce){
+  #goldCase, #goldCase::after{animation:none}
+  .fade-up > *{animation:none}
+  .merge-fly, .merge-flash{transition:none; animation:none; display:none}
 }
 </style>
 
